@@ -10,6 +10,7 @@
          self::$con  = new PDO("sqlite:$file");
          TORM\Connection::setConnection(self::$con);
          TORM\Connection::setDriver("sqlite");
+         TORM\Log::enable(true);
       }
 
       public function testConnection() {

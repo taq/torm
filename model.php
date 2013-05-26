@@ -107,42 +107,47 @@ class Model {
       if(is_array($conditions)) {
          $temp_cond = "";
          foreach($conditions as $key=>$value) {
-            $temp_cond .= "$key=".self::delimiterColumn($key,$value)." and ";
+            $temp_cond .= "\"".self::getTableName()."\".\"$key\"=".self::procColumn($key,$value)." and ";
          }
          $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
          $conditions = $temp_cond;
       }
-      $sql = "select * from ".self::getTableName()." where $conditions ".self::getOrder();
+      $sql = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where $conditions ".self::getOrder();
+      Log::log($sql);
       return new Collection(self::execute($sql),get_called_class());
    }
 
    public static function find($id) {
-      $id   = self::delimiterColumn(self::$pk,$id);
-      $sql  = "select * from ".self::getTableName()." where ".self::$pk."=$id ".self::getOrder();
+      $id   = self::procColumn(self::$pk,$id);
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$pk."\"=$id ".self::getOrder();
+      Log::log($sql);
       $cls  = get_called_class();
       return new $cls(self::fetch($sql));
    }
 
    public static function all() {
-      $sql  = "select * from ".self::getTableName().self::getOrder();
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
+      Log::log($sql);
       return new Collection(self::execute($sql),get_called_class());
    }
 
    public static function first() {
-      $sql  = "select * from ".self::getTableName().self::getOrder();
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
       $cls  = get_called_class();
+      Log::log($sql);
       return new $cls(self::fetch($sql));
    }
 
    public static function last() {
-      $sql  = "select * from ".self::getTableName().self::getReversedOrder();
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getReversedOrder();
+      Log::log($sql);
       $cls  = get_called_class();
       return new $cls(self::fetch($sql));
    }
 
-   public static function delimiterColumn($col,$val) {
+   public static function procColumn($col,$val) {
       if(in_array($col,self::$strings))
-         $val = "'$val'";
+         $val = self::resolveConnection()->quote($val);
       if($val==null)
          $val = "null";
       return $val;
@@ -159,31 +164,32 @@ class Model {
    public function save() {
       $calling    = get_called_class();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = $calling::delimiterColumn($calling::$mapping[$pk],$this->data[$pk]);
+      $pk_value   = $calling::procColumn($calling::$mapping[$pk],$this->data[$pk]);
       $sql        = null;
       $attrs      = $this->data;
 
       if($this->new_rec) {
-         $sql  = "insert into ".$calling::getTableName()." (";
+         $sql  = "insert into \"".$calling::getTableName()."\" (";
          foreach($attrs as $attr=>$value) 
-            $sql .= $calling::$mapping[$attr].",";
+            $sql .= "\"".$calling::$mapping[$attr]."\",";
          $sql  = substr($sql,0,strlen($sql)-1);
          $sql .= ") values (";
          foreach($attrs as $attr=>$value) 
-            $sql .= $calling::delimiterColumn($attr,$value).",";
+            $sql .= $calling::procColumn($attr,$value).",";
          $sql  = substr($sql,0,strlen($sql)-1);
          $sql .= ")";
       } else {
          unset($attrs[$pk]);
-         $sql  = "update ".$calling::getTableName()." set ";
+         $sql  = "update \"".$calling::getTableName()."\" set ";
          foreach($attrs as $attr=>$value) {
             if(strlen(trim($value))<1)
                $value = "null";
-            $sql .= $calling::$mapping[$attr]."=".$calling::delimiterColumn($attr,$value).",";
+            $sql .= "\"".$calling::$mapping[$attr]."\"=".$calling::procColumn($attr,$value).",";
          }
          $sql = substr($sql,0,strlen($sql)-1);
-         $sql .= " where $pk=$pk_value";
+         $sql .= " where \"".self::getTableName()."\".\"$pk\"=$pk_value";
       }
+      Log::log($sql);
       return self::resolveConnection()->exec($sql)==1;
    }
 
@@ -191,7 +197,7 @@ class Model {
       $calling    = get_called_class();
       $table_name = $calling::getTableName();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = $calling::delimiterColumn($pk,$this->data[$pk]);
+      $pk_value   = $calling::procColumn($pk,$this->data[$pk]);
       $sql        = "delete from $table_name where $pk=$pk_value";
       return self::resolveConnection()->exec($sql)==1;
    }
