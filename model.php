@@ -16,6 +16,12 @@ class Model {
    private $data     = array();
    private $new_rec  = false;
 
+   /**
+    * Constructor
+    * If data is sent, then it loads columns with it.
+    * @param array $data
+    * @package TORM
+    */
    public function __construct($data=null) {
       if(!self::$loaded)
          self::loadColumns();
@@ -41,6 +47,10 @@ class Model {
       $this->data = $data;
    }
 
+   /**
+    * Load null values on row columns.
+    * Useful to new objects.
+    */
    private static function loadNullValues() {
       $values = array();
       foreach(self::$columns as $column) {
@@ -51,28 +61,55 @@ class Model {
       return $values;
    }
 
+   /**
+    * Returns the table name.
+    * If not specified one, get the current class name and appends a "s" to it.
+    * @return string table name
+    */
    public static function getTableName() {
       return self::$table_name ? self::$table_name : get_called_class()."s";
    }
 
+   /**
+    * Returns the primary key column.
+    * @return string primary key
+    */
    public static function getPK() {
       return self::$pk;
    }
 
+   /**
+    * Returns the default order.
+    * If not specified, returns an empty string.
+    * @return string order
+    */
    public static function getOrder() {
       return self::$order ? " order by ".self::$order : "";
    }
 
+   /**
+    * Returns the inverse order.
+    * If DESC is specified, retuns ASC.
+    * @return string order
+    */
    public static function getReversedOrder() {
       $sort = preg_match("/desc/i",self::$order);
       $sort = $sort ? " ASC " : " DESC ";
       return self::$order ? " order by ".self::$order." $sort" : "";
    }
 
+   /**
+    * Resolve the current connection handle.
+    * Get it from PDO.
+    * @return object connection
+    */
    private static function resolveConnection() {
       return self::$connection ? self::$connection : Connection::getConnection();
    }
 
+   /**
+    * Load column info
+    */
    private static function loadColumns() {
       self::$columns = array();
       $rst = self::resolveConnection()->query("select * from ".self::getTableName());
@@ -85,19 +122,11 @@ class Model {
       }
    }
 
-   public static function execute($sql) {
-      if(!self::$loaded)
-         self::loadColumns();
-      return self::resolveConnection()->query($sql);
-   }
-
-   public static function fetch($sql) {
-      $data = self::execute($sql);
-      if(!$data)
-         return null;
-      return $data->fetch(\PDO::FETCH_ASSOC);
-   }
-
+   /**
+    * Use the WHERE clause to return values
+    * @conditions string or array - better use is using an array
+    * @return Collection of results
+    */
    public static function where($conditions) {
       $vals = array();
       if(is_array($conditions)) {
@@ -114,6 +143,11 @@ class Model {
       return new Collection(self::executePrepared($sql,$vals),get_called_class());
    }
 
+   /**
+    * Find an object by its primary key
+    * @param object $id - primary key
+    * @return object result
+    */
    public static function find($id) {
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$pk."\"=? ".self::getOrder();
       Log::log($sql);
@@ -122,12 +156,21 @@ class Model {
       return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
    }
 
+   /**
+    * Return all values
+    * @return Collection values
+    */
    public static function all() {
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
       Log::log($sql);
       return new Collection(self::executePrepared($sql),get_called_class());
    }
 
+   /**
+    * Return the first value.
+    * Get by order.
+    * @return object result
+    */
    public static function first() {
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
       $cls  = get_called_class();
@@ -136,6 +179,11 @@ class Model {
       return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
    }
 
+   /**
+    * Return the last value.
+    * Get by inverse order.
+    * @return object result
+    */
    public static function last() {
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getReversedOrder();
       Log::log($sql);
@@ -144,14 +192,26 @@ class Model {
       return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
    }
 
+   /**
+    * Tell if its a new object (not saved)
+    * @return boolean new or not 
+    */
    public function is_new() {
       return $this->new_rec;
    }
 
+   /**
+    * Return the object current values
+    * @return Array data
+    */
    public function getData() {
       return $this->data;
    }
 
+   /**
+    * Save or update currenct object
+    * @return boolean saved/updated
+    */
    public function save() {
       $calling    = get_called_class();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
@@ -193,6 +253,10 @@ class Model {
       return $rtn;
    }
 
+   /**
+    * Destroy the current object
+    * @return boolean destroyed or not
+    */
    public function destroy() {
       $calling    = get_called_class();
       $table_name = $calling::getTableName();
@@ -203,12 +267,21 @@ class Model {
       return self::executePrepared($sql,array($pk_value))->rowCount()==1;
    }
 
+   /**
+    * Execute a prepared statement.
+    * Try to get it from cache.
+    * @return object statement
+    */
    public static function executePrepared($sql,$values=array()) {
       $stmt = self::putCache($sql);
       $stmt->execute($values);
       return $stmt;
    }
 
+   /**
+    * Put a prepared statement on cache, if not there.
+    * @return object prepared statement
+    */
    public static function putCache($sql) {
       $md5 = md5($sql);
       if(array_key_exists($md5,self::$prepared_cache)) {
@@ -220,6 +293,10 @@ class Model {
       return $prepared;
    }
 
+   /**
+    * Get a prepared statement from cache
+    * @return object or null if not on cache
+    */
    public static function getCache($sql) {
       $md5 = md5($sql);
       if(!array_key_exists($md5,self::$prepared_cache)) 
@@ -227,6 +304,12 @@ class Model {
       return self::$prepared_cache[$md5];
    }
 
+   /**
+    * Trigger to use object values as methods
+    * Like
+    * $user->name("john doe");
+    * print $user->name();
+    */
    function __call($method,$args) {
       if(method_exists($this,$method)) 
          return call_user_func_array(array($this,$method),$args);
@@ -236,10 +319,20 @@ class Model {
          $this->data[$method] = $args[0];
    }
 
+   /**
+    * Trigger to get object values as attributes
+    * Like
+    * print $user->name;
+    */
    function __get($attr) {
       return $this->data[$attr];
    }
 
+   /**
+    * Trigger to set object values as attributes
+    * Like
+    * $user->name = "john doe";
+    */
    function __set($attr,$value) {
       $this->data[$attr] = $value;
    }
