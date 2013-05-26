@@ -2,7 +2,10 @@
 namespace TORM;
 
 class Connection {
-   private static $driver     = "sqlite";
+   private static $driver = array("development"=> "sqlite",
+                                  "test"       => "sqlite",
+                                  "production" => "sqlite");
+
    private static $connection = array("development"=> null,
                                       "test"       => null,
                                       "production" => null);
@@ -30,18 +33,18 @@ class Connection {
       return getenv("TORM_ENV");
    }
 
-   public static function setDriver($driver) {
+   public static function setDriver($driver,$env=null) {
       $file = realpath(dirname(__FILE__)."/drivers/$driver.php");
       if(!file_exists($file)) {
          Log::log("ERROR: Driver file $file does not exists");
          return false;
       }
-      self::$driver = $driver;
+      self::$driver[self::selectEnviroment($env)] = $driver;
       include $file;
    }
 
-   public static function getDriver() {
-      return self::$driver;
+   public static function getDriver($env=null) {
+      return self::$driver[self::selectEnviroment($env)];
    }
 }
 ?>
