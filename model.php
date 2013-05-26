@@ -11,6 +11,7 @@ class Model {
    public  static $ignorecase  = true;
    public  static $mapping     = array();
    public  static $loaded      = false;
+   private static $prepared_cache = array();
 
    private $data     = array();
    private $new_rec  = false;
@@ -183,8 +184,7 @@ class Model {
 
          foreach($attrs as $attr=>$value) 
             array_push($vals,$value);
-         $stmt = self::resolveConnection()->prepare($sql);
-         $rtn  = $stmt->execute($vals)==1;
+         $rtn = self::executePrepared($sql,$vals)==1;
       } else {
          unset($attrs[$pk]);
          $sql  = "update \"".$calling::getTableName()."\" set ";
@@ -209,6 +209,29 @@ class Model {
       $sql        = "delete from \"$table_name\" where \"$table_name\".\"$pk\"=$pk_value";
       Log::log($sql);
       return self::resolveConnection()->exec($sql)==1;
+   }
+
+   public static function executePrepared($sql,$values) {
+      $stmt = self::putCache($sql);
+      return $stmt->execute($values);
+   }
+
+   public static function putCache($sql) {
+      $md5 = md5($sql);
+      if(array_key_exists($md5,self::$prepared_cache)) {
+         Log::log("already prepared: $sql\n");
+         return self::$prepared_cache[$md5];
+      }
+      $prepared = self::resolveConnection()->prepare($sql);
+      self::$prepared_cache[$md5] = $prepared;
+      return $prepared;
+   }
+
+   public static function getCache($sql) {
+      $md5 = md5($sql);
+      if(!array_key_exists($md5,self::$prepared_cache)) 
+         return null;
+      return self::$prepared_cache[$md5];
    }
 
    function __call($method,$args) {

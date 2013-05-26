@@ -77,5 +77,12 @@
          $user = User::where("email='john@doe.com'")->next();
          $this->assertTrue($user->destroy());
       }
+
+      public function testCache() {
+         $sql = "select * from Users where id=?";
+         $this->assertNull(User::getCache($sql));
+         User::putCache($sql);
+         $this->assertNotNull(User::getCache($sql));
+      }
    }
 ?>
