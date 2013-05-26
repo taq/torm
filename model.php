@@ -18,7 +18,7 @@ class Model {
 
    public function __construct($data=null) {
       if(!self::$loaded)
-         self::loadDataTypes();
+         self::loadColumns();
 
       if($data==null) {
          $this->new_rec = true;
@@ -73,19 +73,13 @@ class Model {
       return self::$connection ? self::$connection : Connection::getConnection();
    }
 
-   private static function loadDataTypes() {
-      self::$strings = array();
+   private static function loadColumns() {
       self::$columns = array();
-
       $rst = self::resolveConnection()->query("select * from ".self::getTableName());
 
       for($cnt = 0; $cnt<$rst->columnCount(); $cnt++) {
          $meta = $rst->getColumnMeta($cnt);
          $name = self::$ignorecase ? strtolower($meta["name"]) : $meta["name"];
-         
-         if(in_array(strtolower($meta["native_type"]),array("string")))
-            array_push(self::$strings,$name);
-
          array_push(self::$columns,$name);
          self::$loaded = true;
       }
@@ -93,7 +87,7 @@ class Model {
 
    public static function execute($sql) {
       if(!self::$loaded)
-         self::loadDataTypes();
+         self::loadColumns();
       return self::resolveConnection()->query($sql);
    }
 
