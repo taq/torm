@@ -105,53 +105,49 @@ class Model {
    }
 
    public static function where($conditions) {
+      $vals = array();
       if(is_array($conditions)) {
          $temp_cond = "";
          foreach($conditions as $key=>$value) {
-            $temp_cond .= "\"".self::getTableName()."\".\"$key\"=".self::procColumn($key,$value)." and ";
+            $temp_cond .= "\"".self::getTableName()."\".\"$key\"=? and ";
+            array_push($vals,$value);
          }
          $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
          $conditions = $temp_cond;
       }
       $sql = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where $conditions ".self::getOrder();
       Log::log($sql);
-      return new Collection(self::execute($sql),get_called_class());
+      return new Collection(self::executePrepared($sql,$vals),get_called_class());
    }
 
    public static function find($id) {
-      $id   = self::procColumn(self::$pk,$id);
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$pk."\"=$id ".self::getOrder();
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$pk."\"=? ".self::getOrder();
       Log::log($sql);
       $cls  = get_called_class();
-      return new $cls(self::fetch($sql));
+      $stmt = self::executePrepared($sql,array($id));
+      return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
    }
 
    public static function all() {
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
       Log::log($sql);
-      return new Collection(self::execute($sql),get_called_class());
+      return new Collection(self::executePrepared($sql),get_called_class());
    }
 
    public static function first() {
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
       $cls  = get_called_class();
       Log::log($sql);
-      return new $cls(self::fetch($sql));
+      $stmt = self::executePrepared($sql);
+      return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
    }
 
    public static function last() {
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getReversedOrder();
       Log::log($sql);
       $cls  = get_called_class();
-      return new $cls(self::fetch($sql));
-   }
-
-   public static function procColumn($col,$val) {
-      if(in_array($col,self::$strings))
-         $val = self::resolveConnection()->quote($val);
-      if($val==null)
-         $val = "null";
-      return $val;
+      $stmt = self::executePrepared($sql);
+      return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
    }
 
    public function is_new() {
@@ -165,7 +161,7 @@ class Model {
    public function save() {
       $calling    = get_called_class();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = $calling::procColumn($calling::$mapping[$pk],$this->data[$pk]);
+      $pk_value   = $this->data[$pk];
       $sql        = null;
       $attrs      = $this->data;
       $rtn        = false;
@@ -184,7 +180,7 @@ class Model {
 
          foreach($attrs as $attr=>$value) 
             array_push($vals,$value);
-         $rtn = self::executePrepared($sql,$vals)==1;
+         $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
       } else {
          unset($attrs[$pk]);
          $sql  = "update \"".$calling::getTableName()."\" set ";
@@ -197,7 +193,7 @@ class Model {
          $sql  = substr($sql,0,strlen($sql)-1);
          $sql .= " where \"".self::getTableName()."\".\"$pk\"=?";
          array_push($vals,$pk_value);
-         $rtn = self::executePrepared($sql,$vals)==1;
+         $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
       }
       Log::log($sql);
       return $rtn;
@@ -207,15 +203,16 @@ class Model {
       $calling    = get_called_class();
       $table_name = $calling::getTableName();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = $calling::procColumn($pk,$this->data[$pk]);
-      $sql        = "delete from \"$table_name\" where \"$table_name\".\"$pk\"=$pk_value";
+      $pk_value   = $this->data[$pk];
+      $sql        = "delete from \"$table_name\" where \"$table_name\".\"$pk\"=?";
       Log::log($sql);
-      return self::resolveConnection()->exec($sql)==1;
+      return self::executePrepared($sql,array($pk_value))->rowCount()==1;
    }
 
-   public static function executePrepared($sql,$values) {
+   public static function executePrepared($sql,$values=array()) {
       $stmt = self::putCache($sql);
-      return $stmt->execute($values);
+      $stmt->execute($values);
+      return $stmt;
    }
 
    public static function putCache($sql) {
