@@ -7,12 +7,27 @@ class Connection {
                                       "test"       => null,
                                       "production" => null);
 
-   public static function setConnection($con,$env="development") {
-      self::$connection[$env] = $con;
+   public static function setConnection($con,$env=null) {
+      self::$connection[self::selectEnviroment($env)] = $con;
    }
 
-   public static function getConnection($env="development") {
-      return self::$connection[$env];
+   public static function getConnection($env=null) {
+      return self::$connection[self::selectEnviroment($env)];
+   }
+
+   private static function selectEnviroment($env) {
+      if(strlen($env)<1) {
+         $getenv = self::getEnvironment();
+         if(strlen($getenv)>0)
+            $env = $getenv;
+         else 
+            $env = "development";
+      }
+      return $env;
+   }
+
+   private static function getEnvironment() {
+      return getenv("TORM_ENV");
    }
 
    public static function setDriver($driver) {

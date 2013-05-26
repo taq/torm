@@ -8,14 +8,14 @@
       public static function setUpBeforeClass() {
          $file = realpath(dirname(__FILE__)."/../database/test.sqlite3");
          self::$con  = new PDO("sqlite:$file");
-         TORM\Connection::setConnection(self::$con);
+         TORM\Connection::setConnection(self::$con,"test");
          TORM\Connection::setDriver("sqlite");
          TORM\Log::enable(true);
       }
 
       public function testConnection() {
          $this->assertNotNull(self::$con);
-         $this->assertEquals(self::$con,TORM\Connection::getConnection("development"));
+         $this->assertEquals(self::$con,TORM\Connection::getConnection("test"));
       }      
 
       public function testFind() {
