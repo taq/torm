@@ -6,7 +6,7 @@
       protected static $con  = null;
 
       public static function setUpBeforeClass() {
-         $file = realpath(getcwd()."/../database/test.sqlite3");
+         $file = realpath(dirname(__FILE__)."/../database/test.sqlite3");
          self::$con  = new PDO("sqlite:$file");
          TORM\Connection::setConnection(self::$con);
          TORM\Connection::setDriver("sqlite");

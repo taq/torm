@@ -16,7 +16,13 @@ class Connection {
    }
 
    public static function setDriver($driver) {
+      $file = realpath(dirname(__FILE__)."/drivers/$driver.php");
+      if(!file_exists($file)) {
+         Log::log("ERROR: Driver file $file does not exists");
+         return false;
+      }
       self::$driver = $driver;
+      include $file;
    }
 
    public static function getDriver() {

@@ -222,9 +222,10 @@ class Model {
       $vals       = array();
 
       if($this->new_rec) {
-         $sql   = "insert into \"".$calling::getTableName()."\" (";
-         // process primary key here
-         unset($attrs[$calling::getPK()]);
+         $sql = "insert into \"".$calling::getTableName()."\" (";
+
+         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_DELETE)
+            unset($attrs[$calling::getPK()]);
 
          $marks = join(",",array_fill(0,sizeof($attrs),"?"));
          foreach($attrs as $attr=>$value) 
