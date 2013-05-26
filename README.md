@@ -22,9 +22,12 @@ example, stored on the `$con` var) and set the name of the database driver:
 The database driver will be used if needed some specific feature of the
 database.
 
-You can send the connection enviroment **after** the PDO connection object, and
-select which environment will be used setting the `TORM_ENV` enviroment
+You can send the connection enviroment **after** the PDO connection object, and select which environment will be used setting the `TORM_ENV` enviroment
 variable.
+
+    <?php
+        TORM\Connection::setConnection($con,"test");
+    ?>
 
 ## Models
 
@@ -71,5 +74,5 @@ You can enable log messages with:
 
 Go to the `test` directory and use `PHPUnit` to test it like this:
 
-   $export TORM_ENV=test
-   $phpunit torm.php
+    $export TORM_ENV=test
+    $phpunit torm.php
