@@ -71,6 +71,7 @@
          $user->name = "Doe, John";
          $user->save();
          $this->assertEquals("Doe, John",User::find($id)->name);
+         $user->save();
       }
 
       public function testDestroy() {

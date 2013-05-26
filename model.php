@@ -169,6 +169,7 @@ class Model {
       $sql        = null;
       $attrs      = $this->data;
       $rtn        = false;
+      $vals       = array();
 
       if($this->new_rec) {
          $sql   = "insert into \"".$calling::getTableName()."\" (";
@@ -180,7 +181,6 @@ class Model {
             $sql .= "\"".$calling::$mapping[$attr]."\",";
          $sql  = substr($sql,0,strlen($sql)-1);
          $sql .= ") values ($marks)";
-         $vals = array();
 
          foreach($attrs as $attr=>$value) 
             array_push($vals,$value);
@@ -191,11 +191,13 @@ class Model {
          foreach($attrs as $attr=>$value) {
             if(strlen(trim($value))<1)
                $value = "null";
-            $sql .= "\"".$calling::$mapping[$attr]."\"=".$calling::procColumn($attr,$value).",";
+            $sql .= "\"".$calling::$mapping[$attr]."\"=?,";
+            array_push($vals,$value);
          }
-         $sql = substr($sql,0,strlen($sql)-1);
-         $sql .= " where \"".self::getTableName()."\".\"$pk\"=$pk_value";
-         $rtn = self::resolveConnection()->exec($sql)==1;
+         $sql  = substr($sql,0,strlen($sql)-1);
+         $sql .= " where \"".self::getTableName()."\".\"$pk\"=?";
+         array_push($vals,$pk_value);
+         $rtn = self::executePrepared($sql,$vals)==1;
       }
       Log::log($sql);
       return $rtn;
@@ -219,7 +221,7 @@ class Model {
    public static function putCache($sql) {
       $md5 = md5($sql);
       if(array_key_exists($md5,self::$prepared_cache)) {
-         Log::log("already prepared: $sql\n");
+         Log::log("already prepared: $sql");
          return self::$prepared_cache[$md5];
       }
       $prepared = self::resolveConnection()->prepare($sql);
