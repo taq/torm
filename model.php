@@ -167,17 +167,24 @@ class Model {
       $pk_value   = $calling::procColumn($calling::$mapping[$pk],$this->data[$pk]);
       $sql        = null;
       $attrs      = $this->data;
+      $rtn        = false;
 
       if($this->new_rec) {
-         $sql  = "insert into \"".$calling::getTableName()."\" (";
+         $sql   = "insert into \"".$calling::getTableName()."\" (";
+         // process primary key here
+         unset($attrs[$calling::getPK()]);
+
+         $marks = join(",",array_fill(0,sizeof($attrs),"?"));
          foreach($attrs as $attr=>$value) 
             $sql .= "\"".$calling::$mapping[$attr]."\",";
          $sql  = substr($sql,0,strlen($sql)-1);
-         $sql .= ") values (";
+         $sql .= ") values ($marks)";
+         $vals = array();
+
          foreach($attrs as $attr=>$value) 
-            $sql .= $calling::procColumn($attr,$value).",";
-         $sql  = substr($sql,0,strlen($sql)-1);
-         $sql .= ")";
+            array_push($vals,$value);
+         $stmt = self::resolveConnection()->prepare($sql);
+         $rtn  = $stmt->execute($vals)==1;
       } else {
          unset($attrs[$pk]);
          $sql  = "update \"".$calling::getTableName()."\" set ";
@@ -188,9 +195,10 @@ class Model {
          }
          $sql = substr($sql,0,strlen($sql)-1);
          $sql .= " where \"".self::getTableName()."\".\"$pk\"=$pk_value";
+         $rtn = self::resolveConnection()->exec($sql)==1;
       }
       Log::log($sql);
-      return self::resolveConnection()->exec($sql)==1;
+      return $rtn;
    }
 
    public function destroy() {
@@ -198,7 +206,8 @@ class Model {
       $table_name = $calling::getTableName();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $calling::procColumn($pk,$this->data[$pk]);
-      $sql        = "delete from $table_name where $pk=$pk_value";
+      $sql        = "delete from \"$table_name\" where \"$table_name\".\"$pk\"=$pk_value";
+      Log::log($sql);
       return self::resolveConnection()->exec($sql)==1;
    }
 
