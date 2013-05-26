@@ -15,8 +15,8 @@ We use PDO to create the connections. Create and send your connection (on this
 example, stored on the `$con` var) and set the name of the database driver:
 
    <?php
-         TORM\Connection::setConnection($con);
-         TORM\Connection::setDriver("sqlite");
+      TORM\Connection::setConnection($con);
+      TORM\Connection::setDriver("sqlite");
    ?>
 
 The database driver will be used if needed some specific feature of the
@@ -54,3 +54,9 @@ You can set the following attributes:
 2. **order** - Default sort order.
 3. **pk** - Primary key column. Defaults to `id`.
 4. **ignorecase** - Process all columns as lower case. Defaults to `true`.
+
+# Test
+
+Go to the `test` directory and use `PHPUnit` to test it like this:
+
+   $phpunit torm.php
