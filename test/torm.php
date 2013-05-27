@@ -18,6 +18,7 @@
          self::$user->validates("name" ,array("presence"=>true));
          self::$user->validates("email",array("presence"=>true));
          self::$user->validates("email",array("format"  =>"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"));
+         self::$user->validates("email",array("uniqueness"=>true));
          self::$user->name  = "John Doe Jr.";
          self::$user->email = "jr@doe.com";
       }
@@ -42,6 +43,16 @@
       public function testFirst() {
          $user = User::first();
          $this->assertEquals("Eustaquio Rangel",$user->name);
+      }
+
+      public function testFirstWithCondition() {
+         $user = User::first(array("email"=>"eustaquiorangel@gmail.com"));
+         $this->assertEquals("Eustaquio Rangel",$user->name);
+      }
+
+      public function testFirstNotFound() {
+         $user = User::first(array("email"=>"yoda@gmail.com"));
+         $this->assertNull($user);
       }
 
       public function testLast() {
@@ -113,6 +124,15 @@
       public function testValidFormat() {
          self::$user->email = "jr@doe.com";
          $this->assertTrue(self::$user->isValid());
+      }
+
+      public function testUniqueness() {
+         $old_user = User::find(1);
+         $new_user = new User();
+         $new_user->name  = $old_user->name;
+         $new_user->email = $old_user->email;
+         $this->assertFalse($new_user->isValid());
+         $this->assertEquals(TORM\Validation::VALIDATION_UNIQUENESS,$new_user->errors["email"][0]);
       }
    }
 ?>

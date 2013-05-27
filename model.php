@@ -124,22 +124,40 @@ class Model {
       }
    }
 
+   private static function extractWhereConditions($conditions) {
+      if(!$conditions)
+         return "";
+
+      if(is_array($conditions)) {
+         $temp_cond = "";
+         foreach($conditions as $key=>$value)
+            $temp_cond .= "\"".self::getTableName()."\".\"$key\"=? and ";
+         $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
+         $conditions = $temp_cond;
+      }
+      return $conditions;
+   }
+
+   private static function extractWhereValues($conditions) {
+      $values = array();
+      if(!$conditions)
+         return $values;
+
+      if(is_array($conditions)) {
+         foreach($conditions as $key=>$value)
+            array_push($values,$value);
+      }
+      return $values;
+   }
+
    /**
     * Use the WHERE clause to return values
     * @conditions string or array - better use is using an array
     * @return Collection of results
     */
    public static function where($conditions) {
-      $vals = array();
-      if(is_array($conditions)) {
-         $temp_cond = "";
-         foreach($conditions as $key=>$value) {
-            $temp_cond .= "\"".self::getTableName()."\".\"$key\"=? and ";
-            array_push($vals,$value);
-         }
-         $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
-         $conditions = $temp_cond;
-      }
+      $vals       = self::extractWhereValues($conditions);
+      $conditions = self::extractWhereConditions($conditions);
       $sql = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where $conditions ".self::getOrder();
       Log::log($sql);
       return new Collection(self::executePrepared($sql,$vals),get_called_class());
@@ -171,14 +189,25 @@ class Model {
    /**
     * Return the first value.
     * Get by order.
+    * @param conditions
     * @return object result
     */
-   public static function first() {
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
+   public static function first($conditions=null) {
+      $where      = "";
+      $vals       = self::extractWhereValues($conditions);
+      $conditions = self::extractWhereConditions($conditions);
+
+      if(strlen($conditions)>0) 
+         $where = " where $conditions ";
+      
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" $where ".self::getOrder();
       $cls  = get_called_class();
       Log::log($sql);
-      $stmt = self::executePrepared($sql);
-      return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
+      $stmt = self::executePrepared($sql,$vals);
+      $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+      if(!$data)
+         return null;
+      return new $cls($data);
    }
 
    /**
@@ -294,7 +323,7 @@ class Model {
          foreach($validations as $validation) {
             $validation_key   = array_keys($validation)[0];
             $validation_value = array_values($validation)[0];
-            $args = array(get_called_class(),$value,$validation_value);
+            $args = array(get_called_class(),$attr,$value,$validation_value);
             $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
             if(!$test) {
                $rtn = false;
@@ -305,6 +334,16 @@ class Model {
          }
       }
       return $rtn;
+   }
+
+   /**
+    * Check if attribute is unique
+    * @param object attribute
+    * @return if attribute is unique
+    */
+   public static function isUnique($attr,$attr_value) {
+      $obj = self::first(array($attr=>$attr_value));
+      return $obj==null;
    }
 
    public static function validates($attr,$validation) {
