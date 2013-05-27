@@ -334,8 +334,10 @@ class Model {
          $value = $this->data[$attr];
 
          foreach($validations as $validation) {
-            $validation_key   = array_keys($validation)[0];
-            $validation_value = array_values($validation)[0];
+            $validation_key   = array_keys($validation);
+            $validation_key   = $validation_key[0];
+            $validation_value = array_values($validation);
+            $validation_value = $validation_value[0];
             $args = array(get_called_class(),$pk,$attr,$value,$validation_value);
             $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
             if(!$test) {
