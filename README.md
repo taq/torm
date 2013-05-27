@@ -62,6 +62,15 @@ You can set the following attributes:
 3. **pk** - Primary key column. Defaults to `id`.
 4. **ignorecase** - Process all columns as lower case. Defaults to `true`.
 
+### Validations
+
+Some validations are provided:
+
+1. **Presence** (not empty): `User::validates("name" ,array("presence"=>true))`
+2. **Regular expression**: `User::validates("email",array("format"  =>"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"))`
+3. **Uniqueness**: `User::validates("email",array("uniqueness"=>true))`
+4. **Numericality**: `User::validates("id",array("numericality"=>true))`
+
 # Log
 
 You can enable log messages with:
