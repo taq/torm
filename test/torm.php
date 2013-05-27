@@ -19,6 +19,9 @@
          self::$user->validates("email",array("presence"=>true));
          self::$user->validates("email",array("format"  =>"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"));
          self::$user->validates("email",array("uniqueness"=>true));
+         self::$user->validates("id"   ,array("numericality"=>true));
+
+         self::$user->id    = 1;
          self::$user->name  = "John Doe Jr.";
          self::$user->email = "jr@doe.com";
       }
@@ -148,6 +151,11 @@
          $new_user->email = $old_user->email;
          $this->assertFalse($new_user->isValid());
          $this->assertEquals(TORM\Validation::VALIDATION_UNIQUENESS,$new_user->errors["email"][0]);
+      }
+
+      public function testNumericality() {
+         self::$user->id = "one";
+         $this->assertFalse(self::$user->isValid());
       }
    }
 ?>

@@ -5,10 +5,12 @@ class Validation {
    const VALIDATION_PRESENCE     = "presence";
    const VALIDATION_FORMAT       = "format";
    const VALIDATION_UNIQUENESS   = "uniqueness";
+   const VALIDATION_NUMERICALITY = "numericality";
 
-   public static $validation_map = array("presence"   => self::VALIDATION_PRESENCE,
-                                         "format"     => self::VALIDATION_FORMAT,
-                                         "uniqueness" => self::VALIDATION_UNIQUENESS
+   public static $validation_map = array("presence"      => self::VALIDATION_PRESENCE,
+                                         "format"        => self::VALIDATION_FORMAT,
+                                         "uniqueness"    => self::VALIDATION_UNIQUENESS,
+                                         "numericality"  => self::VALIDATION_NUMERICALITY
                                         );
 
    public static function presence($cls,$attr,$attr_value,$validation_value) {
@@ -23,6 +25,10 @@ class Validation {
 
    public static function uniqueness($cls,$attr,$attr_value,$validation_value) {
       return call_user_func_array(array("\\".$cls,"isUnique"),array($attr,$attr_value));
+   }
+
+   public static function numericality($cls,$attr,$attr_value,$validation_value) {
+      return preg_match("/^[0-9]+$/",trim($attr_value));
    }
 }
 ?>
