@@ -173,7 +173,10 @@ class Model {
       Log::log($sql);
       $cls  = get_called_class();
       $stmt = self::executePrepared($sql,array($id));
-      return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
+      $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+      if(!$data)
+         return null;
+      return new $cls($data);
    }
 
    /**

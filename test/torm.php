@@ -34,6 +34,11 @@
          $this->assertEquals("eustaquiorangel@gmail.com",$user->email);
       }
 
+      public function testNotFound() {
+         $user = User::find(10);
+         $this->assertNull($user);
+      }
+
       public function testSetAttribute() {
          $user = User::find(1);
          $user->name = "John Doe";
