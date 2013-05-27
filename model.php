@@ -12,9 +12,11 @@ class Model {
    public  static $mapping     = array();
    public  static $loaded      = false;
    private static $prepared_cache = array();
+   private static $validations    = array();
 
-   private $data     = array();
-   private $new_rec  = false;
+   private $data        = array();
+   private $new_rec     = false;
+   public  $errors      = null;
 
    /**
     * Constructor
@@ -277,6 +279,38 @@ class Model {
       $stmt = self::putCache($sql);
       $stmt->execute($values);
       return $stmt;
+   }
+
+   /**
+    * Check if is valid
+    */
+   public function isValid() {
+      $this->errors = array();
+      $rtn = true;
+
+      foreach(self::$validations as $attr=>$validations) {
+         $value = $this->data[$attr];
+
+         foreach($validations as $validation) {
+            $validation_key   = array_keys($validation)[0];
+            $validation_value = array_values($validation)[0];
+            $args = array(get_called_class(),$value,$validation_value);
+            $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
+            if(!$test) {
+               $rtn = false;
+               if(!array_key_exists($attr,$this->errors))
+                  $this->errors[$attr] = array();
+               array_push($this->errors[$attr],Validation::$validation_map[$validation_key]);
+            }
+         }
+      }
+      return $rtn;
+   }
+
+   public static function validates($attr,$validation) {
+      if(!array_key_exists($attr,self::$validations))
+         self::$validations[$attr] = array();
+      array_push(self::$validations[$attr],$validation);
    }
 
    /**

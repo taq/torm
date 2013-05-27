@@ -4,13 +4,21 @@
 
    class TormTest extends PHPUnit_Framework_TestCase {
       protected static $con  = null;
+      protected static $user = null;
 
       public static function setUpBeforeClass() {
          $file = realpath(dirname(__FILE__)."/../database/test.sqlite3");
          self::$con  = new PDO("sqlite:$file");
+         
          TORM\Connection::setConnection(self::$con,"test");
          TORM\Connection::setDriver("sqlite");
          TORM\Log::enable(true);
+
+         self::$user = new User();
+         self::$user->validates("name" ,array("presence"=>true));
+         self::$user->validates("email",array("presence"=>true));
+         self::$user->name  = "John Doe Jr.";
+         self::$user->email = "jr@doe.com";
       }
 
       public function testConnection() {
@@ -84,6 +92,16 @@
          $this->assertNull(User::getCache($sql));
          User::putCache($sql);
          $this->assertNotNull(User::getCache($sql));
+      }
+
+      public function testInvalidPresence() {
+         self::$user->name = null;
+         $this->assertFalse(self::$user->isValid());
+      }
+
+      public function testValidPresence() {
+         self::$user->name = "John Doe Jr.";
+         $this->assertTrue(self::$user->isValid());
       }
    }
 ?>
