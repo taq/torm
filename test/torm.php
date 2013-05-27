@@ -17,6 +17,7 @@
          self::$user = new User();
          self::$user->validates("name" ,array("presence"=>true));
          self::$user->validates("email",array("presence"=>true));
+         self::$user->validates("email",array("format"  =>"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"));
          self::$user->name  = "John Doe Jr.";
          self::$user->email = "jr@doe.com";
       }
@@ -101,6 +102,16 @@
 
       public function testValidPresence() {
          self::$user->name = "John Doe Jr.";
+         $this->assertTrue(self::$user->isValid());
+      }
+
+      public function testInvalidFormat() {
+         self::$user->email = "yadda@yadda";
+         $this->assertFalse(self::$user->isValid());
+      }
+
+      public function testValidFormat() {
+         self::$user->email = "jr@doe.com";
          $this->assertTrue(self::$user->isValid());
       }
    }
