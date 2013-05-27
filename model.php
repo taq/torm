@@ -25,7 +25,7 @@ class Model {
     * @package TORM
     */
    public function __construct($data=null) {
-      if(!self::$loaded)
+      if(!self::$loaded) 
          self::loadColumns();
 
       if($data==null) {
@@ -317,6 +317,9 @@ class Model {
     * @return object statement
     */
    public static function executePrepared($sql,$values=array()) {
+      if(!self::$loaded)
+         self::loadColumns();
+
       $stmt = self::putCache($sql);
       $stmt->execute($values);
       return $stmt;

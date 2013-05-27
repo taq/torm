@@ -29,6 +29,11 @@ variable.
         TORM\Connection::setConnection($con,"test");
     ?>
 
+To select the current enviroment, for example, to production, on an Apache server 
+with `.htaccess` allowed, insert into the `.htaccess` file:
+
+   SetEnv TORM_ENV production
+
 ## Models
 
 Define your models where you want like
