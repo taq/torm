@@ -187,20 +187,20 @@ class Model {
    }
 
    /**
-    * Return the first value.
-    * Get by order.
-    * @param conditions
-    * @return object result
+    * Get result by position - first or last
+    * @param $position first or last
+    * @param object conditions
+    * @return result or null
     */
-   public static function first($conditions=null) {
+   private static function getByPosition($position,$conditions=null) {
+      $order      = $position=="first" ? self::getOrder() : self::getReversedOrder();
       $where      = "";
       $vals       = self::extractWhereValues($conditions);
       $conditions = self::extractWhereConditions($conditions);
-
       if(strlen($conditions)>0) 
          $where = " where $conditions ";
       
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" $where ".self::getOrder();
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" $where $order";
       $cls  = get_called_class();
       Log::log($sql);
       $stmt = self::executePrepared($sql,$vals);
@@ -211,16 +211,22 @@ class Model {
    }
 
    /**
+    * Return the first value.
+    * Get by order.
+    * @param conditions
+    * @return object result
+    */
+   public static function first($conditions=null) {
+      return self::getByPosition("first",$conditions);
+   }
+
+   /**
     * Return the last value.
     * Get by inverse order.
     * @return object result
     */
-   public static function last() {
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getReversedOrder();
-      Log::log($sql);
-      $cls  = get_called_class();
-      $stmt = self::executePrepared($sql);
-      return new $cls($stmt->fetch(\PDO::FETCH_ASSOC));
+   public static function last($conditions=null) {
+      return self::getByPosition("last",$conditions);
    }
 
    /**

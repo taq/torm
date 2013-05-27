@@ -60,6 +60,16 @@
          $this->assertEquals("Rangel, Eustaquio",$user->name);
       }
 
+      public function testLastWithCondition() {
+         $user = User::last(array("email"=>"taq@bluefish.com.br"));
+         $this->assertEquals("Rangel, Eustaquio",$user->name);
+      }
+
+      public function testLastNotFound() {
+         $user = User::last(array("email"=>"yoda@gmail.com"));
+         $this->assertNull($user);
+      }
+
       public function testWhere() {
          $users = User::where(array("name"=>"Eustaquio Rangel"));
          $user  = $users->next();
