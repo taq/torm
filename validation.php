@@ -13,21 +13,21 @@ class Validation {
                                          "numericality"  => self::VALIDATION_NUMERICALITY
                                         );
 
-   public static function presence($cls,$attr,$attr_value,$validation_value) {
+   public static function presence($cls,$id,$attr,$attr_value,$validation_value) {
       if(!$validation_value)
          return true;
       return strlen(trim($attr_value))>0;
    }
 
-   public static function format($cls,$attr,$attr_value,$validation_value) {
+   public static function format($cls,$id,$attr,$attr_value,$validation_value) {
       return preg_match("/$validation_value/",$attr_value);
    }
 
-   public static function uniqueness($cls,$attr,$attr_value,$validation_value) {
-      return call_user_func_array(array("\\".$cls,"isUnique"),array($attr,$attr_value));
+   public static function uniqueness($cls,$id,$attr,$attr_value,$validation_value) {
+      return call_user_func_array(array("\\".$cls,"isUnique"),array($id,$attr,$attr_value));
    }
 
-   public static function numericality($cls,$attr,$attr_value,$validation_value) {
+   public static function numericality($cls,$id,$attr,$attr_value,$validation_value) {
       return preg_match("/^[0-9]+$/",trim($attr_value));
    }
 }

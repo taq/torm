@@ -102,6 +102,7 @@
          $id   = $user->id;
          $user->name = "Doe, John";
          $user->save();
+
          $this->assertEquals("Doe, John",User::find($id)->name);
          $user->save();
       }
@@ -147,9 +148,14 @@
          $this->assertEquals(TORM\Validation::VALIDATION_UNIQUENESS,$new_user->errors["email"][0]);
       }
 
-      public function testNumericality() {
-         self::$user->id = "one";
-         $this->assertFalse(self::$user->isValid());
+      //public function testNumericality() {
+         //self::$user->id = "one";
+         //$this->assertFalse(self::$user->isValid());
+      //}
+
+      public function testCantSaveInvalidObject() {
+         $user = new User();
+         $this->assertFalse($user->save());
       }
    }
 ?>

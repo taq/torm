@@ -253,6 +253,9 @@ class Model {
     * @return boolean saved/updated
     */
    public function save() {
+      if(!$this->isValid())
+         return false;
+
       $calling    = get_called_class();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
@@ -325,6 +328,7 @@ class Model {
    public function isValid() {
       $this->errors = array();
       $rtn = true;
+      $pk  = self::get(self::getPK());
 
       foreach(self::$validations as $attr=>$validations) {
          $value = $this->data[$attr];
@@ -332,7 +336,7 @@ class Model {
          foreach($validations as $validation) {
             $validation_key   = array_keys($validation)[0];
             $validation_value = array_values($validation)[0];
-            $args = array(get_called_class(),$attr,$value,$validation_value);
+            $args = array(get_called_class(),$pk,$attr,$value,$validation_value);
             $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
             if(!$test) {
                $rtn = false;
@@ -350,9 +354,13 @@ class Model {
     * @param object attribute
     * @return if attribute is unique
     */
-   public static function isUnique($attr,$attr_value) {
+   public static function isUnique($id,$attr,$attr_value) {
       $obj = self::first(array($attr=>$attr_value));
-      return $obj==null;
+      return $obj==null || $obj->get(self::getPK())==$id;
+   }
+
+   public function get($attr) {
+      return $this->data[$attr];
    }
 
    public static function validates($attr,$validation) {

@@ -71,6 +71,8 @@ Some validations are provided:
 3. **Uniqueness**: `User::validates("email",array("uniqueness"=>true))`
 4. **Numericality**: `User::validates("id",array("numericality"=>true))`
 
+You can check for an valid object using `$user->isValid()`.
+
 # Log
 
 You can enable log messages with:
