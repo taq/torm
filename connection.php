@@ -18,7 +18,7 @@ class Connection {
       return self::$connection[self::selectEnviroment($env)];
    }
 
-   public static function selectEnviroment($env) {
+   public static function selectEnviroment($env=null) {
       if(strlen($env)<1) {
          $getenv = self::getEnvironment();
          if(strlen($getenv)>0)
