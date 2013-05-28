@@ -114,14 +114,14 @@ class Model {
     */
    private static function loadColumns() {
       self::$columns = array();
-      $rst = self::resolveConnection()->query("select * from ".self::getTableName());
+      $rst  = self::resolveConnection()->query("select \"".self::getTableName()."\".* from \"".self::getTableName()."\"");
+      $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
-      for($cnt = 0; $cnt<$rst->columnCount(); $cnt++) {
-         $meta = $rst->getColumnMeta($cnt);
-         $name = self::$ignorecase ? strtolower($meta["name"]) : $meta["name"];
-         array_push(self::$columns,$name);
-         self::$loaded = true;
+      foreach($keys as $key) {
+         $key = self::$ignorecase ? strtolower($key) : $key;
+         array_push(self::$columns,$key);
       }
+      self::$loaded = true;
    }
 
    private static function extractWhereConditions($conditions) {
