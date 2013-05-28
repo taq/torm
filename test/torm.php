@@ -91,6 +91,11 @@
 
          $user  = $users->next();
          $this->assertEquals("Rangel, Eustaquio",$user->name);
+
+         echo "checking all users ...\n";
+         foreach(User::all() as $user) {
+            echo "user: ".$user->name."\n";
+         }
       }
 
       public function testInsert() {
