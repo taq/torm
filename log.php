@@ -13,6 +13,7 @@ class Log {
    }
 
    public static function log($msg) {
-      echo "log: $msg\n";
+      if(self::$enabled)
+         echo "log: $msg\n";
    }
 }
