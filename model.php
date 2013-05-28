@@ -45,7 +45,7 @@ class Model {
                unset($data[$key]);
          }
          if(!array_key_exists($keyr,self::$mapping))
-            self::$mapping[$keyr] = $key;
+            self::$mapping[$key] = $keyr;
       }
       $this->data = $data;
    }
@@ -120,7 +120,7 @@ class Model {
       foreach($keys as $key) {
          $keyc = self::$ignorecase ? strtolower($key) : $key;
          array_push(self::$columns,$keyc);
-         self::$mapping[$key] = $keyc;
+         self::$mapping[$keyc] = $key;
       }
       self::$loaded = true;
    }
