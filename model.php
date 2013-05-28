@@ -170,7 +170,8 @@ class Model {
     * @return object result
     */
    public static function find($id) {
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$mapping[self::$pk]."\"=? ".self::getOrder();
+      $pk   = self::$ignorecase ? strtolower(self::getPK()) : self::getPK();
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"$pk\"=? ".self::getOrder();
       Log::log($sql);
       $cls  = get_called_class();
       $stmt = self::executePrepared($sql,array($id));
