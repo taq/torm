@@ -132,7 +132,7 @@ class Model {
       if(is_array($conditions)) {
          $temp_cond = "";
          foreach($conditions as $key=>$value)
-            $temp_cond .= "\"".self::getTableName()."\".\"$key\"=? and ";
+            $temp_cond .= "\"".self::getTableName()."\".\"".self::$mapping[$key]."\"=? and ";
          $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
          $conditions = $temp_cond;
       }
@@ -307,7 +307,7 @@ class Model {
       $table_name = $calling::getTableName();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
-      $sql        = "delete from \"$table_name\" where \"$table_name\".\"$pk\"=?";
+      $sql        = "delete from \"$table_name\" where \"$table_name\".\"".self::$mapping[$pk]."\"=?";
       Log::log($sql);
       return self::executePrepared($sql,array($pk_value))->rowCount()==1;
    }
