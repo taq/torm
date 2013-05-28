@@ -157,6 +157,9 @@ class Model {
     * @return Collection of results
     */
    public static function where($conditions) {
+      if(!self::$loaded) 
+         self::loadColumns();
+
       $vals       = self::extractWhereValues($conditions);
       $conditions = self::extractWhereConditions($conditions);
       $sql = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where $conditions ".self::getOrder();
@@ -170,6 +173,9 @@ class Model {
     * @return object result
     */
    public static function find($id) {
+      if(!self::$loaded) 
+         self::loadColumns();
+
       $pk   = self::$ignorecase ? strtolower(self::getPK()) : self::getPK();
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$mapping[$pk]."\"=? ".self::getOrder();
       Log::log($sql);
@@ -186,6 +192,9 @@ class Model {
     * @return Collection values
     */
    public static function all() {
+      if(!self::$loaded) 
+         self::loadColumns();
+
       $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
       Log::log($sql);
       return new Collection(self::executePrepared($sql),get_called_class());
@@ -198,6 +207,9 @@ class Model {
     * @return result or null
     */
    private static function getByPosition($position,$conditions=null) {
+      if(!self::$loaded) 
+         self::loadColumns();
+
       $order      = $position=="first" ? self::getOrder() : self::getReversedOrder();
       $where      = "";
       $vals       = self::extractWhereValues($conditions);
@@ -258,6 +270,9 @@ class Model {
       if(!$this->isValid())
          return false;
 
+      if(!self::$loaded) 
+         self::loadColumns();
+
       $calling    = get_called_class();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
@@ -304,6 +319,9 @@ class Model {
     * @return boolean destroyed or not
     */
    public function destroy() {
+      if(!self::$loaded) 
+         self::loadColumns();
+
       $calling    = get_called_class();
       $table_name = $calling::getTableName();
       $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
