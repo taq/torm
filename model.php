@@ -44,7 +44,8 @@ class Model {
             if($keyr!=$key)
                unset($data[$key]);
          }
-         self::$mapping[$keyr] = $key;
+         if(!array_key_exists($keyr,self::$mapping))
+            self::$mapping[$keyr] = $key;
       }
       $this->data = $data;
    }
@@ -58,7 +59,6 @@ class Model {
       foreach(self::$columns as $column) {
          $name = self::$ignorecase ? strtolower($column) : $column;
          $values[$column] = null;
-         self::$mapping[$name] = $column;
       }
       return $values;
    }
@@ -118,8 +118,9 @@ class Model {
       $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
       foreach($keys as $key) {
-         $key = self::$ignorecase ? strtolower($key) : $key;
-         array_push(self::$columns,$key);
+         $keyc = self::$ignorecase ? strtolower($key) : $key;
+         array_push(self::$columns,$keyc);
+         self::$mapping[$key] = $keyc;
       }
       self::$loaded = true;
    }
