@@ -88,6 +88,9 @@
          $users = User::all();
          $user  = $users->next();
          $this->assertEquals("Eustaquio Rangel",$user->name);
+
+         $user  = $users->next();
+         $this->assertEquals("Rangel, Eustaquio",$user->name);
       }
 
       public function testInsert() {
