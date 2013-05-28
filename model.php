@@ -171,7 +171,7 @@ class Model {
     */
    public static function find($id) {
       $pk   = self::$ignorecase ? strtolower(self::getPK()) : self::getPK();
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"$pk\"=? ".self::getOrder();
+      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$mapping[$pk]."\"=? ".self::getOrder();
       Log::log($sql);
       $cls  = get_called_class();
       $stmt = self::executePrepared($sql,array($id));
