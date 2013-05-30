@@ -171,5 +171,12 @@
          $this->assertNotNull($users->next());
          $this->assertNull($users->next());
       }
+
+      public function testOrder() {
+         $users = User::where("name like '%rangel%'")->order("email desc")->limit(1);
+         $user  = $users->next();
+         $this->assertNotNull($user);
+         $this->assertEquals("taq@bluefish.com.br",$user->email);
+      }
    }
 ?>
