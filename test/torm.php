@@ -165,5 +165,11 @@
          $user = new User();
          $this->assertFalse($user->save());
       }
+
+      public function testLimit() {
+         $users = User::where(array("name"=>"Eustaquio Rangel"))->limit(1);
+         $this->assertNotNull($users->next());
+         $this->assertNull($users->next());
+      }
    }
 ?>
