@@ -12,7 +12,7 @@
          
          TORM\Connection::setConnection(self::$con,"test");
          TORM\Connection::setDriver("sqlite");
-         TORM\Log::enable(true);
+         TORM\Log::enable(false);
 
          self::$user        = new User();
          self::$user->id    = 1;
