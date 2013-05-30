@@ -18,6 +18,7 @@
          self::$user->id    = 1;
          self::$user->name  = "John Doe Jr.";
          self::$user->email = "jr@doe.com";
+         self::$user->level = 1;
       }
 
       public function testConnection() {
@@ -102,6 +103,7 @@
          $user = new User();
          $user->name    = "John Doe";
          $user->email   = "john@doe.com";
+         $user->level   = 1;
          $this->assertTrue($user->save());
       }
 
@@ -156,10 +158,10 @@
          $this->assertEquals(TORM\Validation::VALIDATION_UNIQUENESS,$new_user->errors["email"][0]);
       }
 
-      //public function testNumericality() {
-         //self::$user->id = "one";
-         //$this->assertFalse(self::$user->isValid());
-      //}
+      public function testNumericality() {
+         self::$user->level = "one";
+         $this->assertFalse(self::$user->isValid());
+      }
 
       public function testCantSaveInvalidObject() {
          $user = new User();
