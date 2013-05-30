@@ -1,5 +1,6 @@
 <?php
    include "connection.php";
+   include "builder.php";
    include "model.php";
    include "collection.php";
    include "driver.php";

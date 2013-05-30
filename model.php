@@ -11,6 +11,7 @@ class Model {
    public  static $ignorecase  = true;
    public  static $mapping     = array();
    public  static $loaded      = false;
+   public  static $builder     = false;
    private static $prepared_cache = array();
    private static $validations    = array();
 
@@ -86,7 +87,7 @@ class Model {
     * @return string order
     */
    public static function getOrder() {
-      return self::$order ? " order by ".self::$order : "";
+      return self::$order ? self::$order : "";
    }
 
    /**
@@ -97,7 +98,7 @@ class Model {
    public static function getReversedOrder() {
       $sort = preg_match("/desc/i",self::$order);
       $sort = $sort ? " ASC " : " DESC ";
-      return self::$order ? " order by ".self::$order." $sort" : "";
+      return self::$order ? self::$order." $sort" : "";
    }
 
    /**
@@ -160,11 +161,17 @@ class Model {
       if(!self::$loaded) 
          self::loadColumns();
 
-      $vals       = self::extractWhereValues($conditions);
-      $conditions = self::extractWhereConditions($conditions);
-      $sql = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where $conditions ".self::getOrder();
-      Log::log($sql);
-      return new Collection(self::executePrepared($sql,$vals),get_called_class());
+      $builder          = self::makeBuilder();
+      $builder->where   = self::extractWhereConditions($conditions);
+      $vals             = self::extractWhereValues($conditions);
+      return new Collection($builder,$vals,get_called_class());
+   }
+
+   private static function makeBuilder() {
+      $builder = new Builder();
+      $builder->table = self::getTableName();
+      $builder->order = self::getOrder();
+      return $builder;
    }
 
    /**
@@ -176,11 +183,12 @@ class Model {
       if(!self::$loaded) 
          self::loadColumns();
 
-      $pk   = self::$ignorecase ? strtolower(self::getPK()) : self::getPK();
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" where \"".self::getTableName()."\".\"".self::$mapping[$pk]."\"=? ".self::getOrder();
-      Log::log($sql);
+      $pk               = self::$ignorecase ? strtolower(self::getPK()) : self::getPK();
+      $builder          = self::makeBuilder();
+      $builder->where   = self::extractWhereConditions(array($pk=>$id));
+      $builder->limit   = 1;
       $cls  = get_called_class();
-      $stmt = self::executePrepared($sql,array($id));
+      $stmt = self::executePrepared($builder,array($id));
       $data = $stmt->fetch(\PDO::FETCH_ASSOC);
       if(!$data)
          return null;
@@ -195,9 +203,8 @@ class Model {
       if(!self::$loaded) 
          self::loadColumns();
 
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\"".self::getOrder();
-      Log::log($sql);
-      return new Collection(self::executePrepared($sql),get_called_class());
+      $builder = self::makeBuilder();
+      return new Collection($builder,null,get_called_class());
    }
 
    /**
@@ -210,17 +217,13 @@ class Model {
       if(!self::$loaded) 
          self::loadColumns();
 
-      $order      = $position=="first" ? self::getOrder() : self::getReversedOrder();
-      $where      = "";
-      $vals       = self::extractWhereValues($conditions);
-      $conditions = self::extractWhereConditions($conditions);
-      if(strlen($conditions)>0) 
-         $where = " where $conditions ";
+      $builder          = self::makeBuilder();
+      $builder->order   = $position=="first" ? self::getOrder() : self::getReversedOrder();
+      $builder->where   = self::extractWhereConditions($conditions);
+      $vals             = self::extractWhereValues($conditions);
       
-      $sql  = "select \"".self::getTableName()."\".* from \"".self::getTableName()."\" $where $order";
       $cls  = get_called_class();
-      Log::log($sql);
-      $stmt = self::executePrepared($sql,$vals);
+      $stmt = self::executePrepared($builder,$vals);
       $data = $stmt->fetch(\PDO::FETCH_ASSOC);
       if(!$data)
          return null;
@@ -336,9 +339,14 @@ class Model {
     * Try to get it from cache.
     * @return object statement
     */
-   public static function executePrepared($sql,$values=array()) {
+   public static function executePrepared($obj,$values=array()) {
       if(!self::$loaded)
          self::loadColumns();
+
+      if(!is_string($obj) && get_class($obj)=="TORM\Builder")
+         $sql = $obj->toString();
+      if(is_string($obj))
+         $sql = $obj;
 
       $stmt = self::putCache($sql);
       $stmt->execute($values);
@@ -403,6 +411,8 @@ class Model {
       if(array_key_exists($md5,self::$prepared_cache)) {
          Log::log("already prepared: $sql");
          return self::$prepared_cache[$md5];
+      } else {
+         Log::log("inserting on cache: $sql");
       }
       $prepared = self::resolveConnection()->prepare($sql);
       self::$prepared_cache[$md5] = $prepared;
