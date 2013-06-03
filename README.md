@@ -111,6 +111,26 @@ With methods that returns `Collection`, we can use a fluent operation like this 
 
 The `order` clause overwrite the default one.
 
+### Has many
+
+We can use has many this way:
+
+    <?php
+        User::hasMany("tickets");
+        $user = User::find(1);
+        foreach($user->tickets() as $ticket)
+            echo "ticket number ".$ticket->id."\n";
+    ?>
+
+The user model will search the user who satisfies the condition (with `find(1)`), return it to the `$user` variable, where we can ask for the `tickets` collection. The `User` model search for a class with the same name as the relation (`tickets`) and remove the final "s" to get the class name (hey, we don't have pluralization, remember?). If we want to specify the correct class name, we can use:
+
+    <?php
+        User::hasMany("tickets",array("class_name"=>"Ticket"));
+    ?>
+
+To load results from `Ticket`, is searched on the `tickets` table an attribute with the name of the current class (`User`), using lower case (if ignoring case), with `_id` append on the end, on this case, `user_id`, and loaded all the tickets with the current `User` primary key value, on this case, `id`. 
+
+
 # Log
 
 You can enable log messages with:
