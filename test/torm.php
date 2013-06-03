@@ -1,6 +1,7 @@
 <?php
    include "../torm.php";
    include "../models/user.php";
+   include "../models/ticket.php";
 
    class TormTest extends PHPUnit_Framework_TestCase {
       protected static $con  = null;
@@ -179,6 +180,11 @@
          $user  = $users->next();
          $this->assertNotNull($user);
          $this->assertEquals("taq@bluefish.com.br",$user->email);
+      }
+
+      public function testHasMany() {
+         $tickets = User::tickets();
+         $this->assertNotNull($tickets);
       }
    }
 ?>

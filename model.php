@@ -3,7 +3,7 @@ namespace TORM;
 
 class Model {
    public  static $connection  = null;
-   public  static $table_name  = null;
+   public  static $table_name  = array();
    public  static $order       = null;
    public  static $pk          = "id";
    public  static $strings     = array();
@@ -12,8 +12,10 @@ class Model {
    public  static $mapping     = array();
    public  static $loaded      = false;
    public  static $builder     = false;
-   private static $prepared_cache = array();
-   private static $validations    = array();
+
+   protected static $prepared_cache = array();
+   private   static $validations    = array();
+   private   static $has_many       = array();
 
    private $data        = array();
    private $new_rec     = false;
@@ -64,13 +66,19 @@ class Model {
       return $values;
    }
 
+   public static function setTableName($table_name) {
+      $cls = get_called_class();
+      self::$table_name[$cls] = $table_name;
+   }
+
    /**
     * Returns the table name.
     * If not specified one, get the current class name and appends a "s" to it.
     * @return string table name
     */
    public static function getTableName() {
-      return self::$table_name ? self::$table_name : get_called_class()."s";
+      $cls = get_called_class();
+      return array_key_exists($cls,self::$table_name) ? self::$table_name[$cls] : get_called_class()."s";
    }
 
    /**
@@ -358,10 +366,11 @@ class Model {
     */
    public function isValid() {
       $this->errors = array();
+      $cls = get_called_class();
       $rtn = true;
       $pk  = self::get(self::getPK());
 
-      foreach(self::$validations as $attr=>$validations) {
+      foreach(self::$validations[$cls] as $attr=>$validations) {
          $value = $this->data[$attr];
 
          foreach($validations as $validation) {
@@ -397,9 +406,36 @@ class Model {
    }
 
    public static function validates($attr,$validation) {
-      if(!array_key_exists($attr,self::$validations))
-         self::$validations[$attr] = array();
-      array_push(self::$validations[$attr],$validation);
+      $cls = get_called_class();
+
+      // bummer! need to verify the calling class
+      if(!array_key_exists($cls,self::$validations))
+         self::$validations[$cls] = array();
+
+      if(!array_key_exists($attr,self::$validations[$cls]))
+         self::$validations[$cls][$attr] = array();
+
+      array_push(self::$validations[$cls][$attr],$validation);
+   }
+
+   /**
+    * Create a has many relationship
+    * @param $attr attribute
+    */
+   public static function hasMany($attr,$options=null) {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$has_many))
+         self::$has_many[$cls] = array();
+      print "has many $attr on $cls ...\n";
+      self::$has_many[$cls][$attr] = $options;
+   }
+
+   private static function resolveHasMany($attr) {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$has_many) ||
+         !array_key_exists($attr,self::$has_many[$cls]))
+         return null;
+      return self::$has_many[$cls][$attr];
    }
 
    /**
@@ -436,13 +472,24 @@ class Model {
     * $user->name("john doe");
     * print $user->name();
     */
-   function __call($method,$args) {
+   public function __call($method,$args) {
+      $cls = get_called_class();
       if(method_exists($this,$method)) 
          return call_user_func_array(array($this,$method),$args);
-      if(!$args)
+
+      if(!$args) {
          return $this->data[$method];
-      else
+      } else
          $this->data[$method] = $args[0];
+   }
+
+   public static function __callStatic($method,$args) {
+      $cls = get_called_class();
+      print "checking $method on $cls ...\n";
+
+      if(array_key_exists($cls   ,self::$has_many) &&
+         array_key_exists($method,self::$has_many[$cls]))
+         return self::resolveHasMany($method);
    }
 
    /**

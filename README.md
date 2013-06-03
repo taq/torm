@@ -68,11 +68,9 @@ include them and use like
         $user->save();
     ?>
 
-### Models attributes
+### Models methods
 
-You can set the following attributes:
-
-1. **table_name** - The default behaviour is use the name of the current class
+1. **setTableName** - The default behaviour is use the name of the current class
    with a 's' on the end (all right, lacks a lot of pluralization but we're
    starting simple). Change to the table name you want.
 2. **order** - Default sort order.
