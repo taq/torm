@@ -6,7 +6,6 @@ class Model {
    private static $table_name  = array();
    private static $order       = array();
    private static $pk          = array();
-   public  static $strings     = array();
    public  static $columns     = array();
    public  static $ignorecase  = true;
    public  static $mapping     = array();
