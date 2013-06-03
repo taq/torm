@@ -11,9 +11,9 @@ class Model {
    private static $mapping     = array();
    private static $loaded      = array();
 
-   protected static $prepared_cache = array();
-   private   static $validations    = array();
-   private   static $has_many       = array();
+   private static $prepared_cache = array();
+   private static $validations    = array();
+   private static $has_many       = array();
 
    private $data        = array();
    private $new_rec     = false;
