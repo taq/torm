@@ -118,7 +118,7 @@ We can use has many this way:
     <?php
         User::hasMany("tickets");
         $user = User::find(1);
-        foreach($user->tickets() as $ticket)
+        foreach($user->tickets as $ticket)
             echo "ticket number ".$ticket->id."\n";
     ?>
 

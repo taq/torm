@@ -503,6 +503,13 @@ class Model {
       return self::$prepared_cache[$md5];
    }
 
+   private static function checkAndReturnMany($method,$value) {
+      $cls = get_called_class();
+      if(array_key_exists($cls   ,self::$has_many) &&
+         array_key_exists($method,self::$has_many[$cls]))
+         return self::resolveHasMany($method,$value);
+   }
+
    /**
     * Trigger to use object values as methods
     * Like
@@ -510,13 +517,12 @@ class Model {
     * print $user->name();
     */
    public function __call($method,$args) {
-      $cls = get_called_class();
       if(method_exists($this,$method)) 
          return call_user_func_array(array($this,$method),$args);
 
-      if(array_key_exists($cls   ,self::$has_many) &&
-         array_key_exists($method,self::$has_many[$cls]))
-         return self::resolveHasMany($method,$this->data[self::getPK()]);
+      $many = self::checkAndReturnMany($method,$this->data[self::getPK()]);
+      if($many)
+         return $many;
 
       if(!$args) {
          return $this->data[$method];
@@ -530,6 +536,10 @@ class Model {
     * print $user->name;
     */
    function __get($attr) {
+      $many = self::checkAndReturnMany($attr,$this->data[self::getPK()]);
+      if($many)
+         return $many;
+
       return $this->data[$attr];
    }
 

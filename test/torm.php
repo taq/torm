@@ -184,11 +184,16 @@
 
       public function testHasMany() {
          $user    = User::find(1);
-         $tickets = $user->tickets();
+         $tickets = $user->tickets;
          $this->assertNotNull($tickets);
          echo "\ntickets:\n";
          foreach($tickets as $ticket)
             echo "ticket: ".$ticket->id." ".$ticket->description."\n";
+      }
+
+      public function testBelongs() {
+         $ticket = Ticket::first();
+         $this->assertNotNull($ticket);
       }
    }
 ?>
