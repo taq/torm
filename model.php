@@ -58,7 +58,7 @@ class Model {
    public static function isIgnoringCase() {
       $cls = get_called_class();
       if(!array_key_exists($cls,self::$ignorecase))
-         return false;
+         return true;
       return self::$ignorecase[$cls];
    }
 
