@@ -39,8 +39,7 @@ class Model {
          if(preg_match("/^\d+$/",$key))
             continue;
          $keyr = $key;
-         if(array_key_exists($cls,self::$ignorecase) &&
-            self::$ignorecase[$cls]) {
+         if(self::isIgnoringCase()) {
             $keyr = strtolower($key);
             $data[$keyr] = $value;
             if($keyr!=$key)
