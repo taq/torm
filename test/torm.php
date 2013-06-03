@@ -183,7 +183,8 @@
       }
 
       public function testHasMany() {
-         $tickets = User::tickets();
+         $user    = User::find(1);
+         $tickets = $user->tickets();
          $this->assertNotNull($tickets);
       }
    }

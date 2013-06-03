@@ -509,19 +509,14 @@ class Model {
       if(method_exists($this,$method)) 
          return call_user_func_array(array($this,$method),$args);
 
+      if(array_key_exists($cls   ,self::$has_many) &&
+         array_key_exists($method,self::$has_many[$cls]))
+         return self::resolveHasMany($method);
+
       if(!$args) {
          return $this->data[$method];
       } else
          $this->data[$method] = $args[0];
-   }
-
-   public static function __callStatic($method,$args) {
-      $cls = get_called_class();
-      print "checking $method on $cls ...\n";
-
-      if(array_key_exists($cls   ,self::$has_many) &&
-         array_key_exists($method,self::$has_many[$cls]))
-         return self::resolveHasMany($method);
    }
 
    /**
