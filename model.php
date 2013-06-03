@@ -7,7 +7,7 @@ class Model {
    private static $order       = array();
    private static $pk          = array();
    private static $columns     = array();
-   public  static $ignorecase  = true;
+   private static $ignorecase  = array();
    public  static $mapping     = array();
    public  static $loaded      = false;
 
@@ -34,12 +34,14 @@ class Model {
          $this->data = self::loadNullValues();
          return;
       }
+      $cls = get_called_class();
 
       foreach($data as $key=>$value) {
          if(preg_match("/^\d+$/",$key))
             continue;
          $keyr = $key;
-         if(self::$ignorecase) {
+         if(array_key_exists($cls,self::$ignorecase) &&
+            self::$ignorecase[$cls]) {
             $keyr = strtolower($key);
             $data[$keyr] = $value;
             if($keyr!=$key)
@@ -49,6 +51,13 @@ class Model {
             self::$mapping[$key] = $keyr;
       }
       $this->data = $data;
+   }
+
+   public static function isIgnoringCase() {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$ignorecase))
+         return false;
+      return self::$ignorecase[$cls];
    }
 
    /**
@@ -63,7 +72,7 @@ class Model {
          return null;
 
       foreach(self::$columns[$cls] as $column) {
-         $name = self::$ignorecase ? strtolower($column) : $column;
+         $name = self::isIgnoringCase() ? strtolower($column) : $column;
          $values[$column] = null;
       }
       return $values;
@@ -144,7 +153,7 @@ class Model {
       $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
       foreach($keys as $key) {
-         $keyc = self::$ignorecase ? strtolower($key) : $key;
+         $keyc = self::isIgnoringCase() ? strtolower($key) : $key;
          array_push(self::$columns[$cls],$keyc);
          self::$mapping[$keyc] = $key;
       }
@@ -208,7 +217,7 @@ class Model {
       if(!self::$loaded) 
          self::loadColumns();
 
-      $pk               = self::$ignorecase ? strtolower(self::getPK()) : self::getPK();
+      $pk               = self::isIgnoringCase() ? strtolower(self::getPK()) : self::getPK();
       $builder          = self::makeBuilder();
       $builder->where   = self::extractWhereConditions(array($pk=>$id));
       $builder->limit   = 1;
@@ -302,7 +311,7 @@ class Model {
          self::loadColumns();
 
       $calling    = get_called_class();
-      $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
+      $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
       $sql        = null;
       $attrs      = $this->data;
@@ -352,7 +361,7 @@ class Model {
 
       $calling    = get_called_class();
       $table_name = $calling::getTableName();
-      $pk         = $calling::$ignorecase ? strtolower($calling::getPK()) : $calling::getPK();
+      $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
       $sql        = "delete from \"$table_name\" where \"$table_name\".\"".self::$mapping[$pk]."\"=?";
       Log::log($sql);
