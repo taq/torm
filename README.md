@@ -51,7 +51,7 @@ Define your models where you want like
 
     <?php
         class User extends TORM\Model {};
-        User::$order = "name";
+        User::setOrder("name");
     ?>
 
 include them and use like
@@ -74,8 +74,8 @@ include them and use like
    with a 's' on the end (all right, lacks a lot of pluralization but we're
    starting simple). Change to the table name you want.
 2. **setOrder(order)** - Default sort order.
-3. **pk** - Primary key column. Defaults to `id`.
-4. **ignorecase** - Process all columns as lower case. Defaults to `true`.
+3. **setPK(pk)** - Primary key column. Defaults to `id`.
+4. **setIgnoreCase(boolean)** - Process all columns as lower case. Defaults to `true`.
 
 ### Validations
 
