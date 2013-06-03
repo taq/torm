@@ -9,7 +9,7 @@ class Model {
    private static $columns     = array();
    private static $ignorecase  = array();
    private static $mapping     = array();
-   public  static $loaded      = false;
+   private static $loaded      = array();
 
    protected static $prepared_cache = array();
    private   static $validations    = array();
@@ -26,15 +26,14 @@ class Model {
     * @package TORM
     */
    public function __construct($data=null) {
-      if(!self::$loaded) 
-         self::loadColumns();
+      $cls = get_called_class();
+      self::checkLoaded();
 
       if($data==null) {
          $this->new_rec = true;
          $this->data = self::loadNullValues();
          return;
       }
-      $cls = get_called_class();
 
       foreach($data as $key=>$value) {
          if(preg_match("/^\d+$/",$key))
@@ -160,7 +159,7 @@ class Model {
          array_push(self::$columns[$cls],$keyc);
          self::$mapping[$cls][$keyc] = $key;
       }
-      self::$loaded = true;
+      self::$loaded[$cls] = true;
    }
 
    private static function extractWhereConditions($conditions) {
@@ -196,8 +195,7 @@ class Model {
     * @return Collection of results
     */
    public static function where($conditions) {
-      if(!self::$loaded) 
-         self::loadColumns();
+      self::checkLoaded();
 
       $builder          = self::makeBuilder();
       $builder->where   = self::extractWhereConditions($conditions);
@@ -218,8 +216,7 @@ class Model {
     * @return object result
     */
    public static function find($id) {
-      if(!self::$loaded) 
-         self::loadColumns();
+      self::checkLoaded();
 
       $pk               = self::isIgnoringCase() ? strtolower(self::getPK()) : self::getPK();
       $builder          = self::makeBuilder();
@@ -238,8 +235,7 @@ class Model {
     * @return Collection values
     */
    public static function all() {
-      if(!self::$loaded) 
-         self::loadColumns();
+      self::checkLoaded();
 
       $builder = self::makeBuilder();
       return new Collection($builder,null,get_called_class());
@@ -252,8 +248,7 @@ class Model {
     * @return result or null
     */
    private static function getByPosition($position,$conditions=null) {
-      if(!self::$loaded) 
-         self::loadColumns();
+      self::checkLoaded();
 
       $builder          = self::makeBuilder();
       $builder->order   = $position=="first" ? self::getOrder() : self::getReversedOrder();
@@ -302,6 +297,14 @@ class Model {
    public function getData() {
       return $this->data;
    }
+
+   private function checkLoaded() {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$loaded))
+         self::$loaded[$cls] = false;
+      if(!self::$loaded[$cls])
+         self::loadColumns();
+   } 
 
    /**
     * Save or update currenct object
