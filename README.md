@@ -70,10 +70,10 @@ include them and use like
 
 ### Models methods
 
-1. **setTableName** - The default behaviour is use the name of the current class
+1. **setTableName(order)** - The default behaviour is use the name of the current class
    with a 's' on the end (all right, lacks a lot of pluralization but we're
    starting simple). Change to the table name you want.
-2. **order** - Default sort order.
+2. **setOrder(order)** - Default sort order.
 3. **pk** - Primary key column. Defaults to `id`.
 4. **ignorecase** - Process all columns as lower case. Defaults to `true`.
 

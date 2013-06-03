@@ -4,7 +4,7 @@ namespace TORM;
 class Model {
    public  static $connection  = null;
    public  static $table_name  = array();
-   public  static $order       = null;
+   public  static $order       = array();
    public  static $pk          = "id";
    public  static $strings     = array();
    public  static $columns     = array();
@@ -89,13 +89,19 @@ class Model {
       return self::$pk;
    }
 
+   public static function setOrder($order) {
+      $cls = get_called_class();
+      self::$order[$cls] = $order;
+   }
+
    /**
     * Returns the default order.
     * If not specified, returns an empty string.
     * @return string order
     */
    public static function getOrder() {
-      return self::$order ? self::$order : "";
+      $cls = get_called_class();
+      return array_key_exists($cls,self::$order) ? self::$order[$cls] : "";
    }
 
    /**
@@ -104,9 +110,9 @@ class Model {
     * @return string order
     */
    public static function getReversedOrder() {
-      $sort = preg_match("/desc/i",self::$order);
+      $sort = preg_match("/desc/i",self::getOrder());
       $sort = $sort ? " ASC " : " DESC ";
-      return self::$order ? self::$order." $sort" : "";
+      return self::getOrder() ? self::getOrder()." $sort" : "";
    }
 
    /**
