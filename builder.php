@@ -14,9 +14,19 @@ class Builder {
          array_push($array," where ".$this->where);
       if($this->order)
          array_push($array," order by ".$this->order);
-      if($this->limit)
+      if($this->limit && Driver::$limit_behaviour==Driver::LIMIT_APPEND)
          array_push($array," limit ".$this->limit);
-      return join(" ",$array);
+
+      // basic query
+      $query = join(" ",$array);
+
+      if($this->limit && 
+         Driver::$limit_behaviour==Driver::LIMIT_AROUND &&
+         Driver::$limit_query) {
+         $query = str_replace("%query%",$query,Driver::$limit_query);
+         $query = str_replace("%limit%",$this->limit,$query);
+      }
+      return $query;
    }
 
    public function __toString() {
