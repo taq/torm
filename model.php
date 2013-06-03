@@ -459,15 +459,20 @@ class Model {
       if(!array_key_exists($cls,self::$has_many))
          self::$has_many[$cls] = array();
       print "has many $attr on $cls ...\n";
-      self::$has_many[$cls][$attr] = $options;
+      self::$has_many[$cls][$attr] = $options ? $options : false;
    }
 
-   private static function resolveHasMany($attr) {
+   private static function resolveHasMany($attr,$value) {
       $cls = get_called_class();
       if(!array_key_exists($cls,self::$has_many) ||
          !array_key_exists($attr,self::$has_many[$cls]))
          return null;
-      return self::$has_many[$cls][$attr];
+
+      $configs       = self::$has_many[$cls][$attr];
+      $has_many_cls  = is_array($configs) && array_key_exists("class_name",$configs) ? $configs["class_name"] : ucfirst(preg_replace('/s$/',"",$attr));
+      $this_key      = self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id";
+      $collection    = $has_many_cls::where(array($this_key=>$value));
+      return $collection;
    }
 
    /**
@@ -511,7 +516,7 @@ class Model {
 
       if(array_key_exists($cls   ,self::$has_many) &&
          array_key_exists($method,self::$has_many[$cls]))
-         return self::resolveHasMany($method);
+         return self::resolveHasMany($method,$this->data[self::getPK()]);
 
       if(!$args) {
          return $this->data[$method];
