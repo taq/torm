@@ -194,6 +194,9 @@
       public function testBelongs() {
          $ticket = Ticket::first();
          $this->assertNotNull($ticket);
+         $user = $ticket->user;
+         $this->assertNotNull($user);
+         echo "user on belongs: ".$user->name."\n";
       }
    }
 ?>

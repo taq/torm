@@ -130,6 +130,18 @@ The user model will search the user who satisfies the condition (with `find(1)`)
 
 To load results from `Ticket`, is searched on the `tickets` table an attribute with the name of the current class (`User`), using lower case (if ignoring case), with `_id` append on the end, on this case, `user_id`, and loaded all the tickets with the current `User` primary key value, on this case, `id`. 
 
+### Belongs to
+
+We can use `belongs to` this way:
+
+    <?php
+        Ticket::belongsTo("user");
+        $ticket = Ticket::first();
+        $user   = $ticket->user;
+        echo $user->name;
+    ?>
+    
+The same rules as has many are working, for class "pluralization" (you know what I mean), on the case above, `Ticket` will search for the current `user_id` attribute on the `id` attribute on table `users`.
 
 # Log
 

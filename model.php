@@ -14,6 +14,7 @@ class Model {
    private static $prepared_cache = array();
    private static $validations    = array();
    private static $has_many       = array();
+   private static $belongs_to     = array();
 
    private $data        = array();
    private $new_rec     = false;
@@ -458,10 +459,28 @@ class Model {
       $cls = get_called_class();
       if(!array_key_exists($cls,self::$has_many))
          self::$has_many[$cls] = array();
-      print "has many $attr on $cls ...\n";
       self::$has_many[$cls][$attr] = $options ? $options : false;
    }
 
+   /**
+    * Check a has many relationship and returns it resolved, if exists.
+    * @param $method name
+    * @param $value  
+    * @return has many collection, if any
+    */
+   private static function checkAndReturnMany($method,$value) {
+      $cls = get_called_class();
+      if(array_key_exists($cls   ,self::$has_many) &&
+         array_key_exists($method,self::$has_many[$cls]))
+         return self::resolveHasMany($method,$value);
+   }
+
+   /**
+    * Resolve the has many relationship and returns the collection with values
+    * @param $attr name
+    * @param $value
+    * @return collection
+    */
    private static function resolveHasMany($attr,$value) {
       $cls = get_called_class();
       if(!array_key_exists($cls,self::$has_many) ||
@@ -473,6 +492,37 @@ class Model {
       $this_key      = self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id";
       $collection    = $has_many_cls::where(array($this_key=>$value));
       return $collection;
+   }
+
+   /**
+    * Create a belongs relationship
+    * @param $attr attribute
+    * @param $options options for relation
+    */
+   public static function belongsTo($model,$options=null) {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$belongs_to))
+         self::$belongs_to[$cls] = array();
+      self::$belongs_to[$cls][$model] = $options ? $options : false;
+   }
+
+   private static function checkAndReturnBelongs($method,$value) {
+      $cls = get_called_class();
+      if(array_key_exists($cls   ,self::$belongs_to) &&
+         array_key_exists($method,self::$belongs_to[$cls]))
+         return self::resolveBelongsTo($method,$value);
+   }
+
+   private static function resolveBelongsTo($attr,$value) {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$belongs_to) ||
+         !array_key_exists($attr,self::$belongs_to[$cls]))
+         return null;
+
+      $configs       = self::$belongs_to[$cls][$attr];
+      $belongs_cls   = is_array($configs) && array_key_exists("class_name",$configs) ? $configs["class_name"] : ucfirst($attr);
+      $obj           = $belongs_cls::first(array("id"=>$value));
+      return $obj;
    }
 
    /**
@@ -503,13 +553,6 @@ class Model {
       return self::$prepared_cache[$md5];
    }
 
-   private static function checkAndReturnMany($method,$value) {
-      $cls = get_called_class();
-      if(array_key_exists($cls   ,self::$has_many) &&
-         array_key_exists($method,self::$has_many[$cls]))
-         return self::resolveHasMany($method,$value);
-   }
-
    /**
     * Trigger to use object values as methods
     * Like
@@ -523,6 +566,10 @@ class Model {
       $many = self::checkAndReturnMany($method,$this->data[self::getPK()]);
       if($many)
          return $many;
+
+      $belongs = self::checkAndReturnBelongs($method,$this->data[self::getPK()]);
+      if($belongs)
+         return $belongs;
 
       if(!$args) {
          return $this->data[$method];
@@ -539,6 +586,10 @@ class Model {
       $many = self::checkAndReturnMany($attr,$this->data[self::getPK()]);
       if($many)
          return $many;
+
+      $belongs = self::checkAndReturnBelongs($attr,$this->data[self::getPK()]);
+      if($belongs)
+         return $belongs;
 
       return $this->data[$attr];
    }
