@@ -10,7 +10,6 @@ class Model {
    public  static $ignorecase  = true;
    public  static $mapping     = array();
    public  static $loaded      = false;
-   public  static $builder     = false;
 
    protected static $prepared_cache = array();
    private   static $validations    = array();
