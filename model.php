@@ -3,9 +3,9 @@ namespace TORM;
 
 class Model {
    public  static $connection  = null;
-   public  static $table_name  = array();
-   public  static $order       = array();
-   public  static $pk          = "id";
+   private static $table_name  = array();
+   private static $order       = array();
+   private static $pk          = array();
    public  static $strings     = array();
    public  static $columns     = array();
    public  static $ignorecase  = true;
@@ -81,12 +81,18 @@ class Model {
       return array_key_exists($cls,self::$table_name) ? self::$table_name[$cls] : get_called_class()."s";
    }
 
+   public static function setPK($pk) {
+      $cls = get_called_class();
+      self::$pk[$cls] = $pk;
+   }
+
    /**
     * Returns the primary key column.
     * @return string primary key
     */
    public static function getPK() {
-      return self::$pk;
+      $cls = get_called_class();
+      return array_key_exists($cls,self::$pk) ? $self::$pk[$cls] : "id";
    }
 
    public static function setOrder($order) {
