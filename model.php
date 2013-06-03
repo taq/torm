@@ -8,7 +8,7 @@ class Model {
    private static $pk          = array();
    private static $columns     = array();
    private static $ignorecase  = array();
-   public  static $mapping     = array();
+   private static $mapping     = array();
    public  static $loaded      = false;
 
    protected static $prepared_cache = array();
@@ -47,8 +47,11 @@ class Model {
             if($keyr!=$key)
                unset($data[$key]);
          }
-         if(!array_key_exists($keyr,self::$mapping))
-            self::$mapping[$key] = $keyr;
+         if(!array_key_exists($cls,self::$mapping))
+            self::$mapping[$cls] = array();
+
+         if(!array_key_exists($keyr,self::$mapping[$cls]))
+            self::$mapping[$cls][$key] = $keyr;
       }
       $this->data = $data;
    }
@@ -155,7 +158,7 @@ class Model {
       foreach($keys as $key) {
          $keyc = self::isIgnoringCase() ? strtolower($key) : $key;
          array_push(self::$columns[$cls],$keyc);
-         self::$mapping[$keyc] = $key;
+         self::$mapping[$cls][$keyc] = $key;
       }
       self::$loaded = true;
    }
@@ -164,10 +167,11 @@ class Model {
       if(!$conditions)
          return "";
 
+      $cls = get_called_class();
       if(is_array($conditions)) {
          $temp_cond = "";
          foreach($conditions as $key=>$value)
-            $temp_cond .= "\"".self::getTableName()."\".\"".self::$mapping[$key]."\"=? and ";
+            $temp_cond .= "\"".self::getTableName()."\".\"".self::$mapping[$cls][$key]."\"=? and ";
          $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
          $conditions = $temp_cond;
       }
@@ -326,7 +330,7 @@ class Model {
 
          $marks = join(",",array_fill(0,sizeof($attrs),"?"));
          foreach($attrs as $attr=>$value) 
-            $sql .= "\"".$calling::$mapping[$attr]."\",";
+            $sql .= "\"".self::$mapping[$calling][$attr]."\",";
          $sql  = substr($sql,0,strlen($sql)-1);
          $sql .= ") values ($marks)";
 
@@ -339,7 +343,7 @@ class Model {
          foreach($attrs as $attr=>$value) {
             if(strlen(trim($value))<1)
                $value = "null";
-            $sql .= "\"".$calling::$mapping[$attr]."\"=?,";
+            $sql .= "\"".self::$mapping[$calling][$attr]."\"=?,";
             array_push($vals,$value);
          }
          $sql  = substr($sql,0,strlen($sql)-1);
@@ -363,7 +367,7 @@ class Model {
       $table_name = $calling::getTableName();
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
-      $sql        = "delete from \"$table_name\" where \"$table_name\".\"".self::$mapping[$pk]."\"=?";
+      $sql        = "delete from \"$table_name\" where \"$table_name\".\"".self::$mapping[$calling][$pk]."\"=?";
       Log::log($sql);
       return self::executePrepared($sql,array($pk_value))->rowCount()==1;
    }
