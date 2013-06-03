@@ -106,7 +106,7 @@ class Model {
     */
    public static function getPK() {
       $cls = get_called_class();
-      return array_key_exists($cls,self::$pk) ? $self::$pk[$cls] : "id";
+      return array_key_exists($cls,self::$pk) ? self::$pk[$cls] : "id";
    }
 
    public static function setOrder($order) {
