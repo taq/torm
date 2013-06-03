@@ -6,7 +6,7 @@ class Model {
    private static $table_name  = array();
    private static $order       = array();
    private static $pk          = array();
-   public  static $columns     = array();
+   private static $columns     = array();
    public  static $ignorecase  = true;
    public  static $mapping     = array();
    public  static $loaded      = false;
@@ -58,7 +58,12 @@ class Model {
     */
    private static function loadNullValues() {
       $values = array();
-      foreach(self::$columns as $column) {
+      $cls    = get_called_class();
+
+      if(!array_key_exists($cls,self::$columns))
+         return null;
+
+      foreach(self::$columns[$cls] as $column) {
          $name = self::$ignorecase ? strtolower($column) : $column;
          $values[$column] = null;
       }
@@ -133,13 +138,15 @@ class Model {
     * Load column info
     */
    private static function loadColumns() {
-      self::$columns = array();
+      $cls = get_called_class();
+      self::$columns[$cls] = array();
+
       $rst  = self::resolveConnection()->query("select \"".self::getTableName()."\".* from \"".self::getTableName()."\"");
       $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
       foreach($keys as $key) {
          $keyc = self::$ignorecase ? strtolower($key) : $key;
-         array_push(self::$columns,$keyc);
+         array_push(self::$columns[$cls],$keyc);
          self::$mapping[$keyc] = $key;
       }
       self::$loaded = true;
