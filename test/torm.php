@@ -198,5 +198,27 @@
          $this->assertNotNull($user);
          echo "user on belongs: ".$user->name."\n";
       }
+
+      public function testCheckEmptySequence() {
+         $this->assertEquals(null,User::resolveSequenceName());
+      }
+
+      public function testDefaultSequence() {
+         $old = TORM\Driver::$primary_key_behaviour;
+         TORM\Driver::$primary_key_behaviour = TORM\Driver::PRIMARY_KEY_SEQUENCE;
+         $name = User::resolveSequenceName();
+         $this->assertEquals("users_sequence",User::resolveSequenceName());
+         TORM\Driver::$primary_key_behaviour = $old;
+      }
+
+      public function testNamedSequence() {
+         $old = TORM\Driver::$primary_key_behaviour;
+         TORM\Driver::$primary_key_behaviour = TORM\Driver::PRIMARY_KEY_SEQUENCE;
+         $test = "yadda_sequence";
+         User::setSequenceName($test);
+         $name = User::resolveSequenceName();
+         $this->assertEquals($test,User::resolveSequenceName());
+         TORM\Driver::$primary_key_behaviour = $old;
+      }
    }
 ?>

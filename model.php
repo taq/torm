@@ -15,6 +15,7 @@ class Model {
    private static $validations    = array();
    private static $has_many       = array();
    private static $belongs_to     = array();
+   private static $sequence       = array();
 
    private $data        = array();
    private $new_rec     = false;
@@ -523,6 +524,42 @@ class Model {
       $belongs_cls   = is_array($configs) && array_key_exists("class_name",$configs) ? $configs["class_name"] : ucfirst($attr);
       $obj           = $belongs_cls::first(array("id"=>$value));
       return $obj;
+   }
+
+   /**
+    * Set the sequence name, if any
+    * @param $name of the sequence
+    */
+   public static function setSequenceName($name) {
+      $cls = get_called_class();
+      self::$sequence[$cls] = $name;
+   }
+
+   /**
+    * Returns the sequence name, if any
+    * @return $name of the sequence
+    */
+   public static function getSequenceName() {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$sequence))
+         return null;
+      return self::$sequence[$cls];
+   }
+
+   /**
+    * Resolve the sequence name, if any
+    * @returns $name of the sequence
+    */
+   public static function resolveSequenceName() {
+      if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
+         return null;
+
+      $suffix  = "_sequence";
+      $table   = strtolower(self::getTableName());
+      $name    = self::getSequenceName();
+      if($name) 
+         return $name;
+      return $table.$suffix;
    }
 
    /**

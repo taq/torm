@@ -6,6 +6,7 @@ class Driver {
    const PRIMARY_KEY_STRING   = 2;
    const PRIMARY_KEY_EXECUTE  = 3;
    const PRIMARY_KEY_EVAL     = 4;
+   const PRIMARY_KEY_SEQUENCE = 5;
 
    const LIMIT_APPEND         = 11;
    const LIMIT_AROUND         = 12;
