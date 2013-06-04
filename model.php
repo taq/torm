@@ -332,6 +332,15 @@ class Model {
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_DELETE)
             unset($attrs[$calling::getPK()]);
 
+         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE) {
+            $attrs[$calling::getPK()] = self::getSequenceName().".nextval";
+            self::checkSequence();
+            if(!self::sequenceExists()) {
+               $this->addError($pk,"Sequence ".self::getSequenceName()." could not be created");
+               return false;
+            }
+         }
+
          $marks = join(",",array_fill(0,sizeof($attrs),"?"));
          foreach($attrs as $attr=>$value) 
             $sql .= "\"".self::$mapping[$calling][$attr]."\",";
@@ -396,10 +405,28 @@ class Model {
    }
 
    /**
+    * Add an error to an attribute
+    * @param $attr attribute
+    * @param $msg  message
+    */
+   private function addError($attr,$msg) {
+      if(!array_key_exists($attr,$this->errors))
+         $this->errors[$attr] = array();
+      array_push($this->errors[$attr],$msg);
+   }
+
+   /**
+    * Reset errors
+    */
+   private function resetErrors() {
+      $this->errors = array();
+   }
+
+   /**
     * Check if is valid
     */
    public function isValid() {
-      $this->errors = array();
+      $this->resetErrors();
       $cls = get_called_class();
       $rtn = true;
       $pk  = self::get(self::getPK());
@@ -416,9 +443,7 @@ class Model {
             $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
             if(!$test) {
                $rtn = false;
-               if(!array_key_exists($attr,$this->errors))
-                  $this->errors[$attr] = array();
-               array_push($this->errors[$attr],Validation::$validation_map[$validation_key]);
+               $this->addError($attr,Validation::$validation_map[$validation_key]);
             }
          }
       }
@@ -560,6 +585,33 @@ class Model {
       if($name) 
          return $name;
       return $table.$suffix;
+   }
+
+   private static function sequenceExists() {
+      if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
+         return null;
+
+      $name = self::resolveSequenceName();
+      $sql  = "select count(*) as \"CNT\" from user_sequences where sequence_name='$name'";
+      $stmt = self::resolveConnection()->query($sql);
+      $rst  = $stmt->fetch(\PDO::FETCH_ASSOC);
+      return intval($rst["CNT"])>0;
+   }
+
+   /**
+    * Check if sequence exists
+    * If not, create it.
+    */
+   private static function checkSequence() {
+      if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
+         return null;
+
+      if(self::sequenceExists())
+         return;
+
+      // create sequence
+      $sql  = "create sequence $name increment by 1 start with 1 nocycle nocache";
+      $stmt = self::resolveConnection()->query($sql);
    }
 
    /**

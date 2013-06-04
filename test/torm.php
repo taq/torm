@@ -105,6 +105,7 @@
          $user->name    = "John Doe";
          $user->email   = "john@doe.com";
          $user->level   = 1;
+         $this->assertTrue($user->isValid());
          $this->assertTrue($user->save());
       }
 
@@ -115,6 +116,7 @@
          $user->save();
 
          $this->assertEquals("Doe, John",User::find($id)->name);
+         $this->assertTrue($user->isValid());
          $user->save();
       }
 
