@@ -3,7 +3,7 @@
    include "../models/user.php";
    include "../models/ticket.php";
 
-   class TormTest extends PHPUnit_Framework_TestCase {
+   class ModelTest extends PHPUnit_Framework_TestCase {
       protected static $con  = null;
       protected static $user = null;
 
