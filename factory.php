@@ -53,7 +53,11 @@ class Factory {
       return $data;
    }
 
-   public static function build($name) {
+   public static function create($name) {
+      return self::build($name,true);
+   }
+
+   public static function build($name,$create=false) {
       self::load();
       $data = self::attributes_for($name);
       if(!$data)
@@ -68,6 +72,11 @@ class Factory {
          $data[$pk] = time()+$pos;
 
       $obj = new $name($data);  
+      if($create) {
+         if(!$obj->isValid()) 
+            return null;
+         $obj->save();
+      }
       return $obj;
    }
 }
