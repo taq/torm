@@ -149,6 +149,9 @@ class Model {
     * Load column info
     */
    private static function loadColumns() {
+      if(!self::resolveConnection())
+         return;
+
       $cls = get_called_class();
       self::$columns[$cls] = array();
 
@@ -461,6 +464,8 @@ class Model {
    }
 
    public function get($attr) {
+      if(!$this->data || !array_key_exists($attr,$this->data))
+         return null;
       return $this->data[$attr];
    }
 
@@ -680,7 +685,7 @@ class Model {
       if($belongs)
          return $belongs;
 
-      return $this->data[$attr];
+      return $this->get($attr);
    }
 
    /**
