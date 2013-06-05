@@ -329,10 +329,15 @@ class Model {
       $rtn        = false;
       $vals       = array();
 
+      if($pk_value) {
+         $existing      = self::find($pk_value);
+         $this->new_rec = !$existing;
+      }
+
       if($this->new_rec) {
          $sql = "insert into \"".$calling::getTableName()."\" (";
 
-         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_DELETE)
+         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_DELETE && !$pk_value)
             unset($attrs[$calling::getPK()]);
 
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE) {
