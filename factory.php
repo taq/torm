@@ -45,9 +45,17 @@ class Factory {
       return self::$loaded;
    }
 
-   public static function build($name) {
+   public static function attributes_for($name) {
       self::load();
       $data = self::get($name);
+      if(!$data)
+         return null;
+      return $data;
+   }
+
+   public static function build($name) {
+      self::load();
+      $data = self::attributes_for($name);
       if(!$data)
          return null;
 

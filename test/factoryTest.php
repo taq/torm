@@ -21,5 +21,13 @@
          $this->assertEquals("Mary Doe",$user->name);
          $this->assertEquals("mary@doe.com",$user->email);
       }
+
+      public function testAttributes() {
+         $data = TORM\Factory::attributes_for("user");
+         $this->assertNotNull($data);
+         $this->assertTrue(is_array($data));
+         $this->assertEquals("Mary Doe",$data["name"]);
+         $this->assertEquals("mary@doe.com",$data["email"]);
+      }
    }
 ?>
