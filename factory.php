@@ -44,4 +44,22 @@ class Factory {
       self::$loaded = true;
       return self::$loaded;
    }
+
+   public static function build($name) {
+      self::load();
+      $data = self::get($name);
+      if(!$data)
+         return null;
+
+      $pos  = array_search($name,array_keys(self::$factories));
+      $name = ucfirst(strtolower($name));
+      $obj  = new $name();  
+      $pk   = $obj::getPK();
+   
+      if(!array_key_exists($pk,$data))
+         $data[$pk] = time()+$pos;
+
+      $obj = new $name($data);  
+      return $obj;
+   }
 }

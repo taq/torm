@@ -1,3 +1,3 @@
 <?php
-   TORM\Factory::define("user",array("name"=>"John Doe","email"=>"john@doe.com"));
+   TORM\Factory::define("user",array("name"=>"Mary Doe","email"=>"mary@doe.com"));
 ?>
