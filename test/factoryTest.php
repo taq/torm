@@ -11,9 +11,8 @@
          
          TORM\Connection::setConnection(self::$con,"test");
          TORM\Connection::setDriver("sqlite");
+         TORM\Factory::setFactoriesPath("./factories");
          TORM\Log::enable(false);
-
-         TORM\Factory::setFactoriesPath("../factories");
       }
 
       public function testGetFactories() {

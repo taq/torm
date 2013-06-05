@@ -1,6 +1,6 @@
 #!/bin/bash
 export TORM_ENV=test
-for file in $(find -iname '*.php' -type f)
+for file in $(find -maxdepth 1 -iname '*.php' -type f)
 do
    echo "running $file ..."
    phpunit $file

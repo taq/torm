@@ -7,13 +7,17 @@ class Factory {
    private static $loaded     = false;
 
    public static function setFactoriesPath($path) {
-      if(!self::$path)
-         self::$path = realpath(dirname(__FILE__)."/factories");
       self::$path = $path;
    }
 
    public static function getFactoriesPath() {
+      self::resolveDefaultPath();
       return self::$path;
+   }
+
+   private static function resolveDefaultPath() {
+      if(!self::$path)
+         self::$path = realpath(dirname(__FILE__)."/factories");
    }
 
    public static function factoriesCount() {
@@ -35,6 +39,7 @@ class Factory {
    public static function load($force=false) {
       if(!$force && self::$loaded)
          return false;
+      self::resolveDefaultPath();
 
       $files = glob(realpath(self::$path)."/*.php");
       foreach($files as $file) {
