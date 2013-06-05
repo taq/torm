@@ -1,7 +1,7 @@
 <?php
-   include "../torm.php";
-   include "../models/user.php";
-   include "../models/ticket.php";
+   include_once "../torm.php";
+   include_once "../models/user.php";
+   include_once "../models/ticket.php";
 
    class ModelTest extends PHPUnit_Framework_TestCase {
       protected static $con  = null;
