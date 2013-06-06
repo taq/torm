@@ -472,6 +472,9 @@ class Model {
       $rtn = true;
       $pk  = self::get(self::getPK());
 
+      if(sizeof(self::$validations[$cls])<1)
+         return;
+
       foreach(self::$validations[$cls] as $attr=>$validations) {
          $value = $this->data[$attr];
 
