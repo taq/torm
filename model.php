@@ -155,7 +155,15 @@ class Model {
       $cls = get_called_class();
       self::$columns[$cls] = array();
 
-      $rst  = self::resolveConnection()->query("select \"".self::getTableName()."\".* from \"".self::getTableName()."\"");
+      // try to create the TORM info table
+      $rst = self::resolveConnection()->query("create table torm_info (id number(1))");
+      $rst = self::resolveConnection()->query("select id from torm_info");
+      if(!$rst->fetch())
+         self::resolveConnection()->query("insert into torm_info values (1)");
+
+      // hack to dont need a query string to get columns
+      $sql  = "select \"".self::getTableName()."\".* from torm_info left outer join \"".self::getTableName()."\" on 1=1";
+      $rst  = self::resolveConnection()->query($sql);
       $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
       foreach($keys as $key) {
