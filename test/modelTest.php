@@ -234,5 +234,19 @@
          $this->assertEquals($test,User::resolveSequenceName());
          TORM\Driver::$primary_key_behaviour = $old;
       }
+
+      public function testCantChangeExistingPK() {
+         $user = User::find(1);
+         $old  = $user->id;
+         $user->id = 10;
+         $this->assertEquals($old,$user->id);
+      }
+
+      public function testCanChangeNewPK() {
+         $user = new User();
+         $new  = 10;
+         $user->id = $new;
+         $this->assertEquals($new,$user->id);
+      }
    }
 ?>

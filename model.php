@@ -510,6 +510,14 @@ class Model {
       return $this->data[$attr];
    }
 
+   public function set($attr,$value) {
+      $pk = self::getPK();
+      // can't change the primary key of an existing record
+      if(!$this->new_rec && $attr==$pk)
+         return;
+      $this->data[$attr] = $value;
+   }
+
    public static function validates($attr,$validation) {
       $cls = get_called_class();
 
@@ -708,10 +716,9 @@ class Model {
       if($belongs)
          return $belongs;
 
-      if(!$args) {
+      if(!$args) 
          return $this->data[$method];
-      } else
-         $this->data[$method] = $args[0];
+      $this->set($method,$args[0]);
    }
 
    /**
@@ -737,7 +744,7 @@ class Model {
     * $user->name = "john doe";
     */
    function __set($attr,$value) {
-      $this->data[$attr] = $value;
+      $this->set($attr,$value);
    }
 }
 ?>
