@@ -341,12 +341,14 @@ class Model {
             unset($attrs[$calling::getPK()]);
 
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE) {
-            $attrs[$calling::getPK()] = self::getSequenceName().".nextval";
             self::checkSequence();
+            $seq_name = self::resolveSequenceName();
+
             if(!self::sequenceExists()) {
-               $this->addError($pk,"Sequence ".self::getSequenceName()." could not be created");
+               $this->addError($pk,"Sequence $seq_name could not be created");
                return false;
             }
+            $attrs[$calling::getPK()] = $seq_name.".nextval";
          }
 
          $marks = join(",",array_fill(0,sizeof($attrs),"?"));
