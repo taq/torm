@@ -483,7 +483,7 @@ class Model {
             $validation_key   = $validation_key[0];
             $validation_value = array_values($validation);
             $validation_value = $validation_value[0];
-            $args = array(get_called_class(),$pk,$attr,$value,$validation_value);
+            $args = array(get_called_class(),$pk,$attr,$value,$validation_value,$validation);
             $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
             if(!$test) {
                $rtn = false;

@@ -19,6 +19,7 @@
          self::$user->id    = 1;
          self::$user->name  = "John Doe Jr.";
          self::$user->email = "jr@doe.com";
+         self::$user->code  = "12345";
          self::$user->level = 1;
       }
 
@@ -105,6 +106,7 @@
          $user->name    = "John Doe";
          $user->email   = "john@doe.com";
          $user->level   = 1;
+         $user->code    = "12345";
          $this->assertTrue($user->isValid());
          $this->assertTrue($user->save());
       }
@@ -149,6 +151,16 @@
 
       public function testValidFormat() {
          self::$user->email = "jr@doe.com";
+         $this->assertTrue(self::$user->isValid());
+      }
+
+      public function testEmptyFormat() {
+         self::$user->code = "";
+         $this->assertFalse(self::$user->isValid());
+      }
+
+      public function testNullFormat() {
+         self::$user->code = null;
          $this->assertTrue(self::$user->isValid());
       }
 
