@@ -622,7 +622,9 @@ class Model {
          return;
 
       // create sequence
+      $name = self::resolveSequenceName();
       $sql  = "create sequence $name increment by 1 start with 1 nocycle nocache";
+      Log::log($sql);
       $stmt = self::resolveConnection()->query($sql);
    }
 
