@@ -115,8 +115,9 @@ class Collection implements \Iterator {
       $builder = $this->builder;
       $table   = $builder->table;
       $where   = $builder->where;
+      $escape  = Driver::$escape_char;
 
-      $sql   = "update \"$table\" set ";
+      $sql   = "update $escape$table$escape set ";
       $sql  .= $cls::extractUpdateColumns($attrs,",");
       $vals  = $cls::extractWhereValues($attrs);
       if(!empty($where))

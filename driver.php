@@ -14,4 +14,6 @@ class Driver {
    public static $primary_key_behaviour = self::PRIMARY_KEY_DELETE;
    public static $limit_behaviour       = self::LIMIT_APPEND;
    public static $limit_query           = null;
+   public static $numeric_column        = "integer";
+   public static $escape_char           = "\"";
 }

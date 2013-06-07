@@ -10,9 +10,11 @@
       public static function setUpBeforeClass() {
          $file = realpath(dirname(__FILE__)."/../database/test.sqlite3");
          self::$con  = new PDO("sqlite:$file");
-         
+         // self::$con  = new PDO('mysql:host=localhost;dbname=torm',"torm","torm");
+
          TORM\Connection::setConnection(self::$con,"test");
          TORM\Connection::setDriver("sqlite");
+         // TORM\Connection::setDriver("mysql");
          TORM\Log::enable(false);
 
          self::$user        = new User();

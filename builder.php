@@ -10,16 +10,17 @@ class Builder {
    public $order  = null;
 
    public function toString() {
-      $array = array();
+      $array  = array();
+      $escape = Driver::$escape_char;
 
       array_push($array,$this->prefix." ");
 
       if(is_null($this->fields))
-         array_push($array,"\"".$this->table."\".* ");
+         array_push($array,$escape.$this->table.$escape.".* ");
       else
          array_push($array,$this->fields);
 
-      array_push($array," from \"".$this->table."\" ");
+      array_push($array," from $escape".$this->table."$escape ");
 
       if($this->where)
          array_push($array," where ".$this->where);
