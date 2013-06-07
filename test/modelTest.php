@@ -296,5 +296,17 @@
       public function testMinWithConditionsAndWhere() {
          $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->min("level"));
       }
+
+      public function testMax() {
+         $this->assertEquals(2,User::all()->max("level"));
+      }
+
+      public function testMaxWithConditions() {
+         $this->assertEquals(2,User::all(array("email"=>"taq@bluefish.com.br"))->max("level"));
+      }
+
+      public function testMaxWithConditionsAndWhere() {
+         $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->max("level"));
+      }
    }
 ?>

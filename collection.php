@@ -67,6 +67,11 @@ class Collection implements \Iterator {
       return $this->executeAndReturnFirst($builder,$this->vals);
    }
 
+   public function max($attr) {
+      $builder = $this->makeBuilderForAggregations(" max($attr) ");
+      return $this->executeAndReturnFirst($builder,$this->vals);
+   }
+
    private function makeBuilderForAggregations($fields) {
       // a lot of people using PHP 5.3 yet ... no deferencing there.
       $builder = $this->builder;
