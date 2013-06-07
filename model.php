@@ -355,7 +355,7 @@ class Model {
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_DELETE && !$pk_value)
             unset($attrs[$calling::getPK()]);
 
-         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE) {
+         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && empty($pk_value)) {
             // build the sequence name column. the primary key attribute will
             // result with the key as the primary key column name and value as 
             // the sequence name column value, for example, 
@@ -369,7 +369,14 @@ class Model {
                $this->addError($pk,"Sequence $seq_name could not be created");
                return false;
             }
-         }
+         } 
+
+         // use sequence, but there is already a value on the primary key
+         // remember that it will allow this only if is really a record that
+         // wasn't found when checking for the primary key, specifying that its 
+         // a new record!
+         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && !empty($pk_value))
+            $attrs[$calling::getPK()] = $pk_value;
 
          // marks to insert values on prepared statement
          $marks = array();
@@ -378,7 +385,7 @@ class Model {
             // can't use marks for sequence values - must be specified the 
             // sequence name column, get as the value specified on the array 
             // created above ({"id"=>"user_sequence.nextval"}).
-            array_push($marks, Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$calling::getPK() ? $value : "?");
+            array_push($marks, Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$calling::getPK() && empty($pk_value) ? $value : "?");
          }
          $marks = join(",",$marks); 
          $sql   = substr($sql,0,strlen($sql)-1);
@@ -391,7 +398,7 @@ class Model {
             // filled, see above. for sequences, $vals will be an array with one 
             // less dynamic value mark.
             if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE &&
-               $attr==$calling::getPK())
+               $attr==$calling::getPK() && empty($pk_value))
                continue;
             array_push($vals,$value);
          }
@@ -448,6 +455,10 @@ class Model {
       $stmt = self::putCache($sql);
       $stmt->execute($values);
       return $stmt;
+   }
+
+   public static function query($sql) {
+      return self::resolveConnection()->query($sql);
    }
 
    /**

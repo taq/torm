@@ -308,5 +308,28 @@
       public function testMaxWithConditionsAndWhere() {
          $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->max("level"));
       }
+
+      public function testDestroyCollection() {
+         $users = User::all();
+         $user1 = $users->next();
+         $user2 = $users->next();
+         User::all()->destroy();
+
+         $this->assertEquals(0,User::all()->count());
+         $this->assertTrue($user1->save());
+         $this->assertTrue($user2->save());
+         $this->assertEquals(2,User::all()->count());
+      }
+
+      public function testDestroyCollectionWithConditions() {
+         $cond  = array("email"=>"eustaquiorangel@gmail.com");
+         $users = User::all($cond);
+         $user1 = $users->next();
+         User::all($cond)->destroy();
+
+         $this->assertEquals(1,User::all()->count());
+         $this->assertTrue($user1->save());
+         $this->assertEquals(2,User::all()->count());
+      }
    }
 ?>

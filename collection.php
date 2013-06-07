@@ -94,6 +94,21 @@ class Collection implements \Iterator {
          return 0;
       return $data[0];
    }
+
+   public function destroy() {
+      $builder = $this->builder;
+      $table   = $builder->table;
+      $where   = $builder->where;
+
+      $builder = new Builder();
+      $builder->prefix = "delete";
+      $builder->fields = "";
+      $builder->table  = $table;
+      $builder->where  = $where;
+
+      $cls = $this->cls;
+      return $cls::executePrepared($builder,$this->vals);
+   }
    
    public function next() {
       $cls = $this->cls;
