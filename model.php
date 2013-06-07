@@ -246,11 +246,16 @@ class Model {
     * Return all values
     * @return Collection values
     */
-   public static function all() {
+   public static function all($conditions=null) {
       self::checkLoaded();
 
       $builder = self::makeBuilder();
-      return new Collection($builder,null,get_called_class());
+      $vals    = null;
+      if($conditions) {
+         $builder->where = self::extractWhereConditions($conditions);
+         $vals           = self::extractWhereValues($conditions);
+      }
+      return new Collection($builder,$vals,get_called_class());
    }
 
    /**

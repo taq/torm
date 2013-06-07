@@ -46,6 +46,29 @@ class Collection implements \Iterator {
    public function rewind() {
       $this->count = 0;
    }
+
+   public function count() {
+      $cls     = $this->cls;
+
+      // a lot of people using PHP 5.3 yet ... no deferencing there.
+      $builder = $this->builder;
+      $table   = $builder->table;
+      $where   = $builder->where;
+
+      $builder = new Builder();
+      $builder->prefix = "select";
+      $builder->fields = " count(*) ";
+      $builder->table  = $table;
+
+      if($where)
+         $builder->where = $where;
+
+      $stmt = $cls::executePrepared($builder,$this->vals);
+      $data = $stmt->fetch();
+      if(!$data)
+         return 0;
+      return intval($data[0]);
+   }
    
    public function next() {
       $cls = $this->cls;

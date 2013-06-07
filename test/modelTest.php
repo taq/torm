@@ -248,5 +248,17 @@
          $user->id = $new;
          $this->assertEquals($new,$user->id);
       }
+
+      public function testCount() {
+         $this->assertEquals(2,User::all()->count());
+      }
+
+      public function testCountWithConditions() {
+         $this->assertEquals(1,User::all(array("email"=>"eustaquiorangel@gmail.com"))->count());
+      }
+
+      public function testCountWithConditionsAndWhere() {
+         $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->count());
+      }
    }
 ?>
