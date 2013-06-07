@@ -366,5 +366,20 @@
          $this->assertTrue($user1->save());
          $this->assertTrue($user2->save());
       }
+
+      public function testUpdateAttributesOnCollectionWithConditions() {
+         $cond  = array("email"=>"eustaquiorangel@gmail.com");
+         $users = User::where($cond);
+         $user1 = $users->next();
+         $this->assertNotNull($user1);
+
+         User::where($cond)->updateAttributes(array("email"=>"void@gmail.com","level"=>0));
+         $users = User::where($cond);
+         while($user = $users->next()) {
+            $this->assertEquals("void@gmail.com",$user->email);
+            $this->assertEquals(0,$user->level);
+         }
+         $this->assertTrue($user1->save());
+      }
    }
 ?>

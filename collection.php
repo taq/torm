@@ -121,7 +121,7 @@ class Collection implements \Iterator {
       $vals  = $cls::extractWhereValues($attrs);
       if(!empty($where))
          $sql .= " where $where";
-      $nval = array_merge($vals,is_array($this->vals) ? $this->vals() : array());
+      $nval = array_merge($vals,is_array($this->vals) ? $this->vals : array());
       return $cls::executePrepared($sql,$nval);
    }
    
