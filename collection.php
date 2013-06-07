@@ -48,25 +48,28 @@ class Collection implements \Iterator {
    }
 
    public function count() {
-      // a lot of people using PHP 5.3 yet ... no deferencing there.
-      $builder = $this->builder;
-      $table   = $builder->table;
-      $where   = $builder->where;
-      $builder = $this->makeBuilderForAggregations("select"," count(*) ",$table,$where);
+      $builder = $this->makeBuilderForAggregations(" count(*) ");
       return $this->executeAndReturnFirst($builder,$this->vals);
    }
 
    public function sum($attr) {
-      $builder = $this->builder;
-      $table   = $builder->table;
-      $where   = $builder->where;
-      $builder = $this->makeBuilderForAggregations("select"," sum($attr) ",$table,$where);
+      $builder = $this->makeBuilderForAggregations(" sum($attr) ");
       return $this->executeAndReturnFirst($builder,$this->vals);
    }
 
-   private function makeBuilderForAggregations($prefix,$fields,$table,$where) {
+   public function avg($attr) {
+      $builder = $this->makeBuilderForAggregations(" avg($attr) ");
+      return $this->executeAndReturnFirst($builder,$this->vals);
+   }
+
+   private function makeBuilderForAggregations($fields) {
+      // a lot of people using PHP 5.3 yet ... no deferencing there.
+      $builder = $this->builder;
+      $table   = $builder->table;
+      $where   = $builder->where;
+
       $builder = new Builder();
-      $builder->prefix = $prefix;
+      $builder->prefix = "select";
       $builder->fields = $fields;
       $builder->table  = $table;
       $builder->where  = $where;
@@ -79,7 +82,7 @@ class Collection implements \Iterator {
       $data = $stmt->fetch();
       if(!$data)
          return 0;
-      return intval($data[0]);
+      return $data[0];
    }
    
    public function next() {

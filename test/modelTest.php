@@ -272,5 +272,17 @@
       public function testSumWithConditionsAndWhere() {
          $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->sum("level"));
       }
+
+      public function testAvg() {
+         $this->assertEquals(1.5,User::all()->avg("level"));
+      }
+
+      public function testAvgWithConditions() {
+         $this->assertEquals(2,User::all(array("email"=>"taq@bluefish.com.br"))->avg("level"));
+      }
+
+      public function testAvgWithConditionsAndWhere() {
+         $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->avg("level"));
+      }
    }
 ?>
