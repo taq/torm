@@ -48,21 +48,33 @@ class Collection implements \Iterator {
    }
 
    public function count() {
-      $cls     = $this->cls;
-
       // a lot of people using PHP 5.3 yet ... no deferencing there.
       $builder = $this->builder;
       $table   = $builder->table;
       $where   = $builder->where;
+      $builder = $this->makeBuilderForAggregations("select"," count(*) ",$table,$where);
+      return $this->executeAndReturnFirst($builder,$this->vals);
+   }
 
+   public function sum($attr) {
+      $builder = $this->builder;
+      $table   = $builder->table;
+      $where   = $builder->where;
+      $builder = $this->makeBuilderForAggregations("select"," sum($attr) ",$table,$where);
+      return $this->executeAndReturnFirst($builder,$this->vals);
+   }
+
+   private function makeBuilderForAggregations($prefix,$fields,$table,$where) {
       $builder = new Builder();
-      $builder->prefix = "select";
-      $builder->fields = " count(*) ";
+      $builder->prefix = $prefix;
+      $builder->fields = $fields;
       $builder->table  = $table;
+      $builder->where  = $where;
+      return $builder;
+   }
 
-      if($where)
-         $builder->where = $where;
-
+   private function executeAndReturnFirst($builder,$vals) {
+      $cls  = $this->cls;
       $stmt = $cls::executePrepared($builder,$this->vals);
       $data = $stmt->fetch();
       if(!$data)

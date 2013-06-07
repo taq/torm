@@ -260,5 +260,17 @@
       public function testCountWithConditionsAndWhere() {
          $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->count());
       }
+
+      public function testSum() {
+         $this->assertEquals(3,User::all()->sum("level"));
+      }
+
+      public function testSumWithConditions() {
+         $this->assertEquals(2,User::all(array("email"=>"taq@bluefish.com.br"))->sum("level"));
+      }
+
+      public function testSumWithConditionsAndWhere() {
+         $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->sum("level"));
+      }
    }
 ?>
