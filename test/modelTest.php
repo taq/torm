@@ -331,5 +331,24 @@
          $this->assertTrue($user1->save());
          $this->assertEquals(2,User::all()->count());
       }
+
+      public function testUpdateAttribute() {
+         $new_level = 3;
+         $new_email = "iwishigottaq@gmail.com";
+
+         $user = User::find(1);
+         $old_level = $user->level;
+         $old_email = $user->email;
+         $user->updateAttributes(array("email"=>$new_email,"level"=>$new_level));
+
+         $user = User::find(1);
+         $this->assertEquals($new_level,$user->level);
+         $this->assertEquals($new_email,$user->email);
+         $user->updateAttributes(array("email"=>$old_email,"level"=>$old_level));
+
+         $user = User::find(1);
+         $this->assertEquals($old_level,$user->level);
+         $this->assertEquals($old_email,$user->email);
+      }
    }
 ?>

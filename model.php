@@ -621,6 +621,12 @@ class Model {
       return $obj;
    }
 
+   public function updateAttributes($attrs) {
+      foreach($attrs as $attr=>$value) 
+         $this->data[$attr] = $value;
+      $this->save();
+   }
+
    /**
     * Set the sequence name, if any
     * @param $name of the sequence
