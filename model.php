@@ -92,8 +92,13 @@ class Model {
     * @return string table name
     */
    public static function getTableName() {
-      $cls = get_called_class();
-      return array_key_exists($cls,self::$table_name) ? self::$table_name[$cls] : get_called_class()."s";
+      $cls  = get_called_class();
+      if(array_key_exists($cls,self::$table_name))
+         return self::$table_name[$cls];
+      $name = get_called_class()."s";
+      if(self::isIgnoringCase())
+         $name = strtolower($name);
+      return $name;
    }
 
    public static function setPK($pk) {
@@ -155,14 +160,17 @@ class Model {
       $cls = get_called_class();
       self::$columns[$cls] = array();
 
+      $escape = Driver::$escape_char;
+
       // try to create the TORM info table
-      $rst = self::resolveConnection()->query("create table torm_info (id number(1))");
-      $rst = self::resolveConnection()->query("select id from torm_info");
+      $type = Driver::$numeric_column;
+      $rst  = self::resolveConnection()->query("create table torm_info (id $type(1))");
+      $rst  = self::resolveConnection()->query("select id from torm_info");
       if(!$rst->fetch())
          self::resolveConnection()->query("insert into torm_info values (1)");
 
       // hack to dont need a query string to get columns
-      $sql  = "select \"".self::getTableName()."\".* from torm_info left outer join \"".self::getTableName()."\" on 1=1";
+      $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
       $rst  = self::resolveConnection()->query($sql);
       $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
@@ -177,8 +185,9 @@ class Model {
    public static function extractUpdateColumns($values) {
       $cls = get_called_class();
       $temp_columns = "";
+      $escape = Driver::$escape_char;
       foreach($values as $key=>$value)
-         $temp_columns .= "\"".self::$mapping[$cls][$key]."\"=?,";
+         $temp_columns .= "$escape".self::$mapping[$cls][$key]."$escape=?,";
       return substr($temp_columns,0,strlen($temp_columns)-1);
    }
 
@@ -187,10 +196,11 @@ class Model {
          return "";
 
       $cls = get_called_class();
+      $escape = Driver::$escape_char;
       if(is_array($conditions)) {
          $temp_cond = "";
          foreach($conditions as $key=>$value)
-            $temp_cond .= "\"".self::getTableName()."\".\"".self::$mapping[$cls][$key]."\"=? and ";
+            $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$mapping[$cls][$key]."$escape=? and ";
          $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
          $conditions = $temp_cond;
       }
@@ -349,6 +359,7 @@ class Model {
       $attrs      = $this->data;
       $rtn        = false;
       $vals       = array();
+      $escape     = Driver::$escape_char;
 
       if($pk_value) {
          $existing      = self::find($pk_value);
@@ -356,7 +367,7 @@ class Model {
       }
 
       if($this->new_rec) {
-         $sql = "insert into \"".$calling::getTableName()."\" (";
+         $sql = "insert into $escape".$calling::getTableName()."$escape (";
 
          // remove the current value when need to insert a NULL value to create 
          // the autoincrement value
@@ -389,7 +400,7 @@ class Model {
          // marks to insert values on prepared statement
          $marks = array();
          foreach($attrs as $attr=>$value) {
-            $sql .= "\"".self::$mapping[$calling][$attr]."\",";
+            $sql .= "$escape".self::$mapping[$calling][$attr]."$escape,";
             // can't use marks for sequence values - must be specified the 
             // sequence name column, get as the value specified on the array 
             // created above ({"id"=>"user_sequence.nextval"}).
@@ -413,15 +424,15 @@ class Model {
          $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
       } else {
          unset($attrs[$pk]);
-         $sql  = "update \"".$calling::getTableName()."\" set ";
+         $sql  = "update $escape".$calling::getTableName()."$escape set ";
          foreach($attrs as $attr=>$value) {
             if(strlen(trim($value))<1)
                $value = "null";
-            $sql .= "\"".self::$mapping[$calling][$attr]."\"=?,";
+            $sql .= "$escape".self::$mapping[$calling][$attr]."$escape=?,";
             array_push($vals,$value);
          }
          $sql  = substr($sql,0,strlen($sql)-1);
-         $sql .= " where \"".self::getTableName()."\".\"$pk\"=?";
+         $sql .= " where $escape".self::getTableName()."$escape.$escape$pk$escape=?";
          array_push($vals,$pk_value);
          $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
       }
@@ -441,7 +452,8 @@ class Model {
       $table_name = $calling::getTableName();
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
-      $sql        = "delete from \"$table_name\" where \"$table_name\".\"".self::$mapping[$calling][$pk]."\"=?";
+      $escape     = Driver::$escape_char;
+      $sql        = "delete from $escape$table_name$escape where $escape$table_name$escape.$escape".self::$mapping[$calling][$pk]."$escape=?";
       Log::log($sql);
       return self::executePrepared($sql,array($pk_value))->rowCount()==1;
    }
@@ -676,7 +688,7 @@ class Model {
          return null;
 
       $name = self::resolveSequenceName();
-      $sql  = "select count(*) as \"CNT\" from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
+      $sql  = "select count(*) as $escape"."CNT"."$escape from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
       $stmt = self::resolveConnection()->query($sql);
       $rst  = $stmt->fetch(\PDO::FETCH_ASSOC);
       return intval($rst["CNT"])>0;
