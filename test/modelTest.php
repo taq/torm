@@ -284,5 +284,17 @@
       public function testAvgWithConditionsAndWhere() {
          $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->avg("level"));
       }
+
+      public function testMin() {
+         $this->assertEquals(1,User::all()->min("level"));
+      }
+
+      public function testMinWithConditions() {
+         $this->assertEquals(2,User::all(array("email"=>"taq@bluefish.com.br"))->min("level"));
+      }
+
+      public function testMinWithConditionsAndWhere() {
+         $this->assertEquals(1,User::where(array("email"=>"eustaquiorangel@gmail.com"))->min("level"));
+      }
    }
 ?>
