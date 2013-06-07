@@ -43,6 +43,11 @@
 <pre><code>&lt;?php
     // include TORM 
     include "torm.php";
+    
+    // open the PDO connection and set it
+    $con = new PDO("sqlite:database.sqlite3");
+    TORM\Connection::setConnection($con);
+    TORM\Connection::setDriver("sqlite");
 
     // define your models - an User class will connect to an users table
     class User extends TORM\Model {};
@@ -57,11 +62,6 @@
     // create some relations
     User::hasMany("tickets");
     Ticket::belongsTo("user");
-
-    // open the PDO connection and set it
-    $con = new PDO("sqlite:database.sqlite3");
-    TORM\Connection::setConnection($con);
-    TORM\Connection::setDriver("sqlite");
 
     // this will create a new user
     $user = new User();
