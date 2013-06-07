@@ -332,7 +332,7 @@
          $this->assertEquals(2,User::all()->count());
       }
 
-      public function testUpdateAttribute() {
+      public function testUpdateAttributes() {
          $new_level = 3;
          $new_email = "iwishigottaq@gmail.com";
 
@@ -349,6 +349,22 @@
          $user = User::find(1);
          $this->assertEquals($old_level,$user->level);
          $this->assertEquals($old_email,$user->email);
+      }
+
+      public function testUpdateAttributesOnCollection() {
+         $users = User::all();
+         $user1 = $users->next();
+         $user2 = $users->next();
+
+         User::all()->updateAttributes(array("email"=>"void@gmail.com","level"=>0));
+         $users = User::all();
+         while($user = $users->next()) {
+            $this->assertEquals("void@gmail.com",$user->email);
+            $this->assertEquals(0,$user->level);
+         }
+
+         $this->assertTrue($user1->save());
+         $this->assertTrue($user2->save());
       }
    }
 ?>

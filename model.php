@@ -174,6 +174,14 @@ class Model {
       self::$loaded[$cls] = true;
    }
 
+   public static function extractUpdateColumns($values) {
+      $cls = get_called_class();
+      $temp_columns = "";
+      foreach($values as $key=>$value)
+         $temp_columns .= "\"".self::$mapping[$cls][$key]."\"=?,";
+      return substr($temp_columns,0,strlen($temp_columns)-1);
+   }
+
    private static function extractWhereConditions($conditions) {
       if(!$conditions)
          return "";
@@ -189,7 +197,7 @@ class Model {
       return $conditions;
    }
 
-   private static function extractWhereValues($conditions) {
+   public static function extractWhereValues($conditions) {
       $values = array();
       if(!$conditions)
          return $values;

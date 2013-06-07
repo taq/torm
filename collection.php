@@ -109,6 +109,21 @@ class Collection implements \Iterator {
       $cls = $this->cls;
       return $cls::executePrepared($builder,$this->vals);
    }
+
+   public function updateAttributes($attrs) {
+      $cls     = $this->cls;
+      $builder = $this->builder;
+      $table   = $builder->table;
+      $where   = $builder->where;
+
+      $sql   = "update \"$table\" set ";
+      $sql  .= $cls::extractUpdateColumns($attrs,",");
+      $vals  = $cls::extractWhereValues($attrs);
+      if(!empty($where))
+         $sql .= " where $where";
+      $nval = array_merge($vals,is_array($this->vals) ? $this->vals() : array());
+      return $cls::executePrepared($sql,$nval);
+   }
    
    public function next() {
       $cls = $this->cls;
