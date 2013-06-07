@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>TORM by taq</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>TORM</h1>
+        <p>Just another simple PHP ORM. </p>
+        <p class="view"><a href="https://github.com/taq/torm">View the Project on GitHub <small>taq/torm</small></a></p>
+        <ul>
+          <li><a href="https://github.com/taq/torm/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/taq/torm/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/taq/torm">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>
+<a name="you-can-use-it-but-dont-ask-me-why-i-made-it--" class="anchor" href="#you-can-use-it-but-dont-ask-me-why-i-made-it--"><span class="octicon octicon-link"></span></a>You can use it, but don't ask me why I made it. :-)</h2>
+
+<h3>
+<a name="about-torm" class="anchor" href="#about-torm"><span class="octicon octicon-link"></span></a>About TORM</h3>
+
+<p>TORM is a simple PHP ORM layer, heavily based on ActiveRecord. </p>
+
+<h3>
+<a name="tell-me-how-it-works" class="anchor" href="#tell-me-how-it-works"><span class="octicon octicon-link"></span></a>Tell me how it works</h3>
+
+<p>The full documentation is on the <a href="https://github.com/taq/torm/wiki">project wiki</a>, but is simple as this, as long as you follow some conventions (like pluralized table names, auto increment columns etc):</p>
+
+<pre><code>&lt;?php
+    // include TORM 
+    include "torm.php";
+
+    // define your models - an User class will connect to an users table
+    class User extends TORM\Model {};
+    class Ticket extends TORM\Model {};
+
+    // create some validations
+    User::validates("name" ,array("presence"=&gt;true));
+    User::validates("email" ,array("presence"=&gt;true));
+    User::validates("email",array("uniqueness"=&gt;true));
+    User::validates("id",array("numericality"=&gt;true));
+
+    // create some relations
+    User::hasMany("tickets");
+    Ticket::belongsTo("user");
+
+    // open the PDO connection and set it
+    $con = new PDO("sqlite:database.sqlite3");
+    TORM\Connection::setConnection($con);
+    TORM\Connection::setDriver("sqlite");
+
+    // this will create a new user
+    $user = new User();
+    $user-&gt;name  = "John Doe";
+    $user-&gt;email = "john@doe.com";
+    $user-&gt;level = 1
+    $user-&gt;save();
+
+    // this will find the user using its primary key
+    $user = User::find(1);
+
+    // find some users
+    $users = User::where(array("level"=&gt;1));
+
+    // updating users
+    User::where(array("level"=&gt;1))-&gt;updateAttributes(array("level"=&gt;3));
+
+    // using fluent queries
+    $users = User::where(array("level"=&gt;1)).limit(5).order("name desc");
+?&gt;```
+
+And many more features. Check the docs.
+
+### Authors and Contributors
+
+Created by @taq.
+
+### Support or Contact
+
+Check out the [project wiki](https://github.com/taq/torm/wiki) or [open an issue](https://github.com/taq/torm/issues).
+</code></pre>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/taq">taq</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-41555127-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
