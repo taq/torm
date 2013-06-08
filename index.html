@@ -54,10 +54,10 @@
     class Ticket extends TORM\Model {};
 
     // create some validations
-    User::validates("name" ,array("presence"=&gt;true));
-    User::validates("email" ,array("presence"=&gt;true));
-    User::validates("email",array("uniqueness"=&gt;true));
-    User::validates("id",array("numericality"=&gt;true));
+    User::validates("name", array("presence"=&gt;true));
+    User::validates("email", array("presence"=&gt;true));
+    User::validates("email", array("uniqueness"=&gt;true));
+    User::validates("id", array("numericality"=&gt;true));
 
     // create some relations
     User::hasMany("tickets");
@@ -92,7 +92,7 @@
 
 <h3>Support or Contact</h3>
 
-<p>Check out the <a href="https://github.com/taq/torm/wiki">project wiki</a> or <a href="https://github.com/taq/torm/issues">open an issue</a>].</p>
+<p>Check out the <a href="https://github.com/taq/torm/wiki">project wiki</a> or <a href="https://github.com/taq/torm/issues">open an issue</a>.</p>
       </section>
     </div>
     <footer>
