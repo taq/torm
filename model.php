@@ -361,10 +361,21 @@ class Model {
       $vals       = array();
       $escape     = Driver::$escape_char;
 
+      if(!$pk_value) {
+         // if there is a method to get the new primary key value on the class, 
+         // call it
+         if(method_exists($calling,"getNewPKValue")) {
+            $pk_value = $calling::getNewPKValue();
+            if(!$this->data[$pk])
+               $this->data[$pk] = $pk_value;
+            $attrs = $this->data;
+         }
+      }
+
       if($pk_value) {
          $existing      = self::find($pk_value);
          $this->new_rec = !$existing;
-      }
+      } 
 
       if($this->new_rec) {
          $sql = "insert into $escape".$calling::getTableName()."$escape (";
@@ -390,7 +401,7 @@ class Model {
             }
          } 
 
-         // use sequence, but there is already a value on the primary key
+         // use sequence, but there is already a value on the primary key.
          // remember that it will allow this only if is really a record that
          // wasn't found when checking for the primary key, specifying that its 
          // a new record!

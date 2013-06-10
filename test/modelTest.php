@@ -383,5 +383,17 @@
          }
          $this->assertTrue($user1->save());
       }
+
+      public function testPKMethod() {
+         $user   = User::first();
+         $ticket = new Ticket();
+         $ticket->user_id     = $user->id;
+         $ticket->description = "pk value test";
+         $this->assertTrue($ticket->save());
+
+         $ticket = Ticket::last();
+         $this->assertTrue($ticket->id>=mktime()-1000);
+         $this->assertTrue($ticket->destroy());
+      }
    }
 ?>
