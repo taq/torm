@@ -604,8 +604,8 @@ class Model {
          return null;
 
       $configs       = self::$has_many[$cls][$attr];
-      $has_many_cls  = is_array($configs) && array_key_exists("class_name",$configs) ? $configs["class_name"] : ucfirst(preg_replace('/s$/',"",$attr));
-      $this_key      = self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id";
+      $has_many_cls  = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"]  : ucfirst(preg_replace('/s$/',"",$attr));
+      $this_key      = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
       $collection    = $has_many_cls::where(array($this_key=>$value));
       return $collection;
    }
@@ -636,8 +636,9 @@ class Model {
          return null;
 
       $configs       = self::$belongs_to[$cls][$attr];
-      $belongs_cls   = is_array($configs) && array_key_exists("class_name",$configs) ? $configs["class_name"] : ucfirst($attr);
-      $obj           = $belongs_cls::first(array("id"=>$value));
+      $belongs_cls   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"]  : ucfirst($attr);
+      $belongs_key   = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : "id";
+      $obj           = $belongs_cls::first(array($belongs_key=>$value));
       return $obj;
    }
 
