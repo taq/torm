@@ -392,7 +392,7 @@
          $this->assertTrue($ticket->save());
 
          $ticket = Ticket::last();
-         $this->assertTrue($ticket->id>=mktime()-1000);
+         $this->assertTrue($ticket->id>=time()-1000);
          $this->assertTrue($ticket->destroy());
       }
    }
