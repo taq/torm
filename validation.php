@@ -28,6 +28,10 @@ class Validation {
    }
 
    public static function uniqueness($cls,$id,$attr,$attr_value,$validation_value,$options) {
+      if(!is_null($options) && array_key_exists("allow_null",$options) && is_null($attr_value))
+         return true;
+      if(!is_null($options) && array_key_exists("allow_blank",$options) && strlen(trim($attr_value))<1)
+         return true;
       return call_user_func_array(array("\\".$cls,"isUnique"),array($id,$attr,$attr_value));
    }
 
