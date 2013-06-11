@@ -68,13 +68,12 @@ class Factory {
       if(!$data)
          return null;
 
-      $pos  = array_search($name,array_keys(self::$factories));
       $name = ucfirst(strtolower($name));
       $obj  = new $name();  
       $pk   = $obj::getPK();
    
       if(!array_key_exists($pk,$data))
-         $data[$pk] = time()+$pos;
+         $data[$pk] = null;
 
       $obj = new $name($data);  
       if($create) {
