@@ -16,6 +16,7 @@ class Model {
    private static $has_many       = array();
    private static $belongs_to     = array();
    private static $sequence       = array();
+   private static $has_one        = array();
 
    private $data        = array();
    private $new_rec     = false;
@@ -659,6 +660,48 @@ class Model {
       return $obj;
    }
 
+   /**
+    * Create a has one relationship
+    * @param $attr attribute
+    */
+   public static function hasOne($attr,$options=null) {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$has_one))
+         self::$has_one[$cls] = array();
+      self::$has_one[$cls][$attr] = $options ? $options : false;
+   }
+
+   /**
+    * Resolve the has one relationship and returns the object
+    * @param $attr name
+    * @param $value
+    * @return collection
+    */
+   private static function resolveHasOne($attr,$value) {
+      $cls = get_called_class();
+      if(!array_key_exists($cls,self::$has_one) ||
+         !array_key_exists($attr,self::$has_one[$cls]))
+         return null;
+
+      $configs       = self::$has_one[$cls][$attr];
+      $has_one_cls   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"]  : ucfirst(preg_replace('/s$/',"",$attr));
+      $this_key      = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
+      $obj           = $has_one_cls::first(array($this_key=>$value));
+      return $obj;
+   }
+
+   /**
+    * Check and return the value of a has one relationship
+    * @param $method searched
+    * @param $value the current id
+    */
+   private static function checkAndReturnHasOne($method,$value) {
+      $cls = get_called_class();
+      if(array_key_exists($cls   ,self::$has_one) &&
+         array_key_exists($method,self::$has_one[$cls]))
+         return self::resolveHasOne($method,$value);
+   }
+
    public function updateAttributes($attrs) {
       foreach($attrs as $attr=>$value) 
          $this->data[$attr] = $value;
@@ -776,6 +819,10 @@ class Model {
       if($belongs)
          return $belongs;
 
+      $has_one = self::checkAndReturnHasOne($method,$this->data[self::getPK()]);
+      if($has_one)
+         return $has_one;
+
       if(!$args) 
          return $this->data[$method];
       $this->set($method,$args[0]);
@@ -794,6 +841,10 @@ class Model {
       $belongs = self::checkAndReturnBelongs($attr,$this->data[self::getPK()]);
       if($belongs)
          return $belongs;
+
+      $has_one = self::checkAndReturnHasOne($attr,$this->data[self::getPK()]);
+      if($has_one)
+         return $has_one;
 
       return $this->get($attr);
    }

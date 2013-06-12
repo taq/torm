@@ -8,4 +8,5 @@
    User::validates("level",array("numericality"=>true));
    User::validates("code" ,array("format"=>"^[0-9]{5}$","allow_null"=>true));
    User::hasMany("tickets",array("class_name"=>"Ticket"));
+   User::hasOne("account");
 ?>

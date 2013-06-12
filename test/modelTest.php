@@ -2,6 +2,7 @@
    include_once "../torm.php";
    include_once "../models/user.php";
    include_once "../models/ticket.php";
+   include_once "../models/account.php";
 
    class ModelTest extends PHPUnit_Framework_TestCase {
       protected static $con  = null;
@@ -15,6 +16,7 @@
          TORM\Connection::setConnection(self::$con,"test");
          TORM\Connection::setDriver("sqlite");
          // TORM\Connection::setDriver("mysql");
+         TORM\Factory::setFactoriesPath("./factories");
          TORM\Log::enable(false);
 
          self::$user        = new User();
@@ -23,6 +25,10 @@
          self::$user->email = "jr@doe.com";
          self::$user->code  = "12345";
          self::$user->level = 1;
+      }
+
+      public function setUp() {
+         Account::all()->destroy();
       }
 
       public function testConnection() {
@@ -394,6 +400,16 @@
          $ticket = Ticket::last();
          $this->assertTrue($ticket->id>=time()-1000);
          $this->assertTrue($ticket->destroy());
+      }
+
+      public function testHasOneRelation() {
+         $account = TORM\Factory::create("account");
+
+         $user = User::first();
+         $acct = $user->account;
+         $this->assertNotNull($acct);
+         $this->assertEquals("Account",get_class($acct));
+         $this->assertEquals($account->number,$acct->number);
       }
    }
 ?>
