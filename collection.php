@@ -107,7 +107,7 @@ class Collection implements \Iterator {
       $builder->where  = $where;
 
       $cls = $this->cls;
-      return $cls::executePrepared($builder,$this->vals);
+      return $cls::executePrepared($builder,$this->vals)->rowCount()>0;
    }
 
    public function updateAttributes($attrs) {
