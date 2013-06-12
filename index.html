@@ -61,6 +61,7 @@
 
     // create some relations
     User::hasMany("tickets");
+    User::hasOne("account");
     Ticket::belongsTo("user");
 
     // this will create a new user
@@ -81,6 +82,13 @@
 
     // using fluent queries
     $users = User::where(array("level"=&gt;1)).limit(5).order("name desc");
+
+    // listing the user tickets
+    foreach($user-&gt;tickets as $ticket)
+      echo $ticket-&gt;description;
+
+   // show user account info
+   echo $user-&gt;account-&gt;number; 
 ?&gt;
 </code></pre>
 
