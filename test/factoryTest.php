@@ -16,11 +16,17 @@
       }
 
       public function testGetFactories() {
-         $this->assertEquals(1,TORM\Factory::factoriesCount());
+         $this->assertEquals(2,TORM\Factory::factoriesCount());
       }
 
       public function testGetFactory() {
          $this->assertNotNull(TORM\Factory::get("user"));
+      }
+
+      public function testFactoryWithDifferentClass() {
+         $admin = TORM\Factory::build("admin");
+         $this->assertNotNull($admin);
+         $this->assertEquals("User",get_class($admin));
       }
 
       public function testBuildFactory() {

@@ -4,6 +4,7 @@ namespace TORM;
 class Factory {
    private static $path       = null;
    private static $factories  = array();
+   private static $options    = array();
    private static $loaded     = false;
 
    public static function setFactoriesPath($path) {
@@ -27,6 +28,7 @@ class Factory {
 
    public static function define($name,$attrs,$options=null) {
       self::$factories[$name] = $attrs;
+      self::$options[$name]   = $options;
    }
 
    public static function get($name) {
@@ -68,14 +70,19 @@ class Factory {
       if(!$data)
          return null;
 
-      $name = ucfirst(strtolower($name));
-      $obj  = new $name();  
+      // if is a different class ...
+      if(is_array(self::$options[$name]) &&
+         array_key_exists("class_name",self::$options[$name]))
+         $name = self::$options[$name]["class_name"];
+
+      $cls = ucfirst(strtolower($name));
+      $obj  = new $cls();  
       $pk   = $obj::getPK();
    
       if(!array_key_exists($pk,$data))
          $data[$pk] = null;
 
-      $obj = new $name($data);  
+      $obj = new $cls($data);  
       if($create) {
          if(!$obj->isValid()) 
             return null;
