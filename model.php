@@ -54,6 +54,12 @@ class Model {
             self::$mapping[$cls][$key] = $keyr;
       }
       $this->data = $data;
+
+      // check if is a new record
+      $pk = $cls::getPK();
+      if(!array_key_exists($pk,$this->data) ||
+         empty($this->data[$pk]))
+         $this->new_rec = true;
    }
 
    public static function isIgnoringCase() {
