@@ -390,15 +390,15 @@ class Model {
          // remove the current value when need to insert a NULL value to create 
          // the autoincrement value
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_DELETE && !$pk_value)
-            unset($attrs[$calling::getPK()]);
+            unset($attrs[$pk]);
 
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && empty($pk_value)) {
             // build the sequence name column. the primary key attribute will
             // result with the key as the primary key column name and value as 
             // the sequence name column value, for example, 
             // {"id"=>"user_sequence.nextval"} 
-            $seq_name = self::resolveSequenceName();
-            $attrs[$calling::getPK()] = $seq_name.".nextval";
+            $seq_name   = self::resolveSequenceName();
+            $attrs[$pk] = $seq_name.".nextval";
 
             // check if the sequence exists
             self::checkSequence();
@@ -413,7 +413,7 @@ class Model {
          // wasn't found when checking for the primary key, specifying that its 
          // a new record!
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && !empty($pk_value))
-            $attrs[$calling::getPK()] = $pk_value;
+            $attrs[$pk] = $pk_value;
 
          // marks to insert values on prepared statement
          $marks = array();
@@ -422,7 +422,7 @@ class Model {
             // can't use marks for sequence values - must be specified the 
             // sequence name column, get as the value specified on the array 
             // created above ({"id"=>"user_sequence.nextval"}).
-            array_push($marks, Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$calling::getPK() && empty($pk_value) ? $value : "?");
+            array_push($marks, Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$pk && empty($pk_value) ? $value : "?");
          }
          $marks = join(",",$marks); 
          $sql   = substr($sql,0,strlen($sql)-1);
@@ -435,11 +435,16 @@ class Model {
             // filled, see above. for sequences, $vals will be an array with one 
             // less dynamic value mark.
             if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE &&
-               $attr==$calling::getPK() && empty($pk_value))
+               $attr==$pk && empty($pk_value))
                continue;
             array_push($vals,$value);
          }
          $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
+
+         // check for last inserted value
+         $lid = self::resolveConnection()->lastInsertId();
+         if(is_null($this->data[$pk]) && !is_null($lid))
+            $this->data[$pk] = $lid;
       } else {
          unset($attrs[$pk]);
          $sql  = "update $escape".$calling::getTableName()."$escape set ";

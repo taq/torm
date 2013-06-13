@@ -116,7 +116,16 @@
          $user->level   = 1;
          $user->code    = "12345";
          $this->assertTrue($user->isValid());
+         $this->assertNull($user->id);
          $this->assertTrue($user->save());
+         $this->assertNotNull($user->id);
+
+         $new_user = User::find($user->id);
+         $this->assertNotNull($new_user);
+         $this->assertEquals($user->name ,$new_user->name);
+         $this->assertEquals($user->email,$new_user->email);
+         $this->assertEquals($user->level,$new_user->level);
+         $this->assertEquals($user->code ,$new_user->code);
       }
 
       public function testUpdate() {
