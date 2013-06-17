@@ -533,7 +533,7 @@ class Model {
 
       if(!array_key_exists($cls,self::$validations) ||
          sizeof(self::$validations[$cls])<1)
-         return;
+         return true;
 
       foreach(self::$validations[$cls] as $attr=>$validations) {
          $value = $this->data[$attr];
