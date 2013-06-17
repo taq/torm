@@ -531,7 +531,8 @@ class Model {
       $rtn = true;
       $pk  = self::get(self::getPK());
 
-      if(sizeof(self::$validations[$cls])<1)
+      if(!array_key_exists($cls,self::$validations) ||
+         sizeof(self::$validations[$cls])<1)
          return;
 
       foreach(self::$validations[$cls] as $attr=>$validations) {
