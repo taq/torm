@@ -645,23 +645,25 @@ class Model {
       self::$belongs_to[$cls][$model] = $options ? $options : false;
    }
 
-   private static function checkAndReturnBelongs($method,$value) {
+   private static function checkAndReturnBelongs($method,$values) {
       $cls = get_called_class();
       if(array_key_exists($cls   ,self::$belongs_to) &&
          array_key_exists($method,self::$belongs_to[$cls]))
-         return self::resolveBelongsTo($method,$value);
+         return self::resolveBelongsTo($method,$values);
    }
 
-   private static function resolveBelongsTo($attr,$value) {
+   private static function resolveBelongsTo($attr,$values) {
       $cls = get_called_class();
       if(!array_key_exists($cls,self::$belongs_to) ||
          !array_key_exists($attr,self::$belongs_to[$cls]))
          return null;
 
       $configs       = self::$belongs_to[$cls][$attr];
-      $belongs_cls   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"]  : ucfirst($attr);
-      $belongs_key   = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : "id";
-      $obj           = $belongs_cls::first(array($belongs_key=>$value));
+      $belongs_cls   = is_array($configs) && array_key_exists("class_name" ,$configs) ? $configs["class_name"]  : ucfirst($attr);
+      $belongs_key   = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : $belongs_cls."_id";
+      $primary_key   = is_array($configs) && array_key_exists("primary_key",$configs) ? $configs["primary_key"] : "id";
+      $value         = $values[self::$mapping[$cls][strtolower($belongs_key)]];
+      $obj           = $belongs_cls::first(array($primary_key=>$value));
       return $obj;
    }
 
@@ -820,7 +822,7 @@ class Model {
       if($many)
          return $many;
 
-      $belongs = self::checkAndReturnBelongs($method,$this->data[self::getPK()]);
+      $belongs = self::checkAndReturnBelongs($method,$this->data);
       if($belongs)
          return $belongs;
 
@@ -843,7 +845,7 @@ class Model {
       if($many)
          return $many;
 
-      $belongs = self::checkAndReturnBelongs($attr,$this->data[self::getPK()]);
+      $belongs = self::checkAndReturnBelongs($attr,$this->data);
       if($belongs)
          return $belongs;
 
