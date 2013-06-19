@@ -441,5 +441,15 @@
          $account = TORM\Factory::build("account");
          $this->assertNull($account->hasCreateColumn());
       }
+
+      public function testHasUpdateColumn() {
+         $user = TORM\Factory::build("user");
+         $this->assertNotNull($user->hasUpdateColumn());
+      }
+
+      public function testHasNotUpdateColumn() {
+         $account = TORM\Factory::build("account");
+         $this->assertNull($account->hasUpdateColumn());
+      }
    }
 ?>

@@ -348,12 +348,20 @@ class Model {
          self::loadColumns();
    } 
 
+   public function hasUpdateColumn() {
+      return $this->hasColumn("updated_at");
+   }
+
    public function hasCreateColumn() {
+      return $this->hasColumn("created_at");
+   }
+
+   private function hasColumn($column) {
       $cls  = get_called_class();
       $key  = null;
       $keys = self::$columns[$cls];
       foreach($keys as $ckey) {
-         if(strtolower($ckey)=="created_at") {
+         if(strtolower($ckey)==$column) {
             $key = $ckey;
             break;
          }
@@ -487,8 +495,9 @@ class Model {
    }
 
    private function update($attrs,$calling,$pk,$pk_value) {
-      $escape = Driver::$escape_char;
-      $vals   = array();
+      $escape        = Driver::$escape_char;
+      $vals          = array();
+      $update_column = $this->hasUpdateColumn();
 
       unset($attrs[$pk]);
       $sql  = "update $escape".$calling::getTableName()."$escape set ";
@@ -498,6 +507,10 @@ class Model {
          $sql .= "$escape".self::$mapping[$calling][$attr]."$escape=?,";
          array_push($vals,$value);
       }
+      
+      if($update_column)
+         $sql .= "$escape".self::$mapping[$calling][$update_column]."$escape=".Driver::$current_timestamp.",";
+
       $sql  = substr($sql,0,strlen($sql)-1);
       $sql .= " where $escape".self::getTableName()."$escape.$escape$pk$escape=?";
       array_push($vals,$pk_value);
