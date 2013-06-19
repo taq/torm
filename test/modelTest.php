@@ -420,5 +420,15 @@
          $this->assertEquals("Account",get_class($acct));
          $this->assertEquals($account->number,$acct->number);
       }
+
+      public function testGet() {
+         $user = TORM\Factory::build("user");
+         $this->assertNotNull($user->get("name"));
+      }
+
+      public function testNullGet() {
+         $user = TORM\Factory::build("user");
+         $this->assertNull($user->get("yadda"));
+      }
    }
 ?>
