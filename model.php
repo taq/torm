@@ -349,14 +349,14 @@ class Model {
    } 
 
    public function hasUpdateColumn() {
-      return $this->hasColumn("updated_at");
+      return self::hasColumn("updated_at");
    }
 
    public function hasCreateColumn() {
-      return $this->hasColumn("created_at");
+      return self::hasColumn("created_at");
    }
 
-   private function hasColumn($column) {
+   private static function hasColumn($column) {
       $cls  = get_called_class();
       $key  = null;
       $keys = self::$columns[$cls];
@@ -408,7 +408,7 @@ class Model {
    private function insert($attrs,$calling,$pk,$pk_value) {
       $escape        = Driver::$escape_char;
       $vals          = array();
-      $create_column = $this->hasCreateColumn();
+      $create_column = self::hasCreateColumn();
 
       $sql = "insert into $escape".$calling::getTableName()."$escape (";
 
@@ -497,7 +497,7 @@ class Model {
    private function update($attrs,$calling,$pk,$pk_value) {
       $escape        = Driver::$escape_char;
       $vals          = array();
-      $update_column = $this->hasUpdateColumn();
+      $update_column = self::hasUpdateColumn();
 
       unset($attrs[$pk]);
       $sql  = "update $escape".$calling::getTableName()."$escape set ";
