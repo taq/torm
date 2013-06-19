@@ -490,21 +490,24 @@ class Model {
       $escape        = Driver::$escape_char;
       $vals          = array();
       $update_column = self::hasColumn("updated_at");
+      $create_column = self::hasColumn("created_at");
 
       unset($attrs[$pk]);
       $sql  = "update $escape".$calling::getTableName()."$escape set ";
       foreach($attrs as $attr=>$value) {
+         if(($update_column && $attr==$update_column) ||
+            ($create_column && $attr==$create_column))
+            continue;
          if(strlen(trim($value))<1)
             $value = "null";
          $sql .= "$escape".self::$mapping[$calling][$attr]."$escape=?,";
          array_push($vals,$value);
       }
-      
       if($update_column)
          $sql .= "$escape".self::$mapping[$calling][$update_column]."$escape=".Driver::$current_timestamp.",";
 
       $sql  = substr($sql,0,strlen($sql)-1);
-      $sql .= " where $escape".self::getTableName()."$escape.$escape$pk$escape=?";
+      $sql .= " where $escape".self::getTableName()."$escape.$escape".self::$mapping[$calling][$pk]."$escape=?";
       array_push($vals,$pk_value);
 
       Log::log($sql);
