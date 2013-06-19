@@ -379,10 +379,8 @@ class Model {
          }
       }
 
-      if($pk_value) {
-         $existing      = self::find($pk_value);
-         $this->new_rec = !$existing;
-      } 
+      if($pk_value)
+         $this->new_rec = !self::find($pk_value);
 
       if($this->new_rec) {
          $sql = "insert into $escape".$calling::getTableName()."$escape (";
@@ -446,21 +444,29 @@ class Model {
          if(is_null($this->data[$pk]) && !is_null($lid))
             $this->data[$pk] = $lid;
       } else {
-         unset($attrs[$pk]);
-         $sql  = "update $escape".$calling::getTableName()."$escape set ";
-         foreach($attrs as $attr=>$value) {
-            if(strlen(trim($value))<1)
-               $value = "null";
-            $sql .= "$escape".self::$mapping[$calling][$attr]."$escape=?,";
-            array_push($vals,$value);
-         }
-         $sql  = substr($sql,0,strlen($sql)-1);
-         $sql .= " where $escape".self::getTableName()."$escape.$escape$pk$escape=?";
-         array_push($vals,$pk_value);
-         $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
+         return $this->update($attrs,$calling,$pk,$pk_value);
       }
-      Log::log($sql);
       return $rtn;
+   }
+
+   private function update($attrs,$calling,$pk,$pk_value) {
+      $escape = Driver::$escape_char;
+      $vals   = array();
+
+      unset($attrs[$pk]);
+      $sql  = "update $escape".$calling::getTableName()."$escape set ";
+      foreach($attrs as $attr=>$value) {
+         if(strlen(trim($value))<1)
+            $value = "null";
+         $sql .= "$escape".self::$mapping[$calling][$attr]."$escape=?,";
+         array_push($vals,$value);
+      }
+      $sql  = substr($sql,0,strlen($sql)-1);
+      $sql .= " where $escape".self::getTableName()."$escape.$escape$pk$escape=?";
+      array_push($vals,$pk_value);
+
+      Log::log($sql);
+      return self::executePrepared($sql,$vals)->rowCount()==1;
    }
 
    /**
