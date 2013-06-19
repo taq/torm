@@ -451,22 +451,22 @@
 
       public function testHasCreateColumn() {
          $user = TORM\Factory::build("user");
-         $this->assertNotNull($user->hasCreateColumn());
+         $this->assertNotNull($user->hasColumn("created_at"));
       }
 
       public function testHasNotCreateColumn() {
          $account = TORM\Factory::build("account");
-         $this->assertNull($account->hasCreateColumn());
+         $this->assertNull($account->hasColumn("created_at"));
       }
 
       public function testHasUpdateColumn() {
          $user = TORM\Factory::build("user");
-         $this->assertNotNull($user->hasUpdateColumn());
+         $this->assertNotNull($user->hasColumn("updated_at"));
       }
 
       public function testHasNotUpdateColumn() {
          $account = TORM\Factory::build("account");
-         $this->assertNull($account->hasUpdateColumn());
+         $this->assertNull($account->hasColumn("updated_at"));
       }
    }
 ?>
