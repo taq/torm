@@ -129,6 +129,14 @@
          $this->assertEquals($user->code ,$new_user->code);
       }
 
+      public function testInsertNoCreatedAtColumn() {
+         $ticket = new Ticket();
+         $ticket->description = "A new ticket";
+         $ticket->user_id = 1;
+         $this->assertTrue($ticket->save());
+         $this->assertTrue($ticket->destroy());
+      }
+
       public function testUpdate() {
          $user = User::where("email='john@doe.com'")->next();
          $id   = $user->id;
@@ -138,6 +146,15 @@
          $this->assertEquals("Doe, John",User::find($id)->name);
          $this->assertTrue($user->isValid());
          $user->save();
+      }
+
+      public function testUpdateNoUpdatedAtColumn() {
+         $ticket = Ticket::first();
+         $old_desc = $ticket->description;
+         $ticket->description = "New description";
+         $this->assertTrue($ticket->save());
+         $ticket->description = $old_desc;
+         $this->assertTrue($ticket->save());
       }
 
       public function testDestroy() {
