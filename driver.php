@@ -16,4 +16,5 @@ class Driver {
    public static $limit_query           = null;
    public static $numeric_column        = "integer";
    public static $escape_char           = "\"";
+   public static $current_timestamp     = "current_timestamp";
 }

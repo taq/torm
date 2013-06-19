@@ -119,6 +119,7 @@
          $this->assertNull($user->id);
          $this->assertTrue($user->save());
          $this->assertNotNull($user->id);
+         $this->assertNotNull($user->created_at);
 
          $new_user = User::find($user->id);
          $this->assertNotNull($new_user);
@@ -429,6 +430,16 @@
       public function testNullGet() {
          $user = TORM\Factory::build("user");
          $this->assertNull($user->get("yadda"));
+      }
+
+      public function testHasCreateColumn() {
+         $user = TORM\Factory::build("user");
+         $this->assertNotNull($user->hasCreateColumn());
+      }
+
+      public function testHasNotCreateColumn() {
+         $account = TORM\Factory::build("account");
+         $this->assertNull($account->hasCreateColumn());
       }
    }
 ?>

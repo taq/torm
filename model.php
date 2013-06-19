@@ -348,6 +348,19 @@ class Model {
          self::loadColumns();
    } 
 
+   public function hasCreateColumn() {
+      $cls  = get_called_class();
+      $key  = null;
+      $keys = self::$columns[$cls];
+      foreach($keys as $ckey) {
+         if(strtolower($ckey)=="created_at") {
+            $key = $ckey;
+            break;
+         }
+      }
+      return $key;
+   }
+
    /**
     * Save or update currenct object
     * @return boolean saved/updated
@@ -385,8 +398,9 @@ class Model {
    }
 
    private function insert($attrs,$calling,$pk,$pk_value) {
-      $escape = Driver::$escape_char;
-      $vals   = array();
+      $escape        = Driver::$escape_char;
+      $vals          = array();
+      $create_column = $this->hasCreateColumn();
 
       $sql = "insert into $escape".$calling::getTableName()."$escape (";
 
@@ -422,11 +436,17 @@ class Model {
       $marks = array();
       foreach($attrs as $attr=>$value) {
          $sql .= "$escape".self::$mapping[$calling][$attr]."$escape,";
+         $mark = "?";
          // can't use marks for sequence values - must be specified the 
          // sequence name column, get as the value specified on the array 
          // created above ({"id"=>"user_sequence.nextval"}).
-         array_push($marks, Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$pk && empty($pk_value) ? $value : "?");
+         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$pk && empty($pk_value))
+            $mark = $value; 
+         if($create_column==self::$mapping[$calling][$attr])
+            $mark = Driver::$current_timestamp;
+         array_push($marks,$mark);
       }
+
       $marks = join(",",$marks); 
       $sql   = substr($sql,0,strlen($sql)-1);
       $sql  .= ") values ($marks)";
@@ -440,15 +460,28 @@ class Model {
          if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE &&
             $attr==$pk && empty($pk_value))
             continue;
+         if($create_column && $attr==$create_column)
+            continue;
          array_push($vals,$value);
       }
       $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
 
-      // check for last inserted value
-      $lid = self::resolveConnection()->lastInsertId();
-      if(is_null($this->data[$pk]) && !is_null($lid))
-         $this->data[$pk] = $lid;
+      // if inserted
+      if($rtn) {
+         // check for last inserted value
+         $lid = self::resolveConnection()->lastInsertId();
+         if(is_null($this->data[$pk]) && !is_null($lid))
+            $this->data[$pk] = $lid;
 
+         // check for database filled columns
+         if($this->data[$pk]) {
+            $found = self::find($this->data[$pk]);
+            if($found) {
+               if($create_column)
+                  $this->data[$create_column] = $found->get($create_column);
+            }
+         }
+      }
       Log::log($sql);
       return $rtn;
    }
