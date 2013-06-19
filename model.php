@@ -810,15 +810,9 @@ class Model {
    }
 
    /**
-    * Trigger to use object values as methods
-    * Like
-    * $user->name("john doe");
-    * print $user->name();
+    * Resolve relations, if present
     */
-   public function __call($method,$args) {
-      if(method_exists($this,$method)) 
-         return call_user_func_array(array($this,$method),$args);
-
+   private function resolveRelations($method) {
       $many = self::checkAndReturnMany($method,$this->data[self::getPK()]);
       if($many)
          return $many;
@@ -831,8 +825,25 @@ class Model {
       if($has_one)
          return $has_one;
 
+      return null;
+   }
+
+   /**
+    * Trigger to use object values as methods
+    * Like
+    * $user->name("john doe");
+    * print $user->name();
+    */
+   public function __call($method,$args) {
+      if(method_exists($this,$method)) 
+         return call_user_func_array(array($this,$method),$args);
+
+      $relation = $this->resolveRelations($method);
+      if($relation)
+         return $relation;
+
       if(!$args) 
-         return $this->data[$method];
+         return $this->get($method);
       $this->set($method,$args[0]);
    }
 
@@ -842,18 +853,9 @@ class Model {
     * print $user->name;
     */
    function __get($attr) {
-      $many = self::checkAndReturnMany($attr,$this->data[self::getPK()]);
-      if($many)
-         return $many;
-
-      $belongs = self::checkAndReturnBelongs($attr,$this->data);
-      if($belongs)
-         return $belongs;
-
-      $has_one = self::checkAndReturnHasOne($attr,$this->data[self::getPK()]);
-      if($has_one)
-         return $has_one;
-
+      $relation = $this->resolveRelations($attr);
+      if($relation)
+         return $relation;
       return $this->get($attr);
    }
 
