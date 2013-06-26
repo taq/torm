@@ -386,6 +386,19 @@
          $this->assertEquals($old_email,$user->email);
       }
 
+      public function testCantUpdatePKAttributes() {
+         $account = TORM\Factory::create("account");
+         $this->assertTrue($account->save());
+
+         $account = Account::first();
+         $old_id  = $account->id;
+         $new_id  = 999;
+
+         $this->assertFalse($account->updateAttributes(array("id"=>$new_id,"number"=>"54321")));
+         $this->assertNotNull(Account::find($old_id));
+         $this->assertNull(Account::find($new_id));
+      }
+
       public function testUpdateAttributesOnCollection() {
          $users = User::all();
          $user1 = $users->next();

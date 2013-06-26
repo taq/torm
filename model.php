@@ -762,9 +762,11 @@ class Model {
    }
 
    public function updateAttributes($attrs) {
+      if(array_key_exists(self::getPK(),$attrs))
+         return false;
       foreach($attrs as $attr=>$value) 
          $this->data[$attr] = $value;
-      $this->save();
+      return $this->save();
    }
 
    /**
