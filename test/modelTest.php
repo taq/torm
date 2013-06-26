@@ -236,8 +236,16 @@
          $tickets = $user->tickets;
          $this->assertNotNull($tickets);
          echo "\ntickets:\n";
-         foreach($tickets as $ticket)
+         $ids = array();
+         foreach($tickets as $ticket) {
             echo "ticket: ".$ticket->id." ".$ticket->description."\n";
+            array_push($ids,$ticket->id);
+         }
+         $this->assertNotNull($user->ticket_ids);
+         $this->assertEquals(sizeof($ids),sizeof($user->ticket_ids));
+         foreach($ids as $id) {
+            $this->assertTrue(in_array($id,$user->ticket_ids));
+         }
       }
 
       public function testBelongs() {

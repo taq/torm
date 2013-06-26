@@ -14,6 +14,8 @@ class Model {
    private static $prepared_cache = array();
    private static $validations    = array();
    private static $has_many       = array();
+   private static $has_many_ids   = array();
+   private static $has_many_maps  = array();
    private static $belongs_to     = array();
    private static $sequence       = array();
    private static $has_one        = array();
@@ -651,6 +653,11 @@ class Model {
       if(!array_key_exists($cls,self::$has_many))
          self::$has_many[$cls] = array();
       self::$has_many[$cls][$attr] = $options ? $options : false;
+
+      $klass = self::hasManyClass($attr);
+      $ids   = strtolower($klass)."_ids";
+      self::$has_many_ids[$cls][$ids]  = array();
+      self::$has_many_maps[$cls][$ids] = $attr;
    }
 
    public function hasHasMany($attr) {
@@ -910,6 +917,32 @@ class Model {
       return null;
    }
 
+   private function resolveIds($attr,$values=null) {
+      $cls = get_called_class();
+
+      if(!array_key_exists($cls ,self::$has_many_ids) ||
+         !array_key_exists($attr,self::$has_many_ids[$cls]))
+         return null;
+
+      // if values sent, set them
+      if($values)
+         self::$has_many_ids[$cls][$attr] = $values;
+      else {
+         // if ids not loaded, load them!
+         if(sizeof(self::$has_many_ids[$cls][$attr])<1) {
+            $klass   = self::hasManyClass(self::$has_many_maps[$cls][$attr]);
+            $foreign = self::hasManyForeignKey(strtolower($klass)."s");
+            $value   = $this->data[self::getPK()];
+            $data    = $klass::where(array($foreign=>$value));
+            $ids     = array();
+            while($row=$data->next())
+               array_push($ids,$row->get($klass::getPK()));
+            return $ids;
+         }
+      }
+      return self::$has_many_ids[$cls][$attr];
+   }
+
    /**
     * Trigger to use object values as methods
     * Like
@@ -923,6 +956,10 @@ class Model {
       $relation = $this->resolveRelations($method);
       if($relation)
          return $relation;
+
+      $ids = $this->resolveIds($method,$args);
+      if($ids)
+         return $ids;
 
       if(!$args) 
          return $this->get($method);
@@ -938,6 +975,10 @@ class Model {
       $relation = $this->resolveRelations($attr);
       if($relation)
          return $relation;
+
+      $ids = $this->resolveIds($attr);
+      if($ids)
+         return $ids;
       return $this->get($attr);
    }
 
@@ -947,6 +988,9 @@ class Model {
     * $user->name = "john doe";
     */
    function __set($attr,$value) {
+      $ids = $this->resolveIds($attr,$value);
+      if($ids)
+         return $ids;
       $this->set($attr,$value);
    }
 }
