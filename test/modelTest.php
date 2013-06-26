@@ -393,9 +393,12 @@
          $account = Account::first();
          $old_id  = $account->id;
          $new_id  = 999;
+         $new_num = "54321";
 
-         $this->assertFalse($account->updateAttributes(array("id"=>$new_id,"number"=>"54321")));
-         $this->assertNotNull(Account::find($old_id));
+         $this->assertTrue($account->updateAttributes(array("id"=>$new_id,"number"=>$new_num)));
+         $account = Account::find($old_id);
+         $this->assertNotNull($account);
+         $this->assertEquals($new_num,$account->number);
          $this->assertNull(Account::find($new_id));
       }
 

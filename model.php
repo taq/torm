@@ -763,7 +763,7 @@ class Model {
 
    public function updateAttributes($attrs) {
       if(array_key_exists(self::getPK(),$attrs))
-         return false;
+         unset($attrs[self::getPK()]);
       foreach($attrs as $attr=>$value) 
          $this->data[$attr] = $value;
       return $this->save();
