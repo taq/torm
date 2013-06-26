@@ -686,6 +686,16 @@ class Model {
       return $klass;
    }
 
+   public static function hasManyForeignKey($attr) {
+      if(!self::hasHasMany($attr))
+         return null;
+
+      $cls     = get_called_class();
+      $configs = self::$has_many[$cls][$attr];
+      $key     = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
+      return $key;
+   }
+
    /**
     * Resolve the has many relationship and returns the collection with values
     * @param $attr name
@@ -699,7 +709,7 @@ class Model {
 
       $configs       = self::$has_many[$cls][$attr];
       $has_many_cls  = self::hasManyClass($attr);
-      $this_key      = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
+      $this_key      = self::hasManyForeignKey($attr);
       $collection    = $has_many_cls::where(array($this_key=>$value));
       return $collection;
    }

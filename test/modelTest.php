@@ -497,5 +497,10 @@
          $user = TORM\Factory::build("user");
          $this->assertEquals("Ticket",$user->hasManyClass("tickets"));
       }
+
+      public function testHasManyForeignKey() {
+         $user = TORM\Factory::build("user");
+         $this->assertEquals("user_id",$user->hasManyForeignKey("tickets"));
+      }
    }
 ?>
