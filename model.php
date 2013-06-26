@@ -924,19 +924,26 @@ class Model {
          !array_key_exists($attr,self::$has_many_ids[$cls]))
          return null;
 
+      $escape  = Driver::$escape_char;
+      $klass   = self::hasManyClass(self::$has_many_maps[$cls][$attr]);
+      $foreign = self::hasManyForeignKey(strtolower($klass)."s");
+      $value   = $this->data[self::getPK()];
+      $klasspk = $klass::getPK();
+
       // if values sent, set them
-      if($values)
+      if($values) {
          self::$has_many_ids[$cls][$attr] = $values;
-      else {
+         $ids = join(",",$values);
+         $klass = strtolower($klass)."s";
+         $sql = "update $escape".$klass."$escape set $foreign=null where $klasspk not in ($ids)";
+         self::query($sql);
+      } else {
          // if ids not loaded, load them!
          if(sizeof(self::$has_many_ids[$cls][$attr])<1) {
-            $klass   = self::hasManyClass(self::$has_many_maps[$cls][$attr]);
-            $foreign = self::hasManyForeignKey(strtolower($klass)."s");
-            $value   = $this->data[self::getPK()];
             $data    = $klass::where(array($foreign=>$value));
             $ids     = array();
             while($row=$data->next())
-               array_push($ids,$row->get($klass::getPK()));
+               array_push($ids,$row->get($klasspk));
             return $ids;
          }
       }

@@ -248,6 +248,18 @@
          }
       }
 
+      public function testHasManyUpdateIds() {
+         $user    = User::find(1);
+         $ticket  = TORM\Factory::build("ticket");
+         $ticket->user_id = $user->id;
+         $this->assertTrue($ticket->save());
+
+         $this->assertEquals(3,$user->tickets->count());
+         $user->ticket_ids = [1,2];
+         $this->assertEquals(2,$user->tickets->count());
+         $this->assertTrue($ticket->destroy());
+      }
+
       public function testBelongs() {
          $ticket = Ticket::first();
          $this->assertNotNull($ticket);
