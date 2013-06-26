@@ -492,5 +492,10 @@
          $this->assertFalse($account->hasHasMany("users"));
          $this->assertTrue($user->hasHasMany("tickets"));
       }
+
+      public function testHasManyClass() {
+         $user = TORM\Factory::build("user");
+         $this->assertEquals("Ticket",$user->hasManyClass("tickets"));
+      }
    }
 ?>

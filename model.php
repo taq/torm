@@ -673,6 +673,20 @@ class Model {
    }
 
    /**
+    * Check class from a relation, like
+    * hasManyClass("tickets") => "Ticket"
+    */
+   public static function hasManyClass($attr) {
+      if(!self::hasHasMany($attr))
+         return null;
+
+      $cls     = get_called_class();
+      $configs = self::$has_many[$cls][$attr];
+      $klass   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"] : ucfirst(preg_replace('/s$/',"",$attr));
+      return $klass;
+   }
+
+   /**
     * Resolve the has many relationship and returns the collection with values
     * @param $attr name
     * @param $value
@@ -680,12 +694,11 @@ class Model {
     */
    private static function resolveHasMany($attr,$value) {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$has_many) ||
-         !array_key_exists($attr,self::$has_many[$cls]))
+      if(!self::hasHasMany($attr))
          return null;
 
       $configs       = self::$has_many[$cls][$attr];
-      $has_many_cls  = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"]  : ucfirst(preg_replace('/s$/',"",$attr));
+      $has_many_cls  = self::hasManyClass($attr);
       $this_key      = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
       $collection    = $has_many_cls::where(array($this_key=>$value));
       return $collection;
