@@ -484,5 +484,13 @@
          $account = TORM\Factory::build("account");
          $this->assertNull($account->hasColumn("updated_at"));
       }
+
+      public function testHasHasManyRelation() {
+         $account = TORM\Factory::build("account");
+         $user    = TORM\Factory::build("user");
+
+         $this->assertFalse($account->hasHasMany("users"));
+         $this->assertTrue($user->hasHasMany("tickets"));
+      }
    }
 ?>

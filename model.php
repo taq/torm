@@ -653,6 +653,12 @@ class Model {
       self::$has_many[$cls][$attr] = $options ? $options : false;
    }
 
+   public function hasHasMany($attr) {
+      $cls = get_called_class();
+      return array_key_exists($cls,self::$has_many) &&
+             array_key_exists($attr,self::$has_many[$cls]);
+   }
+
    /**
     * Check a has many relationship and returns it resolved, if exists.
     * @param $method name
