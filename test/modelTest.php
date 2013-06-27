@@ -523,5 +523,13 @@
          $user = TORM\Factory::build("user");
          $this->assertEquals("user_id",$user->hasManyForeignKey("tickets"));
       }
+
+      public function testModelTableName() {
+         $this->assertEquals("users",User::getTableName());
+      }
+
+      public function testModelTableNameByString() {
+         $this->assertEquals("tickets",TORM\Model::getTableName("Ticket"));
+      }
    }
 ?>

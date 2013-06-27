@@ -100,11 +100,11 @@ class Model {
     * If not specified one, get the current class name and appends a "s" to it.
     * @return string table name
     */
-   public static function getTableName() {
-      $cls  = get_called_class();
+   public static function getTableName($cls=null) {
+      $cls  = $cls ? $cls : get_called_class();
       if(array_key_exists($cls,self::$table_name))
          return self::$table_name[$cls];
-      $name = get_called_class()."s";
+      $name = $cls."s";
       if(self::isIgnoringCase())
          $name = strtolower($name);
       return $name;
@@ -939,9 +939,10 @@ class Model {
       // if values sent, set them
       if($values) {
          $this->has_many_ids = $values;
-         $ids = join(",",$values);
-         $klass = strtolower($klass)."s";
-         $sql = "update $escape".$klass."$escape set $foreign=null where $klasspk not in ($ids)";
+         $ids   = join(",",$values);
+         $klass = strtolower($klass);
+         $table = Model::getTableName($klass);
+         $sql   = "update $escape$table$escape set $escape$foreign$escape=null where $escape$table$escape.$escape$klasspk$escape not in ($ids)";
          self::query($sql);
       } else {
          $data = $klass::where(array($foreign=>$value));
