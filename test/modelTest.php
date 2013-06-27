@@ -257,6 +257,7 @@
          $this->assertEquals(3,$user->tickets->count());
          $user->ticket_ids = [1,2];
          $this->assertEquals(2,$user->tickets->count());
+         $this->assertNotNull(Ticket::find($ticket->id));
          $this->assertTrue($ticket->destroy());
       }
 

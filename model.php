@@ -14,15 +14,15 @@ class Model {
    private static $prepared_cache = array();
    private static $validations    = array();
    private static $has_many       = array();
-   private static $has_many_ids   = array();
    private static $has_many_maps  = array();
    private static $belongs_to     = array();
    private static $sequence       = array();
    private static $has_one        = array();
 
-   private $data        = array();
-   private $new_rec     = false;
-   public  $errors      = null;
+   private $data           = array();
+   private $has_many_ids   = array();
+   private $new_rec        = false;
+   public  $errors         = null;
 
    /**
     * Constructor
@@ -656,7 +656,6 @@ class Model {
 
       $klass = self::hasManyClass($attr);
       $ids   = strtolower($klass)."_ids";
-      self::$has_many_ids[$cls][$ids]  = array();
       self::$has_many_maps[$cls][$ids] = $attr;
    }
 
@@ -920,8 +919,8 @@ class Model {
    private function resolveIds($attr,$values=null) {
       $cls = get_called_class();
 
-      if(!array_key_exists($cls ,self::$has_many_ids) ||
-         !array_key_exists($attr,self::$has_many_ids[$cls]))
+      if(!array_key_exists($cls ,self::$has_many_maps) ||
+         !array_key_exists($attr,self::$has_many_maps[$cls]))
          return null;
 
       $escape  = Driver::$escape_char;
@@ -932,22 +931,18 @@ class Model {
 
       // if values sent, set them
       if($values) {
-         self::$has_many_ids[$cls][$attr] = $values;
+         $this->has_many_ids = $values;
          $ids = join(",",$values);
          $klass = strtolower($klass)."s";
          $sql = "update $escape".$klass."$escape set $foreign=null where $klasspk not in ($ids)";
          self::query($sql);
       } else {
-         // if ids not loaded, load them!
-         if(sizeof(self::$has_many_ids[$cls][$attr])<1) {
-            $data    = $klass::where(array($foreign=>$value));
-            $ids     = array();
-            while($row=$data->next())
-               array_push($ids,$row->get($klasspk));
-            return $ids;
-         }
+         $data = $klass::where(array($foreign=>$value));
+         $this->has_many_ids = array();
+         while($row=$data->next())
+            array_push($this->has_many_ids,$row->get($klasspk));
       }
-      return self::$has_many_ids[$cls][$attr];
+      return $this->has_many_ids;
    }
 
    /**
