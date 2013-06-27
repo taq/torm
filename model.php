@@ -355,7 +355,9 @@ class Model {
       $key  = null;
       $keys = self::$columns[$cls];
       foreach($keys as $ckey) {
-         if(strtolower($ckey)==$column) {
+         $col1 = self::isIgnoringCase() ? strtolower($ckey)   : $ckey;
+         $col2 = self::isIgnoringCase() ? strtolower($column) : $column;
+         if($col1==$col2) {
             $key = $ckey;
             break;
          }
@@ -403,6 +405,7 @@ class Model {
       $escape        = Driver::$escape_char;
       $vals          = array();
       $create_column = self::hasColumn("created_at");
+      $update_column = self::hasColumn("updated_at");
 
       $sql = "insert into $escape".$calling::getTableName()."$escape (";
 
@@ -446,6 +449,8 @@ class Model {
             $mark = $value; 
          if($create_column==self::$mapping[$calling][$attr])
             $mark = Driver::$current_timestamp;
+         if($update_column==self::$mapping[$calling][$attr])
+            $mark = Driver::$current_timestamp;
          array_push($marks,$mark);
       }
 
@@ -463,6 +468,8 @@ class Model {
             $attr==$pk && empty($pk_value))
             continue;
          if($create_column && $attr==$create_column)
+            continue;
+         if($update_column && $attr==$update_column)
             continue;
          array_push($vals,$value);
       }
