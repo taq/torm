@@ -754,9 +754,9 @@ class Model {
 
       $configs       = self::$belongs_to[$cls][$attr];
       $belongs_cls   = is_array($configs) && array_key_exists("class_name" ,$configs) ? $configs["class_name"]  : ucfirst($attr);
-      $belongs_key   = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : $belongs_cls."_id";
+      $belongs_key   = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : strtolower($belongs_cls)."_id";
       $primary_key   = is_array($configs) && array_key_exists("primary_key",$configs) ? $configs["primary_key"] : "id";
-      $value         = $values[self::$mapping[$cls][strtolower($belongs_key)]];
+      $value         = $values[$belongs_key];
       $obj           = $belongs_cls::first(array($primary_key=>$value));
       return $obj;
    }
