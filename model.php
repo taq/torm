@@ -955,8 +955,27 @@ class Model {
       $klass   = strtolower($klass);
       $table   = Model::getTableName($klass);
       $sql     = "update $escape$table$escape set $escape$foreign$escape=null where $escape$foreign$escape=$id and $escape$table$escape.$escape$klasspk$escape not in ($ids)";
-      print "$sql\n";
       self::query($sql);
+   }
+
+   public function push($obj) {
+      $cls           = get_called_class();
+      $escape        = Driver::$escape_char;
+      $value         = $this->data[self::getPK()];
+      $other_cls     = get_class($obj);
+      $other_pk      = $other_cls::getPK();
+      $other_value   = $obj->get($other_pk);
+      $table         = Model::getTableName($other_cls);
+      $foreign       = self::hasManyForeignKey(strtolower($other_cls)."s");
+
+      // if both current object and pushed object already exists and have 
+      // primary key values
+      if(!is_null($value) && !is_null($other_value)) {
+         $sql = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
+         print "$sql\n";
+         $stmt = self::query($sql);
+         return $stmt->rowCount()==1;
+      }
    }
 
    /**
