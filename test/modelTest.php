@@ -579,6 +579,16 @@
       }
 
       public function testPushReceiverWithoutIdObjectWithoutId() {
+         $user    = TORM\Factory::build("user");
+         $ticket  = TORM\Factory::build("ticket");
+
+         $user->push($ticket);
+         $this->assertTrue($user->save());
+
+         $ticket = Ticket::find($ticket->id);
+         $this->assertEquals($user->id,$ticket->user->id);
+         $this->assertTrue($user->destroy());
+         $this->assertTrue($ticket->destroy());
       }
    }
 ?>

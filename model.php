@@ -972,11 +972,9 @@ class Model {
       $cls           = get_called_class();
       $escape        = Driver::$escape_char;
       $value         = array_key_exists(self::getPK(),$this->data) ? $this->data[self::getPK()] : null;
-      //print "current id: $value\n";
       $other_cls     = get_class($obj);
       $other_pk      = $other_cls::getPK();
       $other_value   = $obj->get($other_pk);
-      //print "other: class: $other_cls pk: $other_pk $other_value\n";
       $table         = Model::getTableName($other_cls);
       $foreign       = self::hasManyForeignKey(strtolower($other_cls)."s");
 
@@ -988,15 +986,13 @@ class Model {
                return false;
             $other_value = $obj->get($other_pk);
          }
-
          $sql  = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
          $stmt = self::query($sql);
          return $stmt->rowCount()==1;
       }
 
-      // if current object is still not saved and the pushed object already 
-      // exists
-      if(is_null($value) && !is_null($other_value)) {
+      // if current object does not exists ...
+      if(is_null($value)) {
          $this->pushLater($obj);
       }
    }
