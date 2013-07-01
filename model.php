@@ -22,6 +22,7 @@ class Model {
    private $data           = array();
    private $has_many_ids   = array();
    private $new_rec        = false;
+   private $push_later     = array();
    public  $errors         = null;
 
    /**
@@ -490,6 +491,12 @@ class Model {
                   $this->data[$create_column] = $found->get($create_column);
             }
          }
+
+         // push later objects
+         foreach($this->push_later as $obj) {
+            $this->push($obj);
+         }
+         $this->push_later = array();
       }
       Log::log($sql);
       return $rtn;
@@ -959,23 +966,43 @@ class Model {
    }
 
    public function push($obj) {
+      if(!$obj)
+         return;
+
       $cls           = get_called_class();
       $escape        = Driver::$escape_char;
-      $value         = $this->data[self::getPK()];
+      $value         = array_key_exists(self::getPK(),$this->data) ? $this->data[self::getPK()] : null;
+      //print "current id: $value\n";
       $other_cls     = get_class($obj);
       $other_pk      = $other_cls::getPK();
       $other_value   = $obj->get($other_pk);
+      //print "other: class: $other_cls pk: $other_pk $other_value\n";
       $table         = Model::getTableName($other_cls);
       $foreign       = self::hasManyForeignKey(strtolower($other_cls)."s");
 
-      // if both current object and pushed object already exists and have 
-      // primary key values
-      if(!is_null($value) && !is_null($other_value)) {
-         $sql = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
-         print "$sql\n";
+      // if the current object exists ...
+      if(!is_null($value)) {
+         // if the pushed object is still not saved
+         if(is_null($other_value)) {
+            if(!$obj->save())
+               return false;
+            $other_value = $obj->get($other_pk);
+         }
+
+         $sql  = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
          $stmt = self::query($sql);
          return $stmt->rowCount()==1;
       }
+
+      // if current object is still not saved and the pushed object already 
+      // exists
+      if(is_null($value) && !is_null($other_value)) {
+         $this->pushLater($obj);
+      }
+   }
+
+   private function pushLater($obj) {
+      array_push($this->push_later,$obj);
    }
 
    /**
