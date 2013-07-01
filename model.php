@@ -930,7 +930,6 @@ class Model {
          !array_key_exists($attr,self::$has_many_maps[$cls]))
          return null;
 
-      $escape  = Driver::$escape_char;
       $klass   = self::hasManyClass(self::$has_many_maps[$cls][$attr]);
       $foreign = self::hasManyForeignKey(strtolower($klass)."s");
       $value   = $this->data[self::getPK()];
@@ -940,10 +939,7 @@ class Model {
       if($values) {
          $this->has_many_ids = $values;
          $ids   = join(",",$values);
-         $klass = strtolower($klass);
-         $table = Model::getTableName($klass);
-         $sql   = "update $escape$table$escape set $escape$foreign$escape=null where $escape$table$escape.$escape$klasspk$escape not in ($ids)";
-         self::query($sql);
+         $this->nullNotPresentIds($klass,$foreign,$ids,$value);
       } else {
          $data = $klass::where(array($foreign=>$value));
          $this->has_many_ids = array();
@@ -951,6 +947,16 @@ class Model {
             array_push($this->has_many_ids,$row->get($klasspk));
       }
       return $this->has_many_ids;
+   }
+
+   private function nullNotPresentIds($klass,$foreign,$ids,$id) {
+      $escape  = Driver::$escape_char;
+      $klasspk = $klass::getPK();
+      $klass   = strtolower($klass);
+      $table   = Model::getTableName($klass);
+      $sql     = "update $escape$table$escape set $escape$foreign$escape=null where $escape$foreign$escape=$id and $escape$table$escape.$escape$klasspk$escape not in ($ids)";
+      print "$sql\n";
+      self::query($sql);
    }
 
    /**

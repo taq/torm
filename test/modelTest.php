@@ -531,5 +531,29 @@
       public function testModelTableNameByString() {
          $this->assertEquals("tickets",TORM\Model::getTableName("Ticket"));
       }
+
+      public function testPushReceiverWithIdObjectWithId() {
+         $user    = TORM\Factory::create("user");
+         $ticket  = TORM\Factory::create("ticket");
+
+         $this->assertEquals(0,$user->tickets->count());
+
+         //$user->push($ticket);
+         //$this->assertEquals(1,$user->tickets->count());
+         //$ticket = Ticket::find($ticket->id);
+         //$this->assertEqual($user->id,$ticket->user->id);
+
+         $this->assertTrue($user->destroy());
+         $this->assertTrue($ticket->destroy());
+      }
+
+      public function testPushReceiverWithoutIdObjectWithId() {
+      }
+
+      public function testPushReceiverWithIdObjectWithoutId() {
+      }
+
+      public function testPushReceiverWithoutIdObjectWithoutId() {
+      }
    }
 ?>
