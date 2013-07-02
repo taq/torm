@@ -956,6 +956,30 @@ class Model {
       return $this->has_many_ids;
    }
 
+   private function resolveCollection($attr,$values) {
+      $cls = get_called_class();
+
+      if(!array_key_exists($cls,self::$has_many_maps))
+         return null;
+      
+      $maps = array_values(self::$has_many_maps[$cls]);
+      if(!in_array($attr,$maps))
+         return null;
+      
+      if(!$values || !is_array($values) || sizeof($values)<1 || !is_object($values[0]))
+         return null;
+      
+      $this->has_many_ids = array();
+      foreach($values as $value) {
+         $klass = get_class($value);
+         $this->push($value);
+         $id = $value->get($klass::getPK());
+         if($id)
+            array_push($this->has_many_ids,$id);
+      }
+      return $this->has_many_ids;
+   }
+
    private function nullNotPresentIds($klass,$foreign,$ids,$id) {
       $escape  = Driver::$escape_char;
       $klasspk = $klass::getPK();
@@ -1047,8 +1071,13 @@ class Model {
     */
    function __set($attr,$value) {
       $ids = $this->resolveIds($attr,$value);
-      if($ids)
+      if($ids) 
          return $ids;
+
+      $ids = $this->resolveCollection($attr,$value);
+      if($ids) 
+         return $ids;
+      
       $this->set($attr,$value);
    }
 }

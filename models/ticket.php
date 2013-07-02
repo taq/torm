@@ -1,7 +1,7 @@
 <?php
    class Ticket extends TORM\Model {
       public static function getNewPKValue() {
-         return time();
+         return time()+rand();
       }
    }
 

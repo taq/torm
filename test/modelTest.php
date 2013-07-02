@@ -590,5 +590,19 @@
          $this->assertTrue($user->destroy());
          $this->assertTrue($ticket->destroy());
       }
+
+      public function testManyCollection() {
+         $user = TORM\Factory::create("user");
+         $t1   = TORM\Factory::create("ticket");
+         $t2   = TORM\Factory::create("ticket");
+
+         $this->assertEquals(0,$user->tickets->count());
+         $user->tickets = array($t1,$t2);
+         $this->assertEquals(2,$user->tickets->count());
+
+         $this->assertTrue($user->destroy());
+         $this->assertTrue($t1->destroy());
+         $this->assertTrue($t2->destroy());
+      }
    }
 ?>
