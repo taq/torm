@@ -7,4 +7,5 @@
    include "driver.php";
    include "validation.php";
    include "log.php";
+   include "inflections.php";
 ?>
