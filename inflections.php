@@ -9,11 +9,15 @@ class Inflections {
    private static $inflections = array();
 
    public static function push($idx,$singular,$plural) {
+      self::initialize();
+      self::$inflections[$idx][$singular] = $plural;
+   }
+
+   private static function initialize() {
       for($i=self::SINGULAR; $i<=self::IRREGULAR; $i++) {
          if(!array_key_exists($i,self::$inflections))
             self::$inflections[$i] = array();
       }
-      self::$inflections[$idx][$singular] = $plural;
    }
 
    public static function pluralize($str) {
@@ -25,8 +29,12 @@ class Inflections {
    }
 
    private static function search($str,$idx) {
+      self::initialize();
+
       $idx  = $idx==self::PLURAL ? self::SINGULAR : self::PLURAL;
       $vals = self::$inflections[$idx];
+
+      // adding irregular
       foreach(self::$inflections[self::IRREGULAR] as $key=>$val) {
          $vals[$key] = $val;
          $vals[$val] = $key;
@@ -41,6 +49,8 @@ class Inflections {
          if($reg && $mat)
             return preg_replace($key,$val,$str);
       }
+
+      // default behaviour - the "s" thing
       return $idx==self::SINGULAR ? trim($str)."s" : preg_replace('/s$/',"",$str);
    }
 }

@@ -98,14 +98,14 @@ class Model {
 
    /**
     * Returns the table name.
-    * If not specified one, get the current class name and appends a "s" to it.
+    * If not specified one, get the current class name and pluralize it.
     * @return string table name
     */
    public static function getTableName($cls=null) {
       $cls  = $cls ? $cls : get_called_class();
       if(array_key_exists($cls,self::$table_name))
          return self::$table_name[$cls];
-      $name = $cls."s";
+      $name = Inflections::pluralize($cls);
       if(self::isIgnoringCase())
          $name = strtolower($name);
       return $name;
@@ -938,7 +938,7 @@ class Model {
          return null;
 
       $klass   = self::hasManyClass(self::$has_many_maps[$cls][$attr]);
-      $foreign = self::hasManyForeignKey(strtolower($klass)."s");
+      $foreign = self::hasManyForeignKey(Inflections::pluralize(strtolower($klass)));
       $value   = $this->data[self::getPK()];
       $klasspk = $klass::getPK();
 
@@ -976,7 +976,7 @@ class Model {
       $other_pk      = $other_cls::getPK();
       $other_value   = $obj->get($other_pk);
       $table         = Model::getTableName($other_cls);
-      $foreign       = self::hasManyForeignKey(strtolower($other_cls)."s");
+      $foreign       = self::hasManyForeignKey(Inflections::pluralize(strtolower($other_cls)));
 
       // if the current object exists ...
       if(!is_null($value)) {
