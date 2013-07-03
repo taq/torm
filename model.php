@@ -416,12 +416,7 @@ class Model {
          unset($attrs[$pk]);
 
       if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && empty($pk_value)) {
-         // build the sequence name column. the primary key attribute will
-         // result with the key as the primary key column name and value as 
-         // the sequence name column value, for example, 
-         // {"id"=>"user_sequence.nextval"} 
          $seq_name   = self::resolveSequenceName();
-         // $attrs[$pk] = $seq_name.".nextval";
 
          // check if the sequence exists
          self::checkSequence();
@@ -430,6 +425,7 @@ class Model {
             return false;
          }
 
+         // get the sequence next value
          $seq_sql    = "select $seq_name.nextval from dual";
          $seq_stmt   = self::query($seq_sql);
          $seq_data   = $seq_stmt->fetch(\PDO::FETCH_ASSOC);
@@ -456,11 +452,6 @@ class Model {
       foreach($attrs as $attr=>$value) {
          $sql .= "$escape".self::$mapping[$calling][$attr]."$escape,";
          $mark = "?";
-         // can't use marks for sequence values - must be specified the 
-         // sequence name column, get as the value specified on the array 
-         // created above ({"id"=>"user_sequence.nextval"}).
-         //if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$pk && empty($pk_value))
-            //$mark = $value; 
          if($create_column==self::$mapping[$calling][$attr])
             $mark = Driver::$current_timestamp;
          if($update_column==self::$mapping[$calling][$attr])
@@ -475,12 +466,6 @@ class Model {
       // now fill the $vals array with all values to be inserted on the 
       // prepared statement
       foreach($attrs as $attr=>$value) {
-         // can't pass a dynamic value here because there is no mark to be 
-         // filled, see above. for sequences, $vals will be an array with one 
-         // less dynamic value mark.
-         //if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE &&
-            //$attr==$pk && empty($pk_value))
-            //continue;
          if($create_column && $attr==$create_column)
             continue;
          if($update_column && $attr==$update_column)
