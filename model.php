@@ -35,9 +35,12 @@ class Model {
       $cls = get_called_class();
       self::checkLoaded();
 
+      // setting default null values
+      $this->data = self::loadNullValues();
+
+      // if data not send, is a new record, return
       if($data==null) {
          $this->new_rec = true;
-         $this->data = self::loadNullValues();
          return;
       }
 
