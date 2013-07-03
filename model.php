@@ -1020,8 +1020,10 @@ class Model {
                return false;
             $other_value = $obj->get($other_pk);
          }
-         $sql  = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
-         $stmt = self::query($sql);
+         $foreign    = self::$mapping[$other_cls][$foreign];
+         $other_pk   = self::$mapping[$other_cls][$other_pk];
+         $sql        = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
+         $stmt       = self::query($sql);
          return $stmt->rowCount()==1;
       }
 
