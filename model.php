@@ -447,16 +447,25 @@ class Model {
       if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && !empty($pk_value))
          $attrs[$pk] = $pk_value;
 
+      if($create_column && array_key_exists($create_column,$attrs))
+         unset($attrs[$create_column]);
+
+      if($update_column && array_key_exists($update_column,$attrs))
+         unset($attrs[$update_column]);
+
       // marks to insert values on prepared statement
       $marks = array();
       foreach($attrs as $attr=>$value) {
          $sql .= "$escape".self::$mapping[$calling][$attr]."$escape,";
-         $mark = "?";
-         if($create_column==self::$mapping[$calling][$attr])
-            $mark = Driver::$current_timestamp;
-         if($update_column==self::$mapping[$calling][$attr])
-            $mark = Driver::$current_timestamp;
-         array_push($marks,$mark);
+         array_push($marks,"?");
+      }
+      if($create_column) {
+         $sql .= "$escape".self::$mapping[$calling][$create_column]."$escape,";
+         array_push($marks,Driver::$current_timestamp);
+      }
+      if($update_column) {
+         $sql .= "$escape".self::$mapping[$calling][$update_column]."$escape,";
+         array_push($marks,Driver::$current_timestamp);
       }
 
       $marks = join(",",$marks); 
@@ -465,13 +474,8 @@ class Model {
 
       // now fill the $vals array with all values to be inserted on the 
       // prepared statement
-      foreach($attrs as $attr=>$value) {
-         if($create_column && $attr==$create_column)
-            continue;
-         if($update_column && $attr==$update_column)
-            continue;
+      foreach($attrs as $attr=>$value) 
          array_push($vals,$value);
-      }
       $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
 
       // if inserted
