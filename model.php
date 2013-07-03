@@ -421,13 +421,26 @@ class Model {
          // the sequence name column value, for example, 
          // {"id"=>"user_sequence.nextval"} 
          $seq_name   = self::resolveSequenceName();
-         $attrs[$pk] = $seq_name.".nextval";
+         // $attrs[$pk] = $seq_name.".nextval";
 
          // check if the sequence exists
          self::checkSequence();
          if(!self::sequenceExists()) {
             $this->addError($pk,"Sequence $seq_name could not be created");
             return false;
+         }
+
+         $seq_sql    = "select $seq_name.nextval from $seq_name";
+         $seq_stmt   = self::query($seq_sql);
+         $seq_data   = $seq_stmt->fetch(\PDO::FETCH_ASSOC);
+         if($seq_data) {
+            $seq_keys = array("nextval","NEXTVAL");
+            foreach($seq_keys as $seq_key) {
+               if(array_key_exists($seq_key,$seq_data)) {
+                  $attrs[$pk] = $seq_data[$seq_key];
+                  break;
+               }
+            }
          }
       } 
 
@@ -446,8 +459,8 @@ class Model {
          // can't use marks for sequence values - must be specified the 
          // sequence name column, get as the value specified on the array 
          // created above ({"id"=>"user_sequence.nextval"}).
-         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$pk && empty($pk_value))
-            $mark = $value; 
+         //if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && $attr==$pk && empty($pk_value))
+            //$mark = $value; 
          if($create_column==self::$mapping[$calling][$attr])
             $mark = Driver::$current_timestamp;
          if($update_column==self::$mapping[$calling][$attr])
@@ -482,6 +495,10 @@ class Model {
          $lid = self::resolveConnection()->lastInsertId();
          if(is_null($this->data[$pk]) && !is_null($lid))
             $this->data[$pk] = $lid;
+
+         // or, like Oracle, if the database does not support last inserted id
+         if(is_null($this->data[$pk]) && is_null($lid) && !is_null($attrs[$pk]))
+            $this->data[$pk] = $attrs[$pk];
 
          // check for database filled columns
          if($this->data[$pk]) {
