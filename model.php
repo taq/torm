@@ -430,7 +430,7 @@ class Model {
             return false;
          }
 
-         $seq_sql    = "select $seq_name.nextval from $seq_name";
+         $seq_sql    = "select $seq_name.nextval from dual";
          $seq_stmt   = self::query($seq_sql);
          $seq_data   = $seq_stmt->fetch(\PDO::FETCH_ASSOC);
          if($seq_data) {
@@ -478,9 +478,9 @@ class Model {
          // can't pass a dynamic value here because there is no mark to be 
          // filled, see above. for sequences, $vals will be an array with one 
          // less dynamic value mark.
-         if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE &&
-            $attr==$pk && empty($pk_value))
-            continue;
+         //if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE &&
+            //$attr==$pk && empty($pk_value))
+            //continue;
          if($create_column && $attr==$create_column)
             continue;
          if($update_column && $attr==$update_column)
@@ -493,11 +493,11 @@ class Model {
       if($rtn) {
          // check for last inserted value
          $lid = self::resolveConnection()->lastInsertId();
-         if(is_null($this->data[$pk]) && !is_null($lid))
+         if(empty($this->data[$pk]) && !empty($lid))
             $this->data[$pk] = $lid;
 
          // or, like Oracle, if the database does not support last inserted id
-         if(is_null($this->data[$pk]) && is_null($lid) && !is_null($attrs[$pk]))
+         if(empty($this->data[$pk]) && empty($lid) && !empty($attrs[$pk]))
             $this->data[$pk] = $attrs[$pk];
 
          // check for database filled columns
