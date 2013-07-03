@@ -538,6 +538,7 @@
 
          $this->assertEquals(0,$user->tickets->count());
          $user->push($ticket);
+         $this->assertEquals($user->id,$ticket->user_id);
          $this->assertEquals(1,$user->tickets->count());
 
          $ticket = Ticket::find($ticket->id);

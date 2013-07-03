@@ -1010,6 +1010,7 @@ class Model {
                return false;
             $other_value = $obj->get($other_pk);
          }
+         $obj->set(strtolower($foreign),$value);
          $sql  = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
          $stmt = self::query($sql);
          return $stmt->rowCount()==1;
