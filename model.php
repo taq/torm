@@ -524,7 +524,7 @@ class Model {
             ($create_column && $attr==$create_column))
             continue;
          if(strlen(trim($value))<1)
-            $value = "null";
+            $value = null;
          $sql .= "$escape".self::$mapping[$calling][$attr]."$escape=?,";
          array_push($vals,$value);
       }
