@@ -605,5 +605,32 @@
          $this->assertTrue($t1->destroy());
          $this->assertTrue($t2->destroy());
       }
+
+      private function checkCallbackFile($file) {
+         $user = TORM\Factory::build("user");
+         if(file_exists($file))
+            unlink($file);
+
+         $this->assertFalse(file_exists($file));
+         $this->assertTrue($user->save());
+         $this->assertTrue($user->destroy());
+         $this->assertTrue(file_exists($file));
+      }
+
+      public function testBeforeSave() {
+         $this->checkCallbackFile("/tmp/torm-before-save.log");
+      }
+
+      public function testAfterSave() {
+         $this->checkCallbackFile("/tmp/torm-after-save.log");
+      }
+
+      public function testBeforeDestroy() {
+         $this->checkCallbackFile("/tmp/torm-before-destroy.log");
+      }
+
+      public function testAfterDestroy() {
+         $this->checkCallbackFile("/tmp/torm-before-save.log");
+      }
    }
 ?>

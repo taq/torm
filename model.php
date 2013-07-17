@@ -18,6 +18,7 @@ class Model {
    private static $belongs_to     = array();
    private static $sequence       = array();
    private static $has_one        = array();
+   private static $callbacks      = array();
 
    private $data           = array();
    private $has_many_ids   = array();
@@ -381,6 +382,9 @@ class Model {
          self::loadColumns();
 
       $calling    = get_called_class();
+      if(!self::checkCallback($calling,"before_save"))
+         return false;
+
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
       $attrs      = $this->data;
@@ -399,10 +403,15 @@ class Model {
       if($pk_value)
          $this->new_rec = !self::find($pk_value);
 
+      $rst = false;
       if($this->new_rec) 
-         return $this->insert($attrs,$calling,$pk,$pk_value);
+         $rst = $this->insert($attrs,$calling,$pk,$pk_value);
       else
-         return $this->update($attrs,$calling,$pk,$pk_value);
+         $rst = $this->update($attrs,$calling,$pk,$pk_value);
+
+      if($rst)
+         self::checkCallback($calling,"after_save");
+      return $rst;
    }
 
    private function insert($attrs,$calling,$pk,$pk_value) {
@@ -548,13 +557,20 @@ class Model {
          self::loadColumns();
 
       $calling    = get_called_class();
+      if(!self::checkCallback($calling,"before_destroy"))
+         return false;
+
       $table_name = $calling::getTableName();
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
       $pk_value   = $this->data[$pk];
       $escape     = Driver::$escape_char;
       $sql        = "delete from $escape$table_name$escape where $escape$table_name$escape.$escape".self::$mapping[$calling][$pk]."$escape=?";
       Log::log($sql);
-      return self::executePrepared($sql,array($pk_value))->rowCount()==1;
+
+      $rst = self::executePrepared($sql,array($pk_value))->rowCount()==1;
+      if($rst)
+         self::checkCallback($calling,"after_destroy");
+      return $rst;
    }
 
    /**
@@ -1091,6 +1107,51 @@ class Model {
          return $ids;
       
       $this->set($attr,$value);
+   }
+
+   public static function beforeSave($func) {
+      $cls = get_called_class();
+      self::addCallback($cls,"before_save",$func);
+   }
+
+   public static function afterSave($func) {
+      $cls = get_called_class();
+      self::addCallback($cls,"after_save",$func);
+   }
+
+   public static function beforeDestroy($func) {
+      $cls = get_called_class();
+      self::addCallback($cls,"before_destroy",$func);
+   }
+
+   public static function afterDestroy($func) {
+      $cls = get_called_class();
+      self::addCallback($cls,"after_destroy",$func);
+   }
+
+   private function checkCallback($cls,$callback) {
+      self::initiateCallbacks($cls);
+      foreach(self::$callbacks[$cls][$callback] as $func) {
+         if(!call_user_func(array($cls,$func)))
+            return false;
+      }
+      return true;
+   }
+
+   private function addCallback($cls,$callback,$func) {
+      self::initiateCallbacks($cls);
+      array_push(self::$callbacks[$cls][$callback],$func);
+   }
+
+   private function initiateCallbacks($cls) {
+      if(!array_key_exists($cls,self::$callbacks)) 
+         self::$callbacks[$cls] = array();
+
+      $callbacks = array("before_save","after_save","before_destroy","after_destroy");
+      foreach($callbacks as $callback) {
+         if(!array_key_exists($callback,self::$callbacks[$cls]))
+            self::$callbacks[$cls][$callback] = array();
+      }
    }
 }
 ?>
