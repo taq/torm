@@ -608,6 +608,15 @@ class Model {
       array_push($this->errors[$attr],$msg);
    }
 
+   public function errorMessages() {
+      $msgs = array();
+      foreach($this->errors as $key=>$values) {
+         foreach($values as $value)
+            array_push($msgs,"$key $value");
+      }
+      return $msgs;
+   }
+
    /**
     * Reset errors
     */
