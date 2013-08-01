@@ -19,6 +19,7 @@ class Model {
    private static $sequence       = array();
    private static $has_one        = array();
    private static $callbacks      = array();
+   private static $scopes         = array();
 
    private $data           = array();
    private $has_many_ids   = array();
@@ -684,6 +685,36 @@ class Model {
    }
 
    /**
+    * Create a scope
+    * @param $scope name
+    * @param $conditions
+    */
+   public static function scope($name,$conditions) {
+      $cls = get_called_class();
+      
+      if(!array_key_exists($cls,self::$scopes))
+         self::$scopes[$cls] = array();
+
+      if(!array_key_exists($name,self::$scopes[$cls]))
+         self::$scopes[$cls][$name] = array();
+         
+      self::$scopes[$cls][$name] = $conditions;
+   }
+
+   public static function resolveScope($name) {
+      $cls = get_called_class();
+      
+      if(!array_key_exists($cls,self::$scopes) ||
+         !array_key_exists($name,self::$scopes[$cls]))
+         return null;
+
+      $conditions = self::$scopes[$cls][$name];
+      if(!$conditions)
+         return null;
+      return self::where($conditions);
+   }
+
+   /**
     * Create a has many relationship
     * @param $attr attribute
     */
@@ -1057,7 +1088,7 @@ class Model {
     * Trigger to use object values as methods
     * Like
     * $user->name("john doe");
-    * print $user->name();
+    * echo $user->name();
     */
    public function __call($method,$args) {
       if(method_exists($this,$method)) 
@@ -1076,10 +1107,17 @@ class Model {
       $this->set($method,$args[0]);
    }
 
+   public static function __callStatic($method,$args) {
+      $scope = self::resolveScope($method);
+      if($scope)
+         return $scope;
+      return null;
+   }
+
    /**
     * Trigger to get object values as attributes
     * Like
-    * print $user->name;
+    * echo $user->name;
     */
    function __get($attr) {
       $relation = $this->resolveRelations($attr);

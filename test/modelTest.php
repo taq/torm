@@ -632,5 +632,13 @@
       public function testAfterDestroy() {
          $this->checkCallbackFile("/tmp/torm-before-save.log");
       }
+
+      public function testMustRespondToAScopeDefinitionMethod() {
+         $this->assertTrue(method_exists("User","scope"));
+      }
+
+      public function testMustRespondToAScopeAsAMethod() {
+         $this->assertEquals(1,User::first_level()->count());
+      }
    }
 ?>

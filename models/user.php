@@ -38,4 +38,5 @@
    User::afterSave("after_save");
    User::beforeDestroy("before_destroy");
    User::afterDestroy("after_destroy");
+   User::scope("first_level",array("level"=>1));
 ?>
