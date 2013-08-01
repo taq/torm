@@ -24,7 +24,7 @@ class Validation {
          return true;
       if(!is_null($options) && array_key_exists("allow_null",$options) && is_null($attr_value)) 
          return true;
-      return preg_match("/$validation_value/",$attr_value);
+      return preg_match("/$validation_value/u",$attr_value);
    }
 
    public static function uniqueness($cls,$id,$attr,$attr_value,$validation_value,$options) {

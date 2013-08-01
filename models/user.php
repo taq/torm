@@ -27,6 +27,7 @@
 
    User::setOrder("name");
    User::validates("name" ,array("presence"=>true));
+   User::validates("name" ,array("format"=>"^[\p{L},]{2,} [\p{L}\s\.]{2,}"));
    User::validates("email",array("presence"=>true));
    User::validates("email",array("format"  =>"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"));
    User::validates("email",array("uniqueness"=>true,"allow_null"=>true,"allow_blank"=>true));

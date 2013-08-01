@@ -640,5 +640,11 @@
       public function testMustRespondToAScopeAsAMethod() {
          $this->assertEquals(1,User::first_level()->count());
       }
+
+      public function testAccentedCharsOnValidation() {
+         $user = TORM\Factory::build("user");
+         $user->name = "Eustáquio Rangel";
+         $this->assertTrue($user->isValid());
+      }
    }
 ?>
