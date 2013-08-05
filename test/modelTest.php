@@ -641,6 +641,14 @@
          $this->assertEquals(1,User::first_level()->count());
       }
 
+      public function testMustRespondToAScopeAsAMethodWithParameters() {
+         $this->assertEquals(1,User::by_level(1)->count());
+      }
+
+      public function testMustRespondToAScopeAsAMethodWithMultipleParameters() {
+         $this->assertEquals(1,User::by_level_and_date(1,date("Y-m-d"))->count());
+      }
+
       public function testAccentedCharsOnValidation() {
          $user = TORM\Factory::build("user");
          $user->name = "Eustáquio Rangel";

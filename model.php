@@ -710,7 +710,7 @@ class Model {
       self::$scopes[$cls][$name] = $conditions;
    }
 
-   public static function resolveScope($name) {
+   public static function resolveScope($name,$args=null) {
       $cls = get_called_class();
       
       if(!array_key_exists($cls,self::$scopes) ||
@@ -720,6 +720,9 @@ class Model {
       $conditions = self::$scopes[$cls][$name];
       if(!$conditions)
          return null;
+
+      if(is_callable($conditions)) 
+         $conditions = $conditions($args);
       return self::where($conditions);
    }
 
@@ -1117,7 +1120,7 @@ class Model {
    }
 
    public static function __callStatic($method,$args) {
-      $scope = self::resolveScope($method);
+      $scope = self::resolveScope($method,$args);
       if($scope)
          return $scope;
       return null;

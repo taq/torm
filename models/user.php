@@ -40,4 +40,6 @@
    User::beforeDestroy("before_destroy");
    User::afterDestroy("after_destroy");
    User::scope("first_level",array("level"=>1));
+   User::scope("by_level",function($args) { return "level=".$args[0]; });
+   User::scope("by_level_and_date",function($args) { return "level=".$args[0]." and created_at<'".$args[1]." 23:59:59'"; });
 ?>
