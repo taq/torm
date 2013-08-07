@@ -926,10 +926,11 @@ class Model {
       if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
          return null;
 
-      $name = self::resolveSequenceName();
-      $sql  = "select count(*) as $escape"."CNT"."$escape from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
-      $stmt = self::resolveConnection()->query($sql);
-      $rst  = $stmt->fetch(\PDO::FETCH_ASSOC);
+      $escape = Driver::$escape_char;
+      $name   = self::resolveSequenceName();
+      $sql    = "select count(*) as $escape"."CNT"."$escape from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
+      $stmt   = self::resolveConnection()->query($sql);
+      $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
       return intval($rst["CNT"])>0;
    }
 
