@@ -17,5 +17,6 @@ class Driver {
    public static $numeric_column        = "integer";
    public static $escape_char           = "\"";
    public static $current_timestamp     = "current_timestamp";
-   public static $pagination_query      = "%query% limit %limit% offset %from%";
+   public static $pagination_query      = "%query% limit %to% offset %from%";
+   public static $pagination_subquery   = false;
 }

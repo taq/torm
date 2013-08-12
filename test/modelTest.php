@@ -654,5 +654,33 @@
          $user->name = "Eustáquio Rangel";
          $this->assertTrue($user->isValid());
       }
+
+      public function testCollectionToArray() {
+         $user       = User::first();
+         $tickets    = $user->tickets->toArray();
+         $this->assertEquals(2,sizeof($tickets));
+      }
+
+      public function testPagination() {
+         $user = User::first();
+         $objs = array();
+         for($i=0; $i<21; $i++) {
+            $ticket = TORM\Factory::build("ticket");
+            $ticket->user_id = $user->id;
+            $this->assertTrue($ticket->save());
+            array_push($objs,$ticket);
+         }
+
+         $pages = array(1=>5,2=>5,3=>5,4=>5,5=>3);
+         foreach($pages as $page=>$qty) {
+            $tickets = $user->tickets->paginate($page,5);
+            $ar = $tickets->toArray();
+            $this->assertEquals($page,$tickets->page);
+            $this->assertEquals($qty,sizeof($ar));
+         }
+
+         foreach($objs as $obj) 
+            $this->assertTrue($obj->destroy());
+      }
    }
 ?>

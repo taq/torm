@@ -9,6 +9,7 @@ class Collection implements \Iterator {
    private $curval   = null;
    private $count    = null;
    private $valid    = false;
+   public  $page     = null;
 
    public function __construct($builder,$vals,$cls) {
       $this->data    = null;
@@ -72,17 +73,31 @@ class Collection implements \Iterator {
       return $this->executeAndReturnFirst($builder,$this->vals);
    }
 
+   public function paginate($page,$per_page=50) {
+      $this->builder->limit  = $per_page;
+      $this->builder->offset = ($page-1)*$per_page;
+      $this->page            = $page;
+
+      if(Driver::$pagination_subquery)
+         $this->builder->limit = $this->builder->offset+$page_page-1;
+      return $this;
+   }
+
    private function makeBuilderForAggregations($fields) {
       // a lot of people using PHP 5.3 yet ... no deferencing there.
       $builder = $this->builder;
       $table   = $builder->table;
       $where   = $builder->where;
+      $limit   = $builder->limit;
+      $offset  = $builder->offset;
 
       $builder = new Builder();
       $builder->prefix = "select";
       $builder->fields = $fields;
       $builder->table  = $table;
       $builder->where  = $where;
+      $builder->limit  = $limit;
+      $builder->offset = $offset;
       return $builder;
    }
 
@@ -124,6 +139,13 @@ class Collection implements \Iterator {
          $sql .= " where $where";
       $nval = array_merge($vals,is_array($this->vals) ? $this->vals : array());
       return $cls::executePrepared($sql,$nval);
+   }
+
+   public function toArray() {
+      $ar = array();
+      while($data=$this->next())
+         array_push($ar,$data);
+      return $ar;
    }
    
    public function next() {

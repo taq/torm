@@ -29,20 +29,20 @@ class Builder {
       if($this->order)
          array_push($array," order by ".$this->order);
       
-      if($this->limit && !$this->offset && Driver::$limit_behaviour==Driver::LIMIT_APPEND)
+      if(!is_null($this->limit) && is_null($this->offset) && Driver::$limit_behaviour==Driver::LIMIT_APPEND)
          array_push($array," limit ".$this->limit);
 
       // basic query
       $query = join(" ",$array);
 
-      if($this->limit && !$this->offset &&
-         Driver::$limit_behaviour==Driver::LIMIT_AROUND &&
+      if(!is_null($this->limit) && is_null($this->offset) &&
+         Driver::$limit_behaviour==Driver::LIMIT_AROUND   &&
          Driver::$limit_query) {
          $query = str_replace("%query%",$query,Driver::$limit_query);
          $query = str_replace("%limit%",$this->limit,$query);
       }
 
-      if($this->limit && $this->offset && Driver::$pagination_query) {
+      if(!is_null($this->limit) && !is_null($this->offset) && Driver::$pagination_query) {
          $query = str_replace("%query%",$query,Driver::$pagination_query);
          $query = str_replace("%from%" ,$this->offset,$query);
          $query = str_replace("%to%"   ,$this->limit ,$query);
