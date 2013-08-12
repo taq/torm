@@ -78,8 +78,10 @@ class Collection implements \Iterator {
       $this->builder->offset = ($page-1)*$per_page;
       $this->page            = $page;
 
-      if(Driver::$pagination_subquery)
-         $this->builder->limit = $this->builder->offset+$page_page-1;
+      if(Driver::$pagination_subquery) {
+         $this->builder->limit   = $this->builder->offset+$per_page-1;
+         $this->builder->offset  = $this->builder->offset+1;
+      }
       return $this;
    }
 
