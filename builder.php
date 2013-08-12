@@ -41,6 +41,12 @@ class Builder {
          $query = str_replace("%query%",$query,Driver::$limit_query);
          $query = str_replace("%limit%",$this->limit,$query);
       }
+
+      if($this->limit && $this->offset && Driver::$pagination_query) {
+         $query = str_replace("%query%",$query,Driver::$pagination_query);
+         $query = str_replace("%from%" ,$this->offset,$query);
+         $query = str_replace("%to%"   ,$this->limit ,$query);
+      }
       return $query;
    }
 
