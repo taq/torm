@@ -10,6 +10,7 @@ class Collection implements \Iterator {
    private $count    = null;
    private $valid    = false;
    public  $page     = null;
+   public  $per_page = null;
 
    public function __construct($builder,$vals,$cls) {
       $this->data    = null;
@@ -77,6 +78,7 @@ class Collection implements \Iterator {
       $this->builder->limit  = $per_page;
       $this->builder->offset = ($page-1)*$per_page;
       $this->page            = $page;
+      $this->per_page        = $per_page;
 
       if(Driver::$pagination_subquery) {
          $this->builder->limit   = $this->builder->offset+$per_page-1;
