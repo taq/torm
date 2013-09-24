@@ -1,0 +1,15 @@
+---
+en-US:
+   errors:
+      messages:
+         presence: "cannot be blank"
+         format: "has invalid format"
+         uniqueness: "must be unique"
+         numericality: "must be a number"
+   models:
+      user: "User"
+   attributes:
+      user:
+         name: "Name"
+         email: "E-mail"
+         level: "Level"

@@ -661,6 +661,20 @@
          $this->assertEquals(2,sizeof($tickets));
       }
 
+      public function testFullErrorMessages() {
+         Locale::setDefault("en-US");
+         User::setYAMLFile("torm.yml");
+         $user = User::first();
+         $msgs = $user->fullMessages(array("name"  => array("presence"),
+                                           "level" => array("numericality"),
+                                           "email" => array("uniqueness","format")));
+
+         $this->assertEquals("Name cannot be blank"      ,$msgs[0]);
+         $this->assertEquals("Level must be a number"    ,$msgs[1]);
+         $this->assertEquals("E-mail must be unique"     ,$msgs[2]);
+         $this->assertEquals("E-mail has invalid format" ,$msgs[3]);
+      }
+
       public function testPagination() {
          $user = User::first();
          $objs = array();
