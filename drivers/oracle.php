@@ -8,4 +8,5 @@ Driver::$pagination_query      = "select * from (select a.*, rownum as rnum from
 Driver::$pagination_subquery   = true;
 Driver::$numeric_column        = "number";
 Driver::$current_timestamp     = "sysdate";
+Driver::$last_id_supported     = false;
 ?>

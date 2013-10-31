@@ -19,4 +19,5 @@ class Driver {
    public static $current_timestamp     = "current_timestamp";
    public static $pagination_query      = "%query% limit %to% offset %from%";
    public static $pagination_subquery   = false;
+   public static $last_id_supported     = true;
 }

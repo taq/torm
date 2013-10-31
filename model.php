@@ -495,9 +495,12 @@ class Model {
       // if inserted
       if($rtn) {
          // check for last inserted value
-         $lid = self::resolveConnection()->lastInsertId();
-         if(empty($this->data[$pk]) && !empty($lid))
-            $this->data[$pk] = $lid;
+         $lid = null;
+         if(Driver::$last_id_supported) {
+            $lid = self::resolveConnection()->lastInsertId();
+            if(empty($this->data[$pk]) && !empty($lid))
+               $this->data[$pk] = $lid;
+         }
 
          // or, like Oracle, if the database does not support last inserted id
          if(empty($this->data[$pk]) && empty($lid) && !empty($attrs[$pk]))
