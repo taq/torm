@@ -180,10 +180,22 @@ class Model {
 
       // try to create the TORM info table
       $type = Driver::$numeric_column;
-      $rst  = self::resolveConnection()->query("create table torm_info (id $type(1))");
+
+      // check if the table exists
       $rst  = self::resolveConnection()->query("select id from torm_info");
-      if(!$rst->fetch())
-         self::resolveConnection()->query("insert into torm_info values (1)");
+      if(!$rst->fetch()) {
+         $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
+         $stmt->closeCursor();
+      }
+      $rst->closeCursor();
+
+      // create table and insert first value
+      $rst  = self::resolveConnection()->query("select id from torm_info");
+      if(!$rst->fetch()) {
+         $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
+         $stmt->closeCursor();
+      }
+      $rst->closeCursor();
 
       // hack to dont need a query string to get columns
       $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
@@ -195,6 +207,7 @@ class Model {
          array_push(self::$columns[$cls],$keyc);
          self::$mapping[$cls][$keyc] = $key;
       }
+      $rst->closeCursor();
       self::$loaded[$cls] = true;
    }
 
@@ -452,6 +465,7 @@ class Model {
                }
             }
          }
+         $seq_stmt->closeCursor();
       } 
 
       // use sequence, but there is already a value on the primary key.
@@ -977,7 +991,9 @@ class Model {
       $sql    = "select count(*) as $escape"."CNT"."$escape from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
       $stmt   = self::resolveConnection()->query($sql);
       $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
-      return intval($rst["CNT"])>0;
+      $rtn    = intval($rst["CNT"])>0;
+      $stmt->closeCursor();
+      return $rtn;
    }
 
    /**
@@ -996,6 +1012,7 @@ class Model {
       $sql  = "create sequence $name increment by 1 start with 1 nocycle nocache";
       Log::log($sql);
       $stmt = self::resolveConnection()->query($sql);
+      $stmt->closeCursor();
    }
 
    /**
@@ -1101,7 +1118,8 @@ class Model {
       $klass   = strtolower($klass);
       $table   = Model::getTableName($klass);
       $sql     = "update $escape$table$escape set $escape$foreign$escape=null where $escape$foreign$escape=$id and $escape$table$escape.$escape$klasspk$escape not in ($ids)";
-      self::query($sql);
+      $stmt    = self::query($sql);
+      $stmt->closeCursor();
    }
 
    public function push($obj) {
@@ -1130,7 +1148,9 @@ class Model {
          $other_pk   = self::$mapping[$other_cls][$other_pk];
          $sql        = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
          $stmt       = self::query($sql);
-         return $stmt->rowCount()==1;
+         $rst        = $stmt->rowCount()==1;
+         $stmt->closeCursor();
+         return $rst;
       }
 
       // if current object does not exists ...
