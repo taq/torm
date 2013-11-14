@@ -412,7 +412,7 @@ class Model {
     * Save or update currenct object
     * @return boolean saved/updated
     */
-   public function save() {
+   public function save($force=false) {
       if(!$this->isValid())
          return false;
 
@@ -444,8 +444,14 @@ class Model {
       $rst = false;
       if($this->new_rec) 
          $rst = $this->insert($attrs,$calling,$pk,$pk_value);
-      else
-         $rst = $this->update($attrs,$calling,$pk,$pk_value);
+      else {
+         // no need to update if there weren't changes
+         if(sizeof($this->changed())<1 && !$force) {
+            Log::log("No changes, not updating");
+            $rst = true;
+         } else
+            $rst = $this->update($attrs,$calling,$pk,$pk_value);
+      }
 
       if($rst)
          self::checkCallback($calling,"after_save");

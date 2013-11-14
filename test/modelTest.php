@@ -435,8 +435,8 @@
             $this->assertEquals(0,$user->level);
          }
 
-         $this->assertTrue($user1->save());
-         $this->assertTrue($user2->save());
+         $this->assertTrue($user1->save(true));
+         $this->assertTrue($user2->save(true));
       }
 
       public function testUpdateAttributesOnCollectionWithConditions() {
@@ -451,7 +451,7 @@
             $this->assertEquals("void@gmail.com",$user->email);
             $this->assertEquals(0,$user->level);
          }
-         $this->assertTrue($user1->save());
+         $this->assertTrue($user1->save(true));
       }
 
       public function testPKMethod() {
