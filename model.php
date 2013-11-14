@@ -23,6 +23,7 @@ class Model {
    private static $scopes         = array();
 
    private $data           = array();
+   private $prev_data      = array();
    private $has_many_ids   = array();
    private $new_rec        = false;
    private $push_later     = array();
@@ -39,7 +40,8 @@ class Model {
       self::checkLoaded();
 
       // setting default null values
-      $this->data = self::loadNullValues();
+      $this->data      = self::loadNullValues();
+      $this->prev_data = self::loadNullValues();
 
       // if data not send, is a new record, return
       if($data==null) {
@@ -63,7 +65,9 @@ class Model {
          if(!array_key_exists($keyr,self::$mapping[$cls]))
             self::$mapping[$cls][$key] = $keyr;
       }
-      $this->data = $data;
+
+      $this->data       = $data;
+      $this->prev_data  = $data;
 
       // check if is a new record
       $pk = $cls::getPK();
@@ -360,6 +364,14 @@ class Model {
     */
    public function getData() {
       return $this->data;
+   }
+
+   /**
+    * Return the data previous state
+    * @return Array data
+    */
+   public function getPrevData() {
+      return $this->prev_data;
    }
 
    private function checkLoaded() {
@@ -726,10 +738,10 @@ class Model {
       return $obj==null || $obj->get(self::getPK())==$id;
    }
 
-   public function get($attr) {
+   public function get($attr,$current=true) {
       if(!$this->data || !array_key_exists($attr,$this->data))
          return null;
-      return $this->data[$attr];
+      return $current ? $this->data[$attr] : $this->prev_data[$attr];
    }
 
    public function set($attr,$value) {
@@ -1199,6 +1211,10 @@ class Model {
     * echo $user->name;
     */
    function __get($attr) {
+      $changes  = $this->changedAttribute($attr);
+      if($changes)
+         return $changes;
+
       $relation = $this->resolveRelations($attr);
       if($relation)
          return $relation;
@@ -1269,6 +1285,24 @@ class Model {
          if(!array_key_exists($callback,self::$callbacks[$cls]))
             self::$callbacks[$cls][$callback] = array();
       }
+   }
+
+   private function changedAttribute($attr) {
+      preg_match('/(\w+)_(change|changed|was)$/',$attr,$matches);
+      if(sizeof($matches)<1)
+         return null;
+      $attr = $matches[1];
+      $meth = $matches[2];
+      $cur  = $this->get($attr);
+      $old  = $this->get($attr,false);
+
+      if($meth=="was")
+         return $old;
+      if($meth=="changed")
+         return $cur==$old;
+      if($meth=="change")
+         return array($old,$cur);
+      return null;
    }
 }
 ?>

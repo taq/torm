@@ -696,5 +696,19 @@
          foreach($objs as $obj) 
             $this->assertTrue($obj->destroy());
       }
+
+      public function checkOldAttr($file) {
+         $user = TORM\Factory::build("user");
+         $this->assertTrue($user->save());
+
+         $old_name = $user->name;
+         $new_name = "Dirty Objects";
+
+         $user = User::find($user->id);
+         $user->name = $new_name;
+         $this->assertTrue($user->name_changed);
+         $this->assertEquals($old_name,$user->name_was);
+         $this->assertEquals(array($old_name,$new_name),$user->name_change);
+      }
    }
 ?>
