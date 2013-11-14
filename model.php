@@ -24,6 +24,7 @@ class Model {
 
    private $data           = array();
    private $prev_data      = array();
+   private $orig_data      = array();
    private $has_many_ids   = array();
    private $new_rec        = false;
    private $push_later     = array();
@@ -40,8 +41,9 @@ class Model {
       self::checkLoaded();
 
       // setting default null values
-      $this->data      = self::loadNullValues();
-      $this->prev_data = self::loadNullValues();
+      $this->data       = self::loadNullValues();
+      $this->prev_data  = self::loadNullValues();
+      $this->orig_data  = self::loadNullValues();
 
       // if data not send, is a new record, return
       if($data==null) {
@@ -68,6 +70,7 @@ class Model {
 
       $this->data       = $data;
       $this->prev_data  = $data;
+      $this->orig_data  = $data;
 
       // check if is a new record
       $pk = $cls::getPK();
@@ -367,11 +370,19 @@ class Model {
    }
 
    /**
-    * Return the data previous state
+    * Return the previous data array
     * @return Array data
     */
    public function getPrevData() {
       return $this->prev_data;
+   }
+
+   /**
+    * Return the original data array, immutable through the life of the object
+    * @return Array data
+    */
+   public function getOriginalData() {
+      return $this->orig_data ;
    }
 
    private function checkLoaded() {
