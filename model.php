@@ -1304,5 +1304,19 @@ class Model {
          return array($old,$cur);
       return null;
    }
+
+   public function changes() {
+      $changes = array();
+      $cls    = get_called_class();
+      foreach(self::$columns[$cls] as $column) {
+         if($cls::getPK()==$column)
+            continue;
+         $cur = $this->get($column);
+         $old = $this->get($column,false);
+         if($cur!=$old)
+            array_push($changes,$column);
+      }
+      return $changes;
+   }
 }
 ?>
