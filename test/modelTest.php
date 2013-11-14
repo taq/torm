@@ -711,6 +711,7 @@
          $this->assertEquals(array($old_name,$new_name),$user->name_change);
 
          $this->assertEquals(array("name"),$user->changed);
+         $this->assertEquals(array("name"=>array($old_name,$new_name)),$user->changes);
       }
    }
 ?>

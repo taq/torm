@@ -1305,7 +1305,11 @@ class Model {
       return null;
    }
 
-   public function changed() {
+   public function changes() {
+      return $this->changed(true);
+   }
+
+   public function changed($attrs=false) {
       $changes = array();
       $cls    = get_called_class();
       foreach(self::$columns[$cls] as $column) {
@@ -1313,8 +1317,11 @@ class Model {
             continue;
          $cur = $this->get($column);
          $old = $this->get($column,false);
-         if($cur!=$old)
-            array_push($changes,$column);
+         if($cur==$old)
+            continue;
+         if($attrs)
+            $column = array($old,$cur);
+         array_push($changes,$column);
       }
       return $changes;
    }
