@@ -697,7 +697,7 @@
             $this->assertTrue($obj->destroy());
       }
 
-      public function checkOldAttr($file) {
+      public function testOldAttr() {
          $user = TORM\Factory::build("user");
          $this->assertTrue($user->save());
 
@@ -710,8 +710,19 @@
          $this->assertEquals($old_name,$user->name_was);
          $this->assertEquals(array($old_name,$new_name),$user->name_change);
 
-         $this->assertEquals(array("name"),$user->changed);
-         $this->assertEquals(array("name"=>array($old_name,$new_name)),$user->changes);
+         $this->assertEquals(0,sizeof(array_diff_assoc(array("name"),$user->changed())));
+
+         $changes = $user->changes();
+         $this->assertTrue(array_key_exists("name",$changes));
+         $this->assertEquals(0,sizeof(array_diff_assoc(array($old_name,$new_name),$changes["name"])));
+         $this->assertTrue($user->save());
+
+         $newer_name = "Another dirty object test";
+         $user->name = $newer_name;
+         $this->assertTrue($user->name_changed);
+         $this->assertEquals($new_name,$user->name_was);
+         $this->assertEquals(array($new_name,$newer_name),$user->name_change);
+         $this->assertTrue($user->destroy());
       }
    }
 ?>

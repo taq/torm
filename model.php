@@ -438,6 +438,7 @@ class Model {
 
       if($rst)
          self::checkCallback($calling,"after_save");
+      $this->prev_data = $this->data;
       return $rst;
    }
 
@@ -1298,8 +1299,8 @@ class Model {
 
       if($meth=="was")
          return $old;
-      if($meth=="changed")
-         return $cur==$old;
+      if($meth=="changed") 
+         return $cur!=$old;
       if($meth=="change")
          return array($old,$cur);
       return null;
@@ -1311,17 +1312,20 @@ class Model {
 
    public function changed($attrs=false) {
       $changes = array();
-      $cls    = get_called_class();
+      $cls     = get_called_class();
       foreach(self::$columns[$cls] as $column) {
          if($cls::getPK()==$column)
             continue;
          $cur = $this->get($column);
          $old = $this->get($column,false);
-         if($cur==$old)
+         if($cur==$old) 
             continue;
-         if($attrs)
-            $column = array($old,$cur);
-         array_push($changes,$column);
+         $value = $column;
+         if($attrs) {
+            $value = array($old,$cur);
+            $changes[$column] = $value;
+         } else
+            array_push($changes,$value);
       }
       return $changes;
    }
