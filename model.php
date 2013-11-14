@@ -1305,7 +1305,7 @@ class Model {
       return null;
    }
 
-   public function changes() {
+   public function changed() {
       $changes = array();
       $cls    = get_called_class();
       foreach(self::$columns[$cls] as $column) {
