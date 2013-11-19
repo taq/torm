@@ -424,7 +424,7 @@ class Model {
          return false;
 
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = $this->data[$pk];
+      $pk_value   = array_key_exists($pk,$this->data) ? $this->data[$pk] : null;
       $attrs      = $this->data;
 
       if(!$pk_value) {
