@@ -11,14 +11,14 @@ class Connection {
                                       "production" => null);
 
    public static function setConnection($con,$env=null) {
-      self::$connection[self::selectEnviroment($env)] = $con;
+      self::$connection[self::selectEnvironment($env)] = $con;
    }
 
    public static function getConnection($env=null) {
-      return self::$connection[self::selectEnviroment($env)];
+      return self::$connection[self::selectEnvironment($env)];
    }
 
-   public static function selectEnviroment($env=null) {
+   public static function selectEnvironment($env=null) {
       if(strlen($env)<1) {
          $getenv = self::getEnvironment();
          if(strlen($getenv)>0)
@@ -39,12 +39,12 @@ class Connection {
          Log::log("ERROR: Driver file $file does not exists");
          return false;
       }
-      self::$driver[self::selectEnviroment($env)] = $driver;
+      self::$driver[self::selectEnvironment($env)] = $driver;
       include $file;
    }
 
    public static function getDriver($env=null) {
-      return self::$driver[self::selectEnviroment($env)];
+      return self::$driver[self::selectEnvironment($env)];
    }
 }
 ?>
