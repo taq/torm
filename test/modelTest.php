@@ -208,9 +208,29 @@
          $this->assertEquals(TORM\Validation::VALIDATION_UNIQUENESS,$new_user->errors["email"][0]);
       }
 
-      public function testNumericality() {
+      public function testNotANumber() {
          self::$user->level = "one";
          $this->assertFalse(self::$user->isValid());
+      }
+
+      public function testNotANumberWithSpecialChars() {
+         self::$user->level = "$%@";
+         $this->assertFalse(self::$user->isValid());
+      }
+
+      public function testAPositiveNumber() {
+         self::$user->level = 1;
+         $this->assertTrue(self::$user->isValid());
+      }
+
+      public function testANegativeNumber() {
+         self::$user->level = -1;
+         $this->assertTrue(self::$user->isValid());
+      }
+
+      public function testAFloatingPointNumber() {
+         self::$user->level = 1.23;
+         $this->assertTrue(self::$user->isValid());
       }
 
       public function testCantSaveInvalidObject() {
