@@ -16,7 +16,7 @@
       }
 
       public function testGetFactories() {
-         $this->assertEquals(4,TORM\Factory::factoriesCount());
+         $this->assertEquals(5,TORM\Factory::factoriesCount());
       }
 
       public function testGetFactory() {

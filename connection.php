@@ -11,7 +11,12 @@ class Connection {
                                       "production" => null);
 
    public static function setConnection($con,$env=null) {
-      self::$connection[self::selectEnvironment($env)] = $con;
+      $env = self::selectEnvironment($env);
+      self::$connection[$env] = $con;
+
+      // just send an exception when not on production mode
+      if(in_array($env,array("development","test"))) 
+         self::setErrorHandling(\PDO::ERRMODE_EXCEPTION);
    }
 
    public static function getConnection($env=null) {
@@ -45,6 +50,10 @@ class Connection {
 
    public static function getDriver($env=null) {
       return self::$driver[self::selectEnvironment($env)];
+   }
+
+   public static function setErrorHandling($strategy) {
+      self::getConnection()->setAttribute(\PDO::ATTR_ERRMODE,$strategy);
    }
 }
 ?>

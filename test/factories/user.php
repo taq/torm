@@ -17,4 +17,15 @@ TORM\Factory::define("admin",array(
                      "created_at"   => null,
                      "updated_at"   => null),
                      array("class_name"=>"User"));
+
+TORM\Factory::define("crazy_user",array(
+                     "id"           => time(),
+                     "name"         => "Mary Doe",
+                     "email"        => "mary@doe.com",
+                     "level"        => 1,
+                     "code"         => "12345",
+                     "invalid_attr" => "invalid",
+                     "created_at"   => null,
+                     "updated_at"   => null),
+                     array("class_name"=>"User"));
 ?>

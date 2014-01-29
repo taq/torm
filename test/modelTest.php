@@ -744,5 +744,15 @@
          $this->assertEquals(array($new_name,$newer_name),$user->name_change);
          $this->assertTrue($user->destroy());
       }
+
+      /**
+       * @expectedException PDOException
+       * @expectedExceptionMessage table users has no column named invalid_attr
+       * @expectedExceptionCode HY000
+       */
+      public function testException() {
+         $user = TORM\Factory::build("crazy_user");
+         $this->assertFalse($user->save());
+      }
    }
 ?>
