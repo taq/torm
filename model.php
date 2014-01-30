@@ -1331,7 +1331,7 @@ class Model {
       $changes = array();
       $cls     = get_called_class();
       foreach(self::$columns[$cls] as $column) {
-         if($cls::getPK()==$column)
+         if($cls::getPK()==$column || in_array(strtolower($column),array("created_at","updated_at")))
             continue;
          $cur = $this->get($column);
          $old = $this->get($column,false);
