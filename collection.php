@@ -50,7 +50,9 @@ class Collection implements \Iterator {
    }
 
    public function count() {
-      $builder = $this->makeBuilderForAggregations(" count(*) ");
+      $cls = $this->cls;
+      $pk  = $cls::getPK();
+      $builder = $this->makeBuilderForAggregations(" count($pk) ");
       return $this->executeAndReturnFirst($builder,$this->vals);
    }
 
