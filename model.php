@@ -218,6 +218,17 @@ class Model {
       self::$loaded[$cls] = true;
    }
 
+   public static function extractColumns() {
+      self::checkLoaded();
+      $cls = get_called_class();
+      $temp_columns = "";
+      $escape = Driver::$escape_char;
+      foreach(self::$columns[$cls] as $column) {
+         $temp_columns .= "$escape".self::getTableName()."$escape.$escape".self::$mapping[$cls][$column]."$escape,";
+      }
+      return substr($temp_columns,0,strlen($temp_columns)-1);
+   }
+
    public static function extractUpdateColumns($values) {
       $cls = get_called_class();
       $temp_columns = "";
@@ -265,6 +276,7 @@ class Model {
 
       $builder          = self::makeBuilder();
       $builder->where   = self::extractWhereConditions($conditions);
+      $builder->fields  = self::extractColumns();
       $vals             = self::extractWhereValues($conditions);
       return new Collection($builder,$vals,get_called_class());
    }
@@ -286,6 +298,7 @@ class Model {
 
       $pk               = self::isIgnoringCase() ? strtolower(self::getPK()) : self::getPK();
       $builder          = self::makeBuilder();
+      $builder->fields  = self::extractColumns();
       $builder->where   = self::extractWhereConditions(array($pk=>$id));
       $builder->limit   = 1;
       $cls  = get_called_class();
@@ -304,6 +317,7 @@ class Model {
       self::checkLoaded();
 
       $builder = self::makeBuilder();
+      $builder->fields  = self::extractColumns();
       $vals    = null;
       if($conditions) {
          $builder->where = self::extractWhereConditions($conditions);
@@ -322,6 +336,7 @@ class Model {
       self::checkLoaded();
 
       $builder          = self::makeBuilder();
+      $builder->fields  = self::extractColumns();
       $builder->order   = $position=="first" ? self::getOrder() : self::getReversedOrder();
       $builder->where   = self::extractWhereConditions($conditions);
       $vals             = self::extractWhereValues($conditions);

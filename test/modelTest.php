@@ -754,5 +754,10 @@
          $user = TORM\Factory::build("crazy_user");
          $this->assertFalse($user->save());
       }
+
+      public function testExtractColumns() {
+          $columns = User::extractColumns();
+          $this->assertEquals('"users"."id","users"."name","users"."email","users"."level","users"."code","users"."created_at","users"."updated_at"',$columns);
+      }
    }
 ?>
