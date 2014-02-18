@@ -21,6 +21,7 @@ class Model {
    private static $has_one        = array();
    private static $callbacks      = array();
    private static $scopes         = array();
+   private static $sequence_exists= array();
 
    private $data           = array();
    private $prev_data      = array();
@@ -1030,13 +1031,30 @@ class Model {
       if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
          return null;
 
+      // caching if the sequence exists
+      $cls  = get_called_class();
+      $name = self::resolveSequenceName();
+      if(array_key_exists($cls ,self::$sequence_exists) &&
+         array_key_exists($name,self::$sequence_exists[$cls]))
+      {
+          return true;
+      }
+
+      // checking if the sequence exists
       $escape = Driver::$escape_char;
-      $name   = self::resolveSequenceName();
       $sql    = "select count(sequence_name) as $escape"."CNT"."$escape from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
       $stmt   = self::resolveConnection()->query($sql);
       $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
       $rtn    = intval($rst["CNT"])>0;
       $stmt->closeCursor();
+
+      // if exists, cache result
+      if ($rtn) {
+         if (!array_key_exists($cls, self::$sequence_exists)) {
+            self::$sequence_exists[$cls] = array();
+         }
+         self::$sequence_exists[$cls][$name] = true;
+      }
       return $rtn;
    }
 
