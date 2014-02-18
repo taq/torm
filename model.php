@@ -499,7 +499,7 @@ class Model {
 
          // get the sequence next value
          $seq_sql    = "select $seq_name.nextval from dual";
-         $seq_stmt   = self::query($seq_sql);
+         $seq_stmt   = self::executePrepared($seq_sql);
          $seq_data   = $seq_stmt->fetch(\PDO::FETCH_ASSOC);
          if($seq_data) {
             $seq_keys = array("nextval","NEXTVAL");
@@ -510,7 +510,6 @@ class Model {
                }
             }
          }
-         $seq_stmt->closeCursor();
       } 
 
       // use sequence, but there is already a value on the primary key.
