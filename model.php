@@ -29,7 +29,7 @@ class Model {
    private $has_many_ids   = array();
    private $new_rec        = false;
    private $push_later     = array();
-   public  $errors         = null;
+   public  $errors         = array();
 
    /**
     * Constructor
