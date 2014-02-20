@@ -6,6 +6,11 @@
          return true;
       }
 
+      public function strip_invalid() {
+          $this->email = str_replace("#","",$this->email);
+          return true;
+      }
+
       public function after_save() {
          //echo "user after save callback!\n";
          file_put_contents("/tmp/torm-after-save.log","torm test");
@@ -36,6 +41,7 @@
    User::hasMany("tickets",array("class_name"=>"Ticket"));
    User::hasOne("account");
    User::beforeSave("before_save");
+   User::beforeSave("strip_invalid");
    User::afterSave("after_save");
    User::beforeDestroy("before_destroy");
    User::afterDestroy("after_destroy");

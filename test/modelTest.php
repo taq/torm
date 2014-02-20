@@ -759,5 +759,18 @@
           $columns = User::extractColumns();
           $this->assertEquals('"users"."id","users"."name","users"."email","users"."level","users"."code","users"."created_at","users"."updated_at"',$columns);
       }
+
+      /**
+       * This is a test to check if the before callbacks are called before 
+       * writing the record, where is checked if is a valid record.
+       * There's a before callback that remove invalid chars from the email 
+       * attr, so the record will be saved only if the callback is called 
+       * before saving.
+       */
+      public function testBeforeInvalidChars() {
+          $user = User::first();
+          $user->email = $user->email."#";
+          $this->assertTrue($user->save());
+      }
    }
 ?>

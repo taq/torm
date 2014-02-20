@@ -429,14 +429,16 @@ class Model {
     * @return boolean saved/updated
     */
    public function save($force=false) {
-      if(!$this->isValid())
-         return false;
-
       if(!self::$loaded) 
          self::loadColumns();
 
-      $calling    = get_called_class();
+      // check for callbacks before validation below
+      $calling = get_called_class();
       if(!self::checkCallback($calling,"before_save"))
+         return false;
+
+      // with all the before callbacks checked, check if its valid
+      if(!$this->isValid())
          return false;
 
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
