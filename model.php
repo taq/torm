@@ -696,7 +696,7 @@ class Model {
       if(!function_exists("yaml_parse") ||
          is_null(self::$yaml_file)      ||
          !file_exists(self::$yaml_file))
-         return false;
+         return [];
 
       $rtn    = array();
       $parsed = yaml_parse(file_get_contents(self::$yaml_file));
