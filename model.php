@@ -2,6 +2,10 @@
 namespace TORM;
 
 class Model {
+   const CURSOR_NOTHING = 0;
+   const CURSOR_CLOSE   = 1;
+   const CURSOR_NULL    = 2;
+
    public  static $connection  = null;
    public  static $yaml_file   = null;
    private static $table_name  = array();
@@ -11,6 +15,7 @@ class Model {
    private static $ignorecase  = array();
    private static $mapping     = array();
    private static $loaded      = array();
+   private static $cc_action   = self::CURSOR_CLOSE;
 
    private static $prepared_cache = array();
    private static $validations    = array();
@@ -193,17 +198,17 @@ class Model {
       $rst  = self::resolveConnection()->query("select id from torm_info");
       if(!$rst->fetch()) {
          $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
-         $stmt->closeCursor();
+         self::closeCursor($stmt);
       }
-      $rst->closeCursor();
+      self::closeCursor($rst);
 
       // create table and insert first value
       $rst  = self::resolveConnection()->query("select id from torm_info");
       if(!$rst->fetch()) {
          $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
-         $stmt->closeCursor();
+         self::closeCursor($stmt);
       }
-      $rst->closeCursor();
+      self::closeCursor($rst);
 
       // hack to dont need a query string to get columns
       $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
@@ -215,7 +220,7 @@ class Model {
          array_push(self::$columns[$cls],$keyc);
          self::$mapping[$cls][$keyc] = $key;
       }
-      $rst->closeCursor();
+      self::closeCursor($rst);
       self::$loaded[$cls] = true;
    }
 
@@ -1048,7 +1053,7 @@ class Model {
       $stmt   = self::resolveConnection()->query($sql);
       $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
       $rtn    = intval($rst["CNT"])>0;
-      $stmt->closeCursor();
+      self::closeCursor($stmt);
 
       // if exists, cache result
       if ($rtn) {
@@ -1076,7 +1081,7 @@ class Model {
       $sql  = "create sequence $name increment by 1 start with 1 nocycle nocache";
       Log::log($sql);
       $stmt = self::resolveConnection()->query($sql);
-      $stmt->closeCursor();
+      self::closeCursor($stmt);
    }
 
    /**
@@ -1183,7 +1188,7 @@ class Model {
       $table   = Model::getTableName($klass);
       $sql     = "update $escape$table$escape set $escape$foreign$escape=null where $escape$foreign$escape=$id and $escape$table$escape.$escape$klasspk$escape not in ($ids)";
       $stmt    = self::query($sql);
-      $stmt->closeCursor();
+      self::closeCursor($stmt);
    }
 
    public function push($obj) {
@@ -1213,7 +1218,7 @@ class Model {
          $sql        = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
          $stmt       = self::query($sql);
          $rst        = $stmt->rowCount()==1;
-         $stmt->closeCursor();
+         self::closeCursor($stmt);
          return $rst;
       }
 
@@ -1379,6 +1384,21 @@ class Model {
             array_push($changes,$value);
       }
       return $changes;
+   }
+
+   public static function closeCursorBehaviour($action) {
+       self::$cc_action = $action;
+   }
+
+   private static function closeCursor($stmt) {
+      if (self::$cc_action == self::CURSOR_NOTHING) {
+          return;
+      }
+      if (self::$cc_action == self::CURSOR_CLOSE) {
+          $stmt->closeCursor();
+      } else {
+          $stmt = null;
+      }
    }
 }
 ?>
