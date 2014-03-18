@@ -781,7 +781,7 @@ class Model {
    public function get($attr,$current=true) {
       if(!$this->data || !array_key_exists($attr,$this->data))
          return null;
-      return $current ? $this->data[$attr] : $this->prev_data[$attr];
+      return Connection::convertToEncoding($current ? $this->data[$attr] : $this->prev_data[$attr]);
    }
 
    public function set($attr,$value) {

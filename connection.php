@@ -10,6 +10,8 @@ class Connection {
                                       "test"       => null,
                                       "production" => null);
 
+   private static $encoding = null;
+
    public static function setConnection($con,$env=null) {
       $env = self::selectEnvironment($env);
       self::$connection[$env] = $con;
@@ -54,6 +56,26 @@ class Connection {
 
    public static function setErrorHandling($strategy) {
       self::getConnection()->setAttribute(\PDO::ATTR_ERRMODE,$strategy);
+   }
+
+   public static function setEncoding($encoding) {
+       self::$encoding = $encoding;
+   }
+
+   public static function getEncoding() {
+       return self::$encoding;
+   }
+
+   public static function convertToEncoding($mixed) {
+       if (is_null(self::$encoding) ||
+           is_numeric($mixed)       ||
+           is_bool($mixed)          ||
+           is_object($mixed)        || 
+           is_array($mixed)         ||
+          !is_string($mixed)) {
+          return $mixed;  
+       }
+       return mb_convert_encoding($mixed, self::$encoding);
    }
 }
 ?>

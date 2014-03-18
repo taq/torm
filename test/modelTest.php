@@ -14,6 +14,7 @@
          // self::$con  = new PDO('mysql:host=localhost;dbname=torm',"torm","torm");
 
          TORM\Connection::setConnection(self::$con,"test");
+         TORM\Connection::setEncoding("UTF-8");
          TORM\Connection::setDriver("sqlite");
          // TORM\Connection::setDriver("mysql");
          TORM\Factory::setFactoriesPath("./factories");
