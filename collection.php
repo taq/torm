@@ -147,10 +147,16 @@ class Collection implements \Iterator {
       return $cls::executePrepared($sql,$nval);
    }
 
-   public function toArray() {
-      $ar = array();
-      while($data=$this->next())
+   public function toArray($limit=-1) {
+      $ar  = array();
+      $cnt = 0;
+      while ($data=$this->next()) {
          array_push($ar,$data);
+         $cnt ++;
+         if ($limit != -1 && $cnt>=$limit) {
+             break;
+         }
+      }
       return $ar;
    }
    

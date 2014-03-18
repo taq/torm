@@ -682,6 +682,12 @@
          $this->assertEquals(2,sizeof($tickets));
       }
 
+      public function testCollectionToArrayWithLimit() {
+         $user       = User::first();
+         $tickets    = $user->tickets->toArray(1);
+         $this->assertEquals(1,sizeof($tickets));
+      }
+
       public function testFullErrorMessages() {
          Locale::setDefault("en-US");
          User::setYAMLFile("torm.yml");
