@@ -781,13 +781,13 @@
       }
 
       /**
-       * Object has a after_initialize method
+       * Object has a afterInitialize method
        *
        * @return null
        */
       public function testAfterInitialize() {
          $user = TORM\Factory::build("unnamed_user");
-         $this->assertTrue(method_exists($user, "after_initialize"));
+         $this->assertTrue(method_exists($user, "afterInitialize"));
          $this->assertEquals("Unnamed User", $user->name);
       }
    }

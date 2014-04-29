@@ -29,7 +29,7 @@
          return true;
       }
 
-      public function after_initialize() {
+      public function afterInitialize() {
          if (is_null($this->name)) {
             $this->name = "Unnamed User";
          }

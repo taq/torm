@@ -84,9 +84,9 @@ class Model {
          empty($this->data[$pk]))
          $this->new_rec = true;
 
-      // check if there is a after_initialize method
-      if (method_exists($this, "after_initialize")) {
-          $this->after_initialize();
+      // check if there is a afterInitialize method
+      if (method_exists($this, "afterInitialize")) {
+          $this->afterInitialize();
       }
    }
 
