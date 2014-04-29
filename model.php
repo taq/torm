@@ -83,6 +83,11 @@ class Model {
       if(!array_key_exists($pk,$this->data) ||
          empty($this->data[$pk]))
          $this->new_rec = true;
+
+      // check if there is a after_initialize method
+      if (method_exists($this, "after_initialize")) {
+          $this->after_initialize();
+      }
    }
 
    public static function isIgnoringCase() {

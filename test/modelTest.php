@@ -779,5 +779,16 @@
           $user->email = $user->email."#";
           $this->assertTrue($user->save());
       }
+
+      /**
+       * Object has a after_initialize method
+       *
+       * @return null
+       */
+      public function testAfterInitialize() {
+         $user = TORM\Factory::build("unnamed_user");
+         $this->assertTrue(method_exists($user, "after_initialize"));
+         $this->assertEquals("Unnamed User", $user->name);
+      }
    }
 ?>

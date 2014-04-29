@@ -28,6 +28,12 @@
          file_put_contents("/tmp/torm-after-destroy.log","torm test");
          return true;
       }
+
+      public function after_initialize() {
+         if (is_null($this->name)) {
+            $this->name = "Unnamed User";
+         }
+      }
    }
 
    User::setOrder("name");
