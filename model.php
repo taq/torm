@@ -27,6 +27,7 @@ class Model {
    private static $callbacks      = array();
    private static $scopes         = array();
    private static $sequence_exists= array();
+   private static $_connections   = array();
 
    private $data           = array();
    private $prev_data      = array();
@@ -176,12 +177,35 @@ class Model {
    }
 
    /**
+    * Sets a specific connection for the current model
+    *
+    * @param $con PDO connection
+    * 
+    * @return null
+    */
+   public static function setConnection($con, $env="development")
+   {
+       $cls = get_called_class();
+       if (!array_key_exists($cls, self::$_connections)) {
+           self::$_connections[$cls] = array();
+       }
+       self::$_connections[$cls][$env] = $con;
+   }
+
+   /**
     * Resolve the current connection handle.
-    * Get it from PDO.
+    * Get it from PDO or from the current class.
+    *
     * @return object connection
     */
    private static function resolveConnection() {
-      return self::$connection ? self::$connection : Connection::getConnection();
+       $cls = get_called_class();
+       $env = Connection::selectEnvironment();
+       if (array_key_exists($cls, self::$_connections) &&
+           array_key_exists($env, self::$_connections[$cls])) {
+           return self::$_connections[$cls][$env];
+       }
+       return self::$connection ? self::$connection : Connection::getConnection();
    }
 
    /**
@@ -201,7 +225,7 @@ class Model {
 
       // check if the table exists
       $rst  = self::resolveConnection()->query("select id from torm_info");
-      if(!$rst->fetch()) {
+      if(!is_object($rst) || !$rst->fetch()) {
          $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
          self::closeCursor($stmt);
       }
@@ -1399,7 +1423,7 @@ class Model {
       if (self::$cc_action == self::CURSOR_NOTHING) {
           return;
       }
-      if (self::$cc_action == self::CURSOR_CLOSE) {
+      if (self::$cc_action == self::CURSOR_CLOSE && is_object($stmt)) {
           $stmt->closeCursor();
       } else {
           $stmt = null;

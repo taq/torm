@@ -1,6 +1,7 @@
 <?php
    include_once "../torm.php";
    include_once "../models/user.php";
+   include_once "../models/another_user.php";
    include_once "../models/ticket.php";
    include_once "../models/account.php";
 
@@ -13,7 +14,7 @@
          self::$con  = new PDO("sqlite:$file");
          // self::$con  = new PDO('mysql:host=localhost;dbname=torm',"torm","torm");
 
-         TORM\Connection::setConnection(self::$con,"test");
+         TORM\Connection::setConnection(self::$con, "test");
          TORM\Connection::setEncoding("UTF-8");
          TORM\Connection::setDriver("sqlite");
          // TORM\Connection::setDriver("mysql");
@@ -667,7 +668,7 @@
       }
 
       public function testMustRespondToAScopeAsAMethodWithMultipleParameters() {
-         $this->assertEquals(1,User::by_level_and_date(1,date("Y-m-d"))->count());
+         $this->assertEquals(1, User::by_level_and_date(1, date("Y-m-d", strtotime("+2 days")))->count());
       }
 
       public function testAccentedCharsOnValidation() {
@@ -789,6 +790,21 @@
          $user = TORM\Factory::build("unnamed_user");
          $this->assertTrue(method_exists($user, "afterInitialize"));
          $this->assertEquals("Unnamed User", $user->name);
+      }
+
+      /**
+       * Other connection
+       *
+       * @return null
+       */
+      public function testOtherConnection()
+      {
+          $file = realpath(dirname(__FILE__)."/../database/another_test.sqlite3");
+          $con  = new PDO("sqlite:$file");
+
+          AnotherUser::setConnection($con, "test");
+          $user = AnotherUser::first();
+          $this->assertEquals("Walternate", $user->name);
       }
    }
 ?>
