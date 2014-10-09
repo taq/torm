@@ -198,7 +198,7 @@ class Model {
     *
     * @return object connection
     */
-   private static function resolveConnection() {
+   public static function resolveConnection() {
        $cls = get_called_class();
        $env = Connection::selectEnvironment();
        if (array_key_exists($cls, self::$_connections) &&
