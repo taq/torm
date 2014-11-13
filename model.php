@@ -435,7 +435,7 @@ class Model {
       return $this->orig_data ;
    }
 
-   private function checkLoaded() {
+   private static function checkLoaded() {
       $cls = get_called_class();
       if(!array_key_exists($cls,self::$loaded))
          self::$loaded[$cls] = false;
