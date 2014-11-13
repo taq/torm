@@ -224,19 +224,19 @@ class Model {
       $type = Driver::$numeric_column;
 
       // check if the table exists
-      $rst  = self::resolveConnection()->query("select id from torm_info");
-      if(!is_object($rst) || !$rst->fetch()) {
-         $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
-         self::closeCursor($stmt);
-      }
-      self::closeCursor($rst);
-
-      // create table and insert first value
-      $rst  = self::resolveConnection()->query("select id from torm_info");
-      if(!$rst->fetch()) {
-         $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
-         self::closeCursor($stmt);
-      }
+      $rst = null;
+      try {
+        $rst  = self::resolveConnection()->query("select id from torm_info");
+      } catch(\Exception $e) {
+        // create table and insert first value
+        $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
+        self::closeCursor($stmt);
+        $rst  = self::resolveConnection()->query("select id from torm_info");
+        if(!$rst->fetch()) {
+          $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
+          self::closeCursor($stmt);
+        }
+      }      
       self::closeCursor($rst);
 
       // hack to dont need a query string to get columns
