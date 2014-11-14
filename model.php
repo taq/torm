@@ -208,50 +208,64 @@ class Model {
        return self::$connection ? self::$connection : Connection::getConnection();
    }
 
-   /**
-    * Load column info
-    */
-   private static function loadColumns() {
-      if(!self::resolveConnection())
-         return;
+    /**
+     * Load column info
+     *
+     * @return null
+     */
+    private static function _loadColumns()
+    {
+        if (!self::resolveConnection()) {
+            return;
+        }
 
-      $cls = get_called_class();
-      self::$columns[$cls] = array();
+        $cls = get_called_class();
+        self::$columns[$cls] = array();
 
-      $escape = Driver::$escape_char;
+        $escape = Driver::$escape_char;
 
-      // try to create the TORM info table
-      $type = Driver::$numeric_column;
+        // try to create the TORM info table
+        $type = Driver::$numeric_column;
 
-      // check if the table exists
-      $rst  = self::resolveConnection()->query("select id from torm_info");
-      if(!is_object($rst) || !$rst->fetch()) {
-         $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
-         self::closeCursor($stmt);
-      }
-      self::closeCursor($rst);
+        // check if the torm table exists
+        $rst   = null;
+        $check = false;
+        try {
+            $rst   = self::resolveConnection()->query("select id from torm_info");
+            $check = true;
+        } catch (\Exception $e) {
+        }
 
-      // create table and insert first value
-      $rst  = self::resolveConnection()->query("select id from torm_info");
-      if(!$rst->fetch()) {
-         $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
-         self::closeCursor($stmt);
-      }
-      self::closeCursor($rst);
+        // needs to create table
+        if (!$check || !is_object($rst) || !$rst->fetch()) {
+            $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
+            self::closeCursor($stmt);
+        }
+        if (is_object($rst)) {
+            self::closeCursor($rst);
+        }
 
-      // hack to dont need a query string to get columns
-      $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
-      $rst  = self::resolveConnection()->query($sql);
-      $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
+        // insert first value
+        $rst = self::resolveConnection()->query("select id from torm_info");
+        if (!$rst->fetch()) {
+            $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
+            self::closeCursor($stmt);
+        }
+        self::closeCursor($rst);
 
-      foreach($keys as $key) {
-         $keyc = self::isIgnoringCase() ? strtolower($key) : $key;
-         array_push(self::$columns[$cls],$keyc);
-         self::$mapping[$cls][$keyc] = $key;
-      }
-      self::closeCursor($rst);
-      self::$loaded[$cls] = true;
-   }
+        // hack to dont need a query string to get columns
+        $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
+        $rst  = self::resolveConnection()->query($sql);
+        $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
+
+        foreach ($keys as $key) {
+            $keyc = self::isIgnoringCase() ? strtolower($key) : $key;
+            array_push(self::$columns[$cls], $keyc);
+            self::$mapping[$cls][$keyc] = $key;
+        }
+        self::closeCursor($rst);
+        self::$loaded[$cls] = true;
+    }
 
    public static function extractColumns() {
       self::checkLoaded();
@@ -440,7 +454,7 @@ class Model {
       if(!array_key_exists($cls,self::$loaded))
          self::$loaded[$cls] = false;
       if(!self::$loaded[$cls])
-         self::loadColumns();
+         self::_loadColumns();
    } 
 
    private static function hasColumn($column) {
@@ -464,7 +478,7 @@ class Model {
     */
    public function save($force=false) {
       if(!self::$loaded) 
-         self::loadColumns();
+         self::_loadColumns();
 
       // check for callbacks before validation below
       $calling = get_called_class();
@@ -654,7 +668,7 @@ class Model {
     */
    public function destroy() {
       if(!self::$loaded) 
-         self::loadColumns();
+         self::_loadColumns();
 
       $calling    = get_called_class();
       if(!self::checkCallback($calling,"before_destroy"))
@@ -680,7 +694,7 @@ class Model {
     */
    public static function executePrepared($obj,$values=array()) {
       if(!self::$loaded)
-         self::loadColumns();
+         self::_loadColumns();
 
       if(!is_string($obj) && get_class($obj)=="TORM\Builder")
          $sql = $obj->toString();
