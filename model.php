@@ -1,124 +1,173 @@
 <?php
+/**
+ * Model class, the heart of the system
+ *
+ * PHP version 5.5
+ *
+ * @category Model
+ * @package  Torm
+ * @author   Eustáquio Rangel <taq@bluefish.com.br>
+ * @license  http://www.gnu.org/copyleft/gpl.html GPL
+ * @link     http://github.com/taq/torm
+ */
 namespace TORM;
 
-class Model {
-   const CURSOR_NOTHING = 0;
-   const CURSOR_CLOSE   = 1;
-   const CURSOR_NULL    = 2;
+/**
+ * Model class, the heart of the system
+ *
+ * PHP version 5.5
+ *
+ * @category Model
+ * @package  Torm
+ * @author   Eustáquio Rangel <taq@bluefish.com.br>
+ * @license  http://www.gnu.org/copyleft/gpl.html GPL
+ * @link     http://github.com/taq/torm
+ */
+class Model
+{
+    const CURSOR_NOTHING = 0;
+    const CURSOR_CLOSE   = 1;
+    const CURSOR_NULL    = 2;
 
-   public  static $connection  = null;
-   public  static $yaml_file   = null;
-   private static $table_name  = array();
-   private static $order       = array();
-   private static $pk          = array();
-   private static $columns     = array();
-   private static $ignorecase  = array();
-   private static $mapping     = array();
-   private static $loaded      = array();
-   private static $cc_action   = self::CURSOR_CLOSE;
+    public  static $connection = null;
+    public  static $yaml_file  = null;
+    public $errors             = array();
 
-   private static $prepared_cache = array();
-   private static $validations    = array();
-   private static $has_many       = array();
-   private static $has_many_maps  = array();
-   private static $belongs_to     = array();
-   private static $sequence       = array();
-   private static $has_one        = array();
-   private static $callbacks      = array();
-   private static $scopes         = array();
-   private static $sequence_exists= array();
-   private static $_connections   = array();
+    private static $_table_name      = array();
+    private static $_order           = array();
+    private static $_pk              = array();
+    private static $_columns         = array();
+    private static $_ignorecase      = array();
+    private static $_mapping         = array();
+    private static $_loaded          = array();
+    private static $_cc_action       = self::CURSOR_CLOSE;
+    private static $_prepared_cache  = array();
+    private static $_validations     = array();
+    private static $_has_many        = array();
+    private static $_has_many_maps   = array();
+    private static $_belongs_to      = array();
+    private static $_sequence        = array();
+    private static $_has_one         = array();
+    private static $_callbacks       = array();
+    private static $_scopes          = array();
+    private static $_sequence_exists = array();
+    private static $_connections     = array();
 
-   private $data           = array();
-   private $prev_data      = array();
-   private $orig_data      = array();
-   private $has_many_ids   = array();
-   private $new_rec        = false;
-   private $push_later     = array();
-   public  $errors         = array();
+    private $_data         = array();
+    private $_prev_data    = array();
+    private $_orig_data    = array();
+    private $_has_many_ids = array();
+    private $_new_rec      = false;
+    private $_push_later   = array();
 
-   /**
-    * Constructor
-    * If data is sent, then it loads columns with it.
-    * @param array $data
-    * @package TORM
-    */
-   public function __construct($data=null) {
-      $cls = get_called_class();
-      self::checkLoaded();
+    /**
+     * Constructor
+     *
+     * If data is sent, then it loads columns with it.
+     *
+     * @param array $data to fill the object
+     *
+     * @package TORM
+     */
+    public function __construct($data=null)
+    {
+        $cls = get_called_class();
+        self::checkLoaded();
 
-      // setting default null values
-      $this->data       = self::loadNullValues();
-      $this->prev_data  = self::loadNullValues();
-      $this->orig_data  = self::loadNullValues();
+        // setting default null values
+        $this->_data       = self::_loadNullValues();
+        $this->_prev_data  = self::_loadNullValues();
+        $this->_orig_data  = self::_loadNullValues();
 
-      // if data not send, is a new record, return
-      if($data==null) {
-         $this->new_rec = true;
-         return;
-      }
+        // if data not send, is a new record, return
+        if ($data == null) {
+            $this->_new_rec = true;
+            return;
+        }
 
-      foreach($data as $key=>$value) {
-         if(preg_match("/^\d+$/",$key))
-            continue;
-         $keyr = $key;
-         if(self::isIgnoringCase()) {
-            $keyr = strtolower($key);
-            $data[$keyr] = $value;
-            if($keyr!=$key)
-               unset($data[$key]);
-         }
-         if(!array_key_exists($cls,self::$mapping))
-            self::$mapping[$cls] = array();
+        foreach ($data as $key => $value) {
+            // not numeric keys
+            if (preg_match("/^\d+$/", $key)) {
+                continue;
+            }
+            $keyr = $key;
 
-         if(!array_key_exists($keyr,self::$mapping[$cls]))
-            self::$mapping[$cls][$key] = $keyr;
-      }
+            // if ignoring case, convert all keys to lowercase
+            if (self::isIgnoringCase()) {
+                $keyr = strtolower($key);
+                $data[$keyr] = $value;
+                if ($keyr != $key) {
+                    unset($data[$key]);
+                }
+            }
 
-      $this->data       = $data;
-      $this->prev_data  = $data;
-      $this->orig_data  = $data;
+            // if there is no mapping array, create one
+            if (!array_key_exists($cls, self::$_mapping)) {
+                self::$_mapping[$cls] = array();
+            }
 
-      // check if is a new record
-      $pk = $cls::getPK();
-      if(!array_key_exists($pk,$this->data) ||
-         empty($this->data[$pk]))
-         $this->new_rec = true;
+            // if the key is not on the mapping array, add it
+            if (!array_key_exists($keyr, self::$_mapping[$cls])) {
+                self::$_mapping[$cls][$key] = $keyr;
+            }
+        }
 
-      // check if there is a afterInitialize method
-      if (method_exists($this, "afterInitialize")) {
-          $this->afterInitialize();
-      }
-   }
+        $this->_data       = $data;
+        $this->_prev_data  = $data;
+        $this->_orig_data  = $data;
 
-   public static function isIgnoringCase() {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$ignorecase))
-         return true;
-      return self::$ignorecase[$cls];
-   }
+        // check if is a new record
+        $pk = $cls::getPK();
 
-   /**
-    * Load null values on row columns.
-    * Useful to new objects.
-    */
-   private static function loadNullValues() {
-      $values = array();
-      $cls    = get_called_class();
+        // if there is no value on PK, is a new record
+        if (!array_key_exists($pk, $this->_data) || empty($this->_data[$pk])) {
+            $this->_new_rec = true;
+        }
 
-      if(!array_key_exists($cls,self::$columns))
-         return null;
+        // check if there is a afterInitialize method, if so, run it
+        if (method_exists($this, "afterInitialize")) {
+            $this->afterInitialize();
+        }
+    }
 
-      foreach(self::$columns[$cls] as $column) {
-         $name = self::isIgnoringCase() ? strtolower($column) : $column;
-         $values[$column] = null;
-      }
-      return $values;
-   }
+    /**
+     * Check if is ignoring case
+     *
+     * @return boolean ignoring case
+     */
+    public static function isIgnoringCase() 
+    {
+        $cls = get_called_class();
+        if (!array_key_exists($cls, self::$_ignorecase)) {
+            return true;
+        }
+        return self::$_ignorecase[$cls];
+    }
+
+    /**
+     * Load null values on row columns. Useful to new objects.
+     *
+     * @return null
+     */
+    private static function _loadNullValues()
+    {
+        $values = array();
+        $cls    = get_called_class();
+
+        if (!array_key_exists($cls, self::$_columns)) {
+            return null;
+        }
+
+        foreach (self::$_columns[$cls] as $column) {
+            $name = self::isIgnoringCase() ? strtolower($column) : $column;
+            $values[$column] = null;
+        }
+        return $values;
+    }
 
    public static function setTableName($table_name) {
       $cls = get_called_class();
-      self::$table_name[$cls] = $table_name;
+      self::$_table_name[$cls] = $table_name;
    }
 
    /**
@@ -128,8 +177,8 @@ class Model {
     */
    public static function getTableName($cls=null) {
       $cls  = $cls ? $cls : get_called_class();
-      if(array_key_exists($cls,self::$table_name))
-         return self::$table_name[$cls];
+      if(array_key_exists($cls,self::$_table_name))
+         return self::$_table_name[$cls];
       $name = Inflections::pluralize($cls);
       if(self::isIgnoringCase())
          $name = strtolower($name);
@@ -138,7 +187,7 @@ class Model {
 
    public static function setPK($pk) {
       $cls = get_called_class();
-      self::$pk[$cls] = $pk;
+      self::$_pk[$cls] = $pk;
    }
 
    /**
@@ -147,12 +196,12 @@ class Model {
     */
    public static function getPK() {
       $cls = get_called_class();
-      return array_key_exists($cls,self::$pk) ? self::$pk[$cls] : "id";
+      return array_key_exists($cls,self::$_pk) ? self::$_pk[$cls] : "id";
    }
 
    public static function setOrder($order) {
       $cls = get_called_class();
-      self::$order[$cls] = $order;
+      self::$_order[$cls] = $order;
    }
 
    /**
@@ -162,7 +211,7 @@ class Model {
     */
    public static function getOrder() {
       $cls = get_called_class();
-      return array_key_exists($cls,self::$order) ? self::$order[$cls] : "";
+      return array_key_exists($cls,self::$_order) ? self::$_order[$cls] : "";
    }
 
    /**
@@ -220,7 +269,7 @@ class Model {
         }
 
         $cls = get_called_class();
-        self::$columns[$cls] = array();
+        self::$_columns[$cls] = array();
 
         $escape = Driver::$escape_char;
 
@@ -260,11 +309,11 @@ class Model {
 
         foreach ($keys as $key) {
             $keyc = self::isIgnoringCase() ? strtolower($key) : $key;
-            array_push(self::$columns[$cls], $keyc);
-            self::$mapping[$cls][$keyc] = $key;
+            array_push(self::$_columns[$cls], $keyc);
+            self::$_mapping[$cls][$keyc] = $key;
         }
         self::closeCursor($rst);
-        self::$loaded[$cls] = true;
+        self::$_loaded[$cls] = true;
     }
 
    public static function extractColumns() {
@@ -272,8 +321,8 @@ class Model {
       $cls = get_called_class();
       $temp_columns = "";
       $escape = Driver::$escape_char;
-      foreach(self::$columns[$cls] as $column) {
-         $temp_columns .= "$escape".self::getTableName()."$escape.$escape".self::$mapping[$cls][$column]."$escape,";
+      foreach(self::$_columns[$cls] as $column) {
+         $temp_columns .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$column]."$escape,";
       }
       return substr($temp_columns,0,strlen($temp_columns)-1);
    }
@@ -283,7 +332,7 @@ class Model {
       $temp_columns = "";
       $escape = Driver::$escape_char;
       foreach($values as $key=>$value)
-         $temp_columns .= "$escape".self::$mapping[$cls][$key]."$escape=?,";
+         $temp_columns .= "$escape".self::$_mapping[$cls][$key]."$escape=?,";
       return substr($temp_columns,0,strlen($temp_columns)-1);
    }
 
@@ -296,7 +345,7 @@ class Model {
       if(is_array($conditions)) {
          $temp_cond = "";
          foreach($conditions as $key=>$value)
-            $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$mapping[$cls][$key]."$escape=? and ";
+            $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape=? and ";
          $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
          $conditions = $temp_cond;
       }
@@ -422,7 +471,7 @@ class Model {
     * @return boolean new or not 
     */
    public function is_new() {
-      return $this->new_rec;
+      return $this->_new_rec;
    }
 
    /**
@@ -430,7 +479,7 @@ class Model {
     * @return Array data
     */
    public function getData() {
-      return $this->data;
+      return $this->_data;
    }
 
    /**
@@ -438,7 +487,7 @@ class Model {
     * @return Array data
     */
    public function getPrevData() {
-      return $this->prev_data;
+      return $this->_prev_data;
    }
 
    /**
@@ -446,21 +495,21 @@ class Model {
     * @return Array data
     */
    public function getOriginalData() {
-      return $this->orig_data ;
+      return $this->_orig_data ;
    }
 
    private static function checkLoaded() {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$loaded))
-         self::$loaded[$cls] = false;
-      if(!self::$loaded[$cls])
+      if(!array_key_exists($cls,self::$_loaded))
+         self::$_loaded[$cls] = false;
+      if(!self::$_loaded[$cls])
          self::_loadColumns();
    } 
 
    private static function hasColumn($column) {
       $cls  = get_called_class();
       $key  = null;
-      $keys = self::$columns[$cls];
+      $keys = self::$_columns[$cls];
       foreach($keys as $ckey) {
          $col1 = self::isIgnoringCase() ? strtolower($ckey)   : $ckey;
          $col2 = self::isIgnoringCase() ? strtolower($column) : $column;
@@ -477,7 +526,7 @@ class Model {
     * @return boolean saved/updated
     */
    public function save($force=false) {
-      if(!self::$loaded) 
+      if(!self::$_loaded) 
          self::_loadColumns();
 
       // check for callbacks before validation below
@@ -490,25 +539,25 @@ class Model {
          return false;
 
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = array_key_exists($pk,$this->data) ? $this->data[$pk] : null;
-      $attrs      = $this->data;
+      $pk_value   = array_key_exists($pk,$this->_data) ? $this->_data[$pk] : null;
+      $attrs      = $this->_data;
 
       if(!$pk_value) {
          // if there is a method to get the new primary key value on the class, 
          // call it
          if(method_exists($calling,"getNewPKValue")) {
             $pk_value = $calling::getNewPKValue();
-            if(!$this->data[$pk])
-               $this->data[$pk] = $pk_value;
-            $attrs = $this->data;
+            if(!$this->_data[$pk])
+               $this->_data[$pk] = $pk_value;
+            $attrs = $this->_data;
          }
       }
 
       if($pk_value)
-         $this->new_rec = !self::find($pk_value);
+         $this->_new_rec = !self::find($pk_value);
 
       $rst = false;
-      if($this->new_rec) 
+      if($this->_new_rec) 
          $rst = $this->insert($attrs,$calling,$pk,$pk_value);
       else {
          // no need to update if there weren't changes
@@ -521,7 +570,7 @@ class Model {
 
       if($rst)
          self::checkCallback($calling,"after_save");
-      $this->prev_data = $this->data;
+      $this->_prev_data = $this->_data;
       return $rst;
    }
 
@@ -579,15 +628,15 @@ class Model {
       // marks to insert values on prepared statement
       $marks = array();
       foreach($attrs as $attr=>$value) {
-         $sql .= "$escape".self::$mapping[$calling][$attr]."$escape,";
+         $sql .= "$escape".self::$_mapping[$calling][$attr]."$escape,";
          array_push($marks,"?");
       }
       if($create_column) {
-         $sql .= "$escape".self::$mapping[$calling][$create_column]."$escape,";
+         $sql .= "$escape".self::$_mapping[$calling][$create_column]."$escape,";
          array_push($marks,Driver::$current_timestamp);
       }
       if($update_column) {
-         $sql .= "$escape".self::$mapping[$calling][$update_column]."$escape,";
+         $sql .= "$escape".self::$_mapping[$calling][$update_column]."$escape,";
          array_push($marks,Driver::$current_timestamp);
       }
 
@@ -607,28 +656,28 @@ class Model {
          $lid = null;
          if(Driver::$last_id_supported) {
             $lid = self::resolveConnection()->lastInsertId();
-            if(empty($this->data[$pk]) && !empty($lid))
-               $this->data[$pk] = $lid;
+            if(empty($this->_data[$pk]) && !empty($lid))
+               $this->_data[$pk] = $lid;
          }
 
          // or, like Oracle, if the database does not support last inserted id
-         if(empty($this->data[$pk]) && empty($lid) && !empty($attrs[$pk]))
-            $this->data[$pk] = $attrs[$pk];
+         if(empty($this->_data[$pk]) && empty($lid) && !empty($attrs[$pk]))
+            $this->_data[$pk] = $attrs[$pk];
 
          // check for database filled columns
-         if($this->data[$pk]) {
-            $found = self::find($this->data[$pk]);
+         if($this->_data[$pk]) {
+            $found = self::find($this->_data[$pk]);
             if($found) {
                if($create_column)
-                  $this->data[$create_column] = $found->get($create_column);
+                  $this->_data[$create_column] = $found->get($create_column);
             }
          }
 
          // push later objects
-         foreach($this->push_later as $obj) {
+         foreach($this->_push_later as $obj) {
             $this->push($obj);
          }
-         $this->push_later = array();
+         $this->_push_later = array();
       }
       Log::log($sql);
       return $rtn;
@@ -648,14 +697,14 @@ class Model {
             continue;
          if(strlen(trim($value))<1)
             $value = null;
-         $sql .= "$escape".self::$mapping[$calling][$attr]."$escape=?,";
+         $sql .= "$escape".self::$_mapping[$calling][$attr]."$escape=?,";
          array_push($vals,$value);
       }
       if($update_column)
-         $sql .= "$escape".self::$mapping[$calling][$update_column]."$escape=".Driver::$current_timestamp.",";
+         $sql .= "$escape".self::$_mapping[$calling][$update_column]."$escape=".Driver::$current_timestamp.",";
 
       $sql  = substr($sql,0,strlen($sql)-1);
-      $sql .= " where $escape".self::getTableName()."$escape.$escape".self::$mapping[$calling][$pk]."$escape=?";
+      $sql .= " where $escape".self::getTableName()."$escape.$escape".self::$_mapping[$calling][$pk]."$escape=?";
       array_push($vals,$pk_value);
 
       Log::log($sql);
@@ -667,7 +716,7 @@ class Model {
     * @return boolean destroyed or not
     */
    public function destroy() {
-      if(!self::$loaded) 
+      if(!self::$_loaded) 
          self::_loadColumns();
 
       $calling    = get_called_class();
@@ -676,9 +725,9 @@ class Model {
 
       $table_name = $calling::getTableName();
       $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = $this->data[$pk];
+      $pk_value   = $this->_data[$pk];
       $escape     = Driver::$escape_char;
-      $sql        = "delete from $escape$table_name$escape where $escape$table_name$escape.$escape".self::$mapping[$calling][$pk]."$escape=?";
+      $sql        = "delete from $escape$table_name$escape where $escape$table_name$escape.$escape".self::$_mapping[$calling][$pk]."$escape=?";
       Log::log($sql);
 
       $rst = self::executePrepared($sql,array($pk_value))->rowCount()==1;
@@ -693,7 +742,7 @@ class Model {
     * @return object statement
     */
    public static function executePrepared($obj,$values=array()) {
-      if(!self::$loaded)
+      if(!self::$_loaded)
          self::_loadColumns();
 
       if(!is_string($obj) && get_class($obj)=="TORM\Builder")
@@ -788,12 +837,12 @@ class Model {
       $rtn = true;
       $pk  = self::get(self::getPK());
 
-      if(!array_key_exists($cls,self::$validations) ||
-         sizeof(self::$validations[$cls])<1)
+      if(!array_key_exists($cls,self::$_validations) ||
+         sizeof(self::$_validations[$cls])<1)
          return true;
 
-      foreach(self::$validations[$cls] as $attr=>$validations) {
-         $value = $this->data[$attr];
+      foreach(self::$_validations[$cls] as $attr=>$validations) {
+         $value = $this->_data[$attr];
 
          foreach($validations as $validation) {
             $validation_key   = array_keys($validation);
@@ -822,30 +871,30 @@ class Model {
    }
 
    public function get($attr,$current=true) {
-      if(!$this->data || !array_key_exists($attr,$this->data))
+      if(!$this->_data || !array_key_exists($attr,$this->_data))
          return null;
-      return Connection::convertToEncoding($current ? $this->data[$attr] : $this->prev_data[$attr]);
+      return Connection::convertToEncoding($current ? $this->_data[$attr] : $this->_prev_data[$attr]);
    }
 
    public function set($attr,$value) {
       $pk = self::getPK();
       // can't change the primary key of an existing record
-      if(!$this->new_rec && $attr==$pk)
+      if(!$this->_new_rec && $attr==$pk)
          return;
-      $this->data[$attr] = $value;
+      $this->_data[$attr] = $value;
    }
 
    public static function validates($attr,$validation) {
       $cls = get_called_class();
 
       // bummer! need to verify the calling class
-      if(!array_key_exists($cls,self::$validations))
-         self::$validations[$cls] = array();
+      if(!array_key_exists($cls,self::$_validations))
+         self::$_validations[$cls] = array();
 
-      if(!array_key_exists($attr,self::$validations[$cls]))
-         self::$validations[$cls][$attr] = array();
+      if(!array_key_exists($attr,self::$_validations[$cls]))
+         self::$_validations[$cls][$attr] = array();
 
-      array_push(self::$validations[$cls][$attr],$validation);
+      array_push(self::$_validations[$cls][$attr],$validation);
    }
 
    /**
@@ -856,23 +905,23 @@ class Model {
    public static function scope($name,$conditions) {
       $cls = get_called_class();
       
-      if(!array_key_exists($cls,self::$scopes))
-         self::$scopes[$cls] = array();
+      if(!array_key_exists($cls,self::$_scopes))
+         self::$_scopes[$cls] = array();
 
-      if(!array_key_exists($name,self::$scopes[$cls]))
-         self::$scopes[$cls][$name] = array();
+      if(!array_key_exists($name,self::$_scopes[$cls]))
+         self::$_scopes[$cls][$name] = array();
          
-      self::$scopes[$cls][$name] = $conditions;
+      self::$_scopes[$cls][$name] = $conditions;
    }
 
    public static function resolveScope($name,$args=null) {
       $cls = get_called_class();
       
-      if(!array_key_exists($cls,self::$scopes) ||
-         !array_key_exists($name,self::$scopes[$cls]))
+      if(!array_key_exists($cls,self::$_scopes) ||
+         !array_key_exists($name,self::$_scopes[$cls]))
          return null;
 
-      $conditions = self::$scopes[$cls][$name];
+      $conditions = self::$_scopes[$cls][$name];
       if(!$conditions)
          return null;
 
@@ -887,19 +936,19 @@ class Model {
     */
    public static function hasMany($attr,$options=null) {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$has_many))
-         self::$has_many[$cls] = array();
-      self::$has_many[$cls][$attr] = $options ? $options : false;
+      if(!array_key_exists($cls,self::$_has_many))
+         self::$_has_many[$cls] = array();
+      self::$_has_many[$cls][$attr] = $options ? $options : false;
 
       $klass = self::hasManyClass($attr);
       $ids   = strtolower($klass)."_ids";
-      self::$has_many_maps[$cls][$ids] = $attr;
+      self::$_has_many_maps[$cls][$ids] = $attr;
    }
 
    public function hasHasMany($attr) {
       $cls = get_called_class();
-      return array_key_exists($cls,self::$has_many) &&
-             array_key_exists($attr,self::$has_many[$cls]);
+      return array_key_exists($cls,self::$_has_many) &&
+             array_key_exists($attr,self::$_has_many[$cls]);
    }
 
    /**
@@ -910,8 +959,8 @@ class Model {
     */
    private static function checkAndReturnMany($method,$value) {
       $cls = get_called_class();
-      if(array_key_exists($cls   ,self::$has_many) &&
-         array_key_exists($method,self::$has_many[$cls]))
+      if(array_key_exists($cls   ,self::$_has_many) &&
+         array_key_exists($method,self::$_has_many[$cls]))
          return self::resolveHasMany($method,$value);
    }
 
@@ -924,7 +973,7 @@ class Model {
          return null;
 
       $cls     = get_called_class();
-      $configs = self::$has_many[$cls][$attr];
+      $configs = self::$_has_many[$cls][$attr];
       $klass   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"] : ucfirst(preg_replace('/s$/',"",$attr));
       return $klass;
    }
@@ -934,7 +983,7 @@ class Model {
          return null;
 
       $cls     = get_called_class();
-      $configs = self::$has_many[$cls][$attr];
+      $configs = self::$_has_many[$cls][$attr];
       $key     = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
       return $key;
    }
@@ -950,7 +999,7 @@ class Model {
       if(!self::hasHasMany($attr))
          return null;
 
-      $configs       = self::$has_many[$cls][$attr];
+      $configs       = self::$_has_many[$cls][$attr];
       $has_many_cls  = self::hasManyClass($attr);
       $this_key      = self::hasManyForeignKey($attr);
       $collection    = $has_many_cls::where(array($this_key=>$value));
@@ -964,25 +1013,25 @@ class Model {
     */
    public static function belongsTo($model,$options=null) {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$belongs_to))
-         self::$belongs_to[$cls] = array();
-      self::$belongs_to[$cls][$model] = $options ? $options : false;
+      if(!array_key_exists($cls,self::$_belongs_to))
+         self::$_belongs_to[$cls] = array();
+      self::$_belongs_to[$cls][$model] = $options ? $options : false;
    }
 
    private static function checkAndReturnBelongs($method,$values) {
       $cls = get_called_class();
-      if(array_key_exists($cls   ,self::$belongs_to) &&
-         array_key_exists($method,self::$belongs_to[$cls]))
+      if(array_key_exists($cls   ,self::$_belongs_to) &&
+         array_key_exists($method,self::$_belongs_to[$cls]))
          return self::resolveBelongsTo($method,$values);
    }
 
    private static function resolveBelongsTo($attr,$values) {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$belongs_to) ||
-         !array_key_exists($attr,self::$belongs_to[$cls]))
+      if(!array_key_exists($cls,self::$_belongs_to) ||
+         !array_key_exists($attr,self::$_belongs_to[$cls]))
          return null;
 
-      $configs       = self::$belongs_to[$cls][$attr];
+      $configs       = self::$_belongs_to[$cls][$attr];
       $belongs_cls   = is_array($configs) && array_key_exists("class_name" ,$configs) ? $configs["class_name"]  : ucfirst($attr);
       $belongs_key   = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : strtolower($belongs_cls)."_id";
       $primary_key   = is_array($configs) && array_key_exists("primary_key",$configs) ? $configs["primary_key"] : "id";
@@ -997,9 +1046,9 @@ class Model {
     */
    public static function hasOne($attr,$options=null) {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$has_one))
-         self::$has_one[$cls] = array();
-      self::$has_one[$cls][$attr] = $options ? $options : false;
+      if(!array_key_exists($cls,self::$_has_one))
+         self::$_has_one[$cls] = array();
+      self::$_has_one[$cls][$attr] = $options ? $options : false;
    }
 
    /**
@@ -1010,11 +1059,11 @@ class Model {
     */
    private static function resolveHasOne($attr,$value) {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$has_one) ||
-         !array_key_exists($attr,self::$has_one[$cls]))
+      if(!array_key_exists($cls,self::$_has_one) ||
+         !array_key_exists($attr,self::$_has_one[$cls]))
          return null;
 
-      $configs       = self::$has_one[$cls][$attr];
+      $configs       = self::$_has_one[$cls][$attr];
       $has_one_cls   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"]  : ucfirst(preg_replace('/s$/',"",$attr));
       $this_key      = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
       $obj           = $has_one_cls::first(array($this_key=>$value));
@@ -1028,8 +1077,8 @@ class Model {
     */
    private static function checkAndReturnHasOne($method,$value) {
       $cls = get_called_class();
-      if(array_key_exists($cls   ,self::$has_one) &&
-         array_key_exists($method,self::$has_one[$cls]))
+      if(array_key_exists($cls   ,self::$_has_one) &&
+         array_key_exists($method,self::$_has_one[$cls]))
          return self::resolveHasOne($method,$value);
    }
 
@@ -1037,7 +1086,7 @@ class Model {
       if(array_key_exists(self::getPK(),$attrs))
          unset($attrs[self::getPK()]);
       foreach($attrs as $attr=>$value) 
-         $this->data[$attr] = $value;
+         $this->_data[$attr] = $value;
       return $this->save();
    }
 
@@ -1047,7 +1096,7 @@ class Model {
     */
    public static function setSequenceName($name) {
       $cls = get_called_class();
-      self::$sequence[$cls] = $name;
+      self::$_sequence[$cls] = $name;
    }
 
    /**
@@ -1056,9 +1105,9 @@ class Model {
     */
    public static function getSequenceName() {
       $cls = get_called_class();
-      if(!array_key_exists($cls,self::$sequence))
+      if(!array_key_exists($cls,self::$_sequence))
          return null;
-      return self::$sequence[$cls];
+      return self::$_sequence[$cls];
    }
 
    /**
@@ -1084,8 +1133,8 @@ class Model {
       // caching if the sequence exists
       $cls  = get_called_class();
       $name = self::resolveSequenceName();
-      if(array_key_exists($cls ,self::$sequence_exists) &&
-         array_key_exists($name,self::$sequence_exists[$cls]))
+      if(array_key_exists($cls ,self::$_sequence_exists) &&
+         array_key_exists($name,self::$_sequence_exists[$cls]))
       {
           return true;
       }
@@ -1100,10 +1149,10 @@ class Model {
 
       // if exists, cache result
       if ($rtn) {
-         if (!array_key_exists($cls, self::$sequence_exists)) {
-            self::$sequence_exists[$cls] = array();
+         if (!array_key_exists($cls, self::$_sequence_exists)) {
+            self::$_sequence_exists[$cls] = array();
          }
-         self::$sequence_exists[$cls][$name] = true;
+         self::$_sequence_exists[$cls][$name] = true;
       }
       return $rtn;
    }
@@ -1133,14 +1182,14 @@ class Model {
     */
    public static function putCache($sql) {
       $md5 = md5($sql);
-      if(array_key_exists($md5,self::$prepared_cache)) {
+      if(array_key_exists($md5,self::$_prepared_cache)) {
          Log::log("already prepared: $sql");
-         return self::$prepared_cache[$md5];
+         return self::$_prepared_cache[$md5];
       } else {
          Log::log("inserting on cache: $sql");
       }
       $prepared = self::resolveConnection()->prepare($sql);
-      self::$prepared_cache[$md5] = $prepared;
+      self::$_prepared_cache[$md5] = $prepared;
       return $prepared;
    }
 
@@ -1150,24 +1199,24 @@ class Model {
     */
    public static function getCache($sql) {
       $md5 = md5($sql);
-      if(!array_key_exists($md5,self::$prepared_cache)) 
+      if(!array_key_exists($md5,self::$_prepared_cache)) 
          return null;
-      return self::$prepared_cache[$md5];
+      return self::$_prepared_cache[$md5];
    }
 
    /**
     * Resolve relations, if present
     */
    private function resolveRelations($method) {
-      $many = self::checkAndReturnMany($method,$this->data[self::getPK()]);
+      $many = self::checkAndReturnMany($method,$this->_data[self::getPK()]);
       if($many)
          return $many;
 
-      $belongs = self::checkAndReturnBelongs($method,$this->data);
+      $belongs = self::checkAndReturnBelongs($method,$this->_data);
       if($belongs)
          return $belongs;
 
-      $has_one = self::checkAndReturnHasOne($method,$this->data[self::getPK()]);
+      $has_one = self::checkAndReturnHasOne($method,$this->_data[self::getPK()]);
       if($has_one)
          return $has_one;
 
@@ -1177,51 +1226,51 @@ class Model {
    private function resolveIds($attr,$values=null) {
       $cls = get_called_class();
 
-      if(!array_key_exists($cls ,self::$has_many_maps) ||
-         !array_key_exists($attr,self::$has_many_maps[$cls]))
+      if(!array_key_exists($cls ,self::$_has_many_maps) ||
+         !array_key_exists($attr,self::$_has_many_maps[$cls]))
          return null;
 
-      $klass   = self::hasManyClass(self::$has_many_maps[$cls][$attr]);
+      $klass   = self::hasManyClass(self::$_has_many_maps[$cls][$attr]);
       $foreign = self::hasManyForeignKey(Inflections::pluralize(strtolower($klass)));
-      $value   = $this->data[self::getPK()];
+      $value   = $this->_data[self::getPK()];
       $klasspk = $klass::getPK();
 
       // if values sent, set them
       if($values) {
-         $this->has_many_ids = $values;
+         $this->_has_many_ids = $values;
          $ids   = join(",",$values);
          $this->nullNotPresentIds($klass,$foreign,$ids,$value);
       } else {
          $data = $klass::where(array($foreign=>$value));
-         $this->has_many_ids = array();
+         $this->_has_many_ids = array();
          while($row=$data->next())
-            array_push($this->has_many_ids,$row->get($klasspk));
+            array_push($this->_has_many_ids,$row->get($klasspk));
       }
-      return $this->has_many_ids;
+      return $this->_has_many_ids;
    }
 
    private function resolveCollection($attr,$values) {
       $cls = get_called_class();
 
-      if(!array_key_exists($cls,self::$has_many_maps))
+      if(!array_key_exists($cls,self::$_has_many_maps))
          return null;
       
-      $maps = array_values(self::$has_many_maps[$cls]);
+      $maps = array_values(self::$_has_many_maps[$cls]);
       if(!in_array($attr,$maps))
          return null;
       
       if(!$values || !is_array($values) || sizeof($values)<1 || !is_object($values[0]))
          return null;
       
-      $this->has_many_ids = array();
+      $this->_has_many_ids = array();
       foreach($values as $value) {
          $klass = get_class($value);
          $this->push($value);
          $id = $value->get($klass::getPK());
          if($id)
-            array_push($this->has_many_ids,$id);
+            array_push($this->_has_many_ids,$id);
       }
-      return $this->has_many_ids;
+      return $this->_has_many_ids;
    }
 
    private function nullNotPresentIds($klass,$foreign,$ids,$id) {
@@ -1240,7 +1289,7 @@ class Model {
 
       $cls           = get_called_class();
       $escape        = Driver::$escape_char;
-      $value         = array_key_exists(self::getPK(),$this->data) ? $this->data[self::getPK()] : null;
+      $value         = array_key_exists(self::getPK(),$this->_data) ? $this->_data[self::getPK()] : null;
       $other_cls     = get_class($obj);
       $other_pk      = $other_cls::getPK();
       $other_value   = $obj->get($other_pk);
@@ -1256,8 +1305,8 @@ class Model {
                return false;
             $other_value = $obj->get($other_pk);
          }
-         $foreign    = self::$mapping[$other_cls][$foreign];
-         $other_pk   = self::$mapping[$other_cls][$other_pk];
+         $foreign    = self::$_mapping[$other_cls][$foreign];
+         $other_pk   = self::$_mapping[$other_cls][$other_pk];
          $sql        = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
          $stmt       = self::query($sql);
          $rst        = $stmt->rowCount()==1;
@@ -1272,7 +1321,7 @@ class Model {
    }
 
    private function pushLater($obj) {
-      array_push($this->push_later,$obj);
+      array_push($this->_push_later,$obj);
    }
 
    /**
@@ -1364,7 +1413,7 @@ class Model {
 
    private function checkCallback($cls,$callback) {
       self::initiateCallbacks($cls);
-      foreach(self::$callbacks[$cls][$callback] as $func) {
+      foreach(self::$_callbacks[$cls][$callback] as $func) {
          if(!call_user_func(array($cls,$func)))
             return false;
       }
@@ -1373,17 +1422,17 @@ class Model {
 
    private function addCallback($cls,$callback,$func) {
       self::initiateCallbacks($cls);
-      array_push(self::$callbacks[$cls][$callback],$func);
+      array_push(self::$_callbacks[$cls][$callback],$func);
    }
 
    private function initiateCallbacks($cls) {
-      if(!array_key_exists($cls,self::$callbacks)) 
-         self::$callbacks[$cls] = array();
+      if(!array_key_exists($cls,self::$_callbacks)) 
+         self::$_callbacks[$cls] = array();
 
       $callbacks = array("before_save","after_save","before_destroy","after_destroy");
       foreach($callbacks as $callback) {
-         if(!array_key_exists($callback,self::$callbacks[$cls]))
-            self::$callbacks[$cls][$callback] = array();
+         if(!array_key_exists($callback,self::$_callbacks[$cls]))
+            self::$_callbacks[$cls][$callback] = array();
       }
    }
 
@@ -1412,7 +1461,7 @@ class Model {
    public function changed($attrs=false) {
       $changes = array();
       $cls     = get_called_class();
-      foreach(self::$columns[$cls] as $column) {
+      foreach(self::$_columns[$cls] as $column) {
          if($cls::getPK()==$column || in_array(strtolower($column),array("created_at","updated_at")))
             continue;
          $cur = $this->get($column);
@@ -1430,14 +1479,14 @@ class Model {
    }
 
    public static function closeCursorBehaviour($action) {
-       self::$cc_action = $action;
+       self::$_cc_action = $action;
    }
 
    private static function closeCursor($stmt) {
-      if (self::$cc_action == self::CURSOR_NOTHING) {
+      if (self::$_cc_action == self::CURSOR_NOTHING) {
           return;
       }
-      if (self::$cc_action == self::CURSOR_CLOSE && is_object($stmt)) {
+      if (self::$_cc_action == self::CURSOR_CLOSE && is_object($stmt)) {
           $stmt->closeCursor();
       } else {
           $stmt = null;
