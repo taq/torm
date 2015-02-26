@@ -25,7 +25,8 @@ namespace TORM;
  */
 class Model
 {
-    use Finders, Storage, Persistence, Errors;
+    use Finders, Storage, Persistence, Errors, Validations, Scopes, HasMany,
+        HasOne, BelongsTo, Sequences, Cache, Callbacks, Dirty;
 
     const CURSOR_NOTHING = 0;
     const CURSOR_CLOSE   = 1;
@@ -267,7 +268,8 @@ class Model
     /**
      * Sets a specific connection for the current model
      *
-     * @param $con PDO connection
+     * @param mixed  $con PDO connection
+     * @param string $env enviroment
      * 
      * @return null
      */
@@ -329,19 +331,19 @@ class Model
         // needs to create table
         if (!$check || !is_object($rst) || !$rst->fetch()) {
             $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
-            self::closeCursor($stmt);
+            self::_closeCursor($stmt);
         }
         if (is_object($rst)) {
-            self::closeCursor($rst);
+            self::_closeCursor($rst);
         }
 
         // insert first value
         $rst = self::resolveConnection()->query("select id from torm_info");
         if (!$rst->fetch()) {
             $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
-            self::closeCursor($stmt);
+            self::_closeCursor($stmt);
         }
-        self::closeCursor($rst);
+        self::_closeCursor($rst);
 
         // hack to dont need a query string to get columns
         $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
@@ -353,7 +355,7 @@ class Model
             array_push(self::$_columns[$cls], $keyc);
             self::$_mapping[$cls][$keyc] = $key;
         }
-        self::closeCursor($rst);
+        self::_closeCursor($rst);
         self::$_loaded[$cls] = true;
     }
 
@@ -544,669 +546,181 @@ class Model
         return self::resolveConnection()->query($sql);
     }
 
-   /**
-    * Check if object is valid
-    */
-   public function isValid() {
-      $this->_resetErrors();
-      $cls = get_called_class();
-      $rtn = true;
-      $pk  = self::get(self::getPK());
-
-      if(!array_key_exists($cls,self::$_validations) ||
-         sizeof(self::$_validations[$cls])<1)
-         return true;
-
-      foreach(self::$_validations[$cls] as $attr=>$validations) {
-         $value = $this->_data[$attr];
-
-         foreach($validations as $validation) {
-            $validation_key   = array_keys($validation);
-            $validation_key   = $validation_key[0];
-            $validation_value = array_values($validation);
-            $validation_value = $validation_value[0];
-            $args = array(get_called_class(),$pk,$attr,$value,$validation_value,$validation);
-            $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
-            if(!$test) {
-               $rtn = false;
-               $this->_addError($attr,Validation::$validation_map[$validation_key]);
-            }
-         }
-      }
-      return $rtn;
-   }
-
-   /**
-    * Check if attribute is unique
-    * @param object attribute
-    * @return if attribute is unique
-    */
-   public static function isUnique($id,$attr,$attr_value) {
-      $obj = self::first(array($attr=>$attr_value));
-      return $obj==null || $obj->get(self::getPK())==$id;
-   }
-
-   public function get($attr,$current=true) {
-      if(!$this->_data || !array_key_exists($attr,$this->_data))
-         return null;
-      return Connection::convertToEncoding($current ? $this->_data[$attr] : $this->_prev_data[$attr]);
-   }
-
-   public function set($attr,$value) {
-      $pk = self::getPK();
-      // can't change the primary key of an existing record
-      if(!$this->_new_rec && $attr==$pk)
-         return;
-      $this->_data[$attr] = $value;
-   }
-
-   public static function validates($attr,$validation) {
-      $cls = get_called_class();
-
-      // bummer! need to verify the calling class
-      if(!array_key_exists($cls,self::$_validations))
-         self::$_validations[$cls] = array();
-
-      if(!array_key_exists($attr,self::$_validations[$cls]))
-         self::$_validations[$cls][$attr] = array();
-
-      array_push(self::$_validations[$cls][$attr],$validation);
-   }
-
-   /**
-    * Create a scope
-    * @param $scope name
-    * @param $conditions
-    */
-   public static function scope($name,$conditions) {
-      $cls = get_called_class();
-      
-      if(!array_key_exists($cls,self::$_scopes))
-         self::$_scopes[$cls] = array();
-
-      if(!array_key_exists($name,self::$_scopes[$cls]))
-         self::$_scopes[$cls][$name] = array();
-         
-      self::$_scopes[$cls][$name] = $conditions;
-   }
-
-   public static function resolveScope($name,$args=null) {
-      $cls = get_called_class();
-      
-      if(!array_key_exists($cls,self::$_scopes) ||
-         !array_key_exists($name,self::$_scopes[$cls]))
-         return null;
-
-      $conditions = self::$_scopes[$cls][$name];
-      if(!$conditions)
-         return null;
-
-      if(is_callable($conditions)) 
-         $conditions = $conditions($args);
-      return self::where($conditions);
-   }
-
-   /**
-    * Create a has many relationship
-    * @param $attr attribute
-    */
-   public static function hasMany($attr,$options=null) {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$_has_many))
-         self::$_has_many[$cls] = array();
-      self::$_has_many[$cls][$attr] = $options ? $options : false;
-
-      $klass = self::hasManyClass($attr);
-      $ids   = strtolower($klass)."_ids";
-      self::$_has_many_maps[$cls][$ids] = $attr;
-   }
-
-   public function hasHasMany($attr) {
-      $cls = get_called_class();
-      return array_key_exists($cls,self::$_has_many) &&
-             array_key_exists($attr,self::$_has_many[$cls]);
-   }
-
-   /**
-    * Check a has many relationship and returns it resolved, if exists.
-    * @param $method name
-    * @param $value  
-    * @return has many collection, if any
-    */
-   private static function checkAndReturnMany($method,$value) {
-      $cls = get_called_class();
-      if(array_key_exists($cls   ,self::$_has_many) &&
-         array_key_exists($method,self::$_has_many[$cls]))
-         return self::resolveHasMany($method,$value);
-   }
-
-   /**
-    * Check class from a relation, like
-    * hasManyClass("tickets") => "Ticket"
-    */
-   public static function hasManyClass($attr) {
-      if(!self::hasHasMany($attr))
-         return null;
-
-      $cls     = get_called_class();
-      $configs = self::$_has_many[$cls][$attr];
-      $klass   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"] : ucfirst(preg_replace('/s$/',"",$attr));
-      return $klass;
-   }
-
-   public static function hasManyForeignKey($attr) {
-      if(!self::hasHasMany($attr))
-         return null;
-
-      $cls     = get_called_class();
-      $configs = self::$_has_many[$cls][$attr];
-      $key     = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
-      return $key;
-   }
-
-   /**
-    * Resolve the has many relationship and returns the collection with values
-    * @param $attr name
-    * @param $value
-    * @return collection
-    */
-   private static function resolveHasMany($attr,$value) {
-      $cls = get_called_class();
-      if(!self::hasHasMany($attr))
-         return null;
-
-      $configs       = self::$_has_many[$cls][$attr];
-      $has_many_cls  = self::hasManyClass($attr);
-      $this_key      = self::hasManyForeignKey($attr);
-      $collection    = $has_many_cls::where(array($this_key=>$value));
-      return $collection;
-   }
-
-   /**
-    * Create a belongs relationship
-    * @param $attr attribute
-    * @param $options options for relation
-    */
-   public static function belongsTo($model,$options=null) {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$_belongs_to))
-         self::$_belongs_to[$cls] = array();
-      self::$_belongs_to[$cls][$model] = $options ? $options : false;
-   }
-
-   private static function checkAndReturnBelongs($method,$values) {
-      $cls = get_called_class();
-      if(array_key_exists($cls   ,self::$_belongs_to) &&
-         array_key_exists($method,self::$_belongs_to[$cls]))
-         return self::resolveBelongsTo($method,$values);
-   }
-
-   private static function resolveBelongsTo($attr,$values) {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$_belongs_to) ||
-         !array_key_exists($attr,self::$_belongs_to[$cls]))
-         return null;
-
-      $configs       = self::$_belongs_to[$cls][$attr];
-      $belongs_cls   = is_array($configs) && array_key_exists("class_name" ,$configs) ? $configs["class_name"]  : ucfirst($attr);
-      $belongs_key   = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : strtolower($belongs_cls)."_id";
-      $primary_key   = is_array($configs) && array_key_exists("primary_key",$configs) ? $configs["primary_key"] : "id";
-      $value         = $values[$belongs_key];
-      $obj           = $belongs_cls::first(array($primary_key=>$value));
-      return $obj;
-   }
-
-   /**
-    * Create a has one relationship
-    * @param $attr attribute
-    */
-   public static function hasOne($attr,$options=null) {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$_has_one))
-         self::$_has_one[$cls] = array();
-      self::$_has_one[$cls][$attr] = $options ? $options : false;
-   }
-
-   /**
-    * Resolve the has one relationship and returns the object
-    * @param $attr name
-    * @param $value
-    * @return collection
-    */
-   private static function resolveHasOne($attr,$value) {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$_has_one) ||
-         !array_key_exists($attr,self::$_has_one[$cls]))
-         return null;
-
-      $configs       = self::$_has_one[$cls][$attr];
-      $has_one_cls   = is_array($configs) && array_key_exists("class_name",$configs)  ? $configs["class_name"]  : ucfirst(preg_replace('/s$/',"",$attr));
-      $this_key      = is_array($configs) && array_key_exists("foreign_key",$configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
-      $obj           = $has_one_cls::first(array($this_key=>$value));
-      return $obj;
-   }
-
-   /**
-    * Check and return the value of a has one relationship
-    * @param $method searched
-    * @param $value the current id
-    */
-   private static function checkAndReturnHasOne($method,$value) {
-      $cls = get_called_class();
-      if(array_key_exists($cls   ,self::$_has_one) &&
-         array_key_exists($method,self::$_has_one[$cls]))
-         return self::resolveHasOne($method,$value);
-   }
-
-   public function updateAttributes($attrs) {
-      if(array_key_exists(self::getPK(),$attrs))
-         unset($attrs[self::getPK()]);
-      foreach($attrs as $attr=>$value) 
-         $this->_data[$attr] = $value;
-      return $this->save();
-   }
-
-   /**
-    * Set the sequence name, if any
-    * @param $name of the sequence
-    */
-   public static function setSequenceName($name) {
-      $cls = get_called_class();
-      self::$_sequence[$cls] = $name;
-   }
-
-   /**
-    * Returns the sequence name, if any
-    * @return $name of the sequence
-    */
-   public static function getSequenceName() {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$_sequence))
-         return null;
-      return self::$_sequence[$cls];
-   }
-
-   /**
-    * Resolve the sequence name, if any
-    * @returns $name of the sequence
-    */
-   public static function resolveSequenceName() {
-      if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
-         return null;
-
-      $suffix  = "_sequence";
-      $table   = strtolower(self::getTableName());
-      $name    = self::getSequenceName();
-      if($name) 
-         return $name;
-      return $table.$suffix;
-   }
-
-   private static function sequenceExists() {
-      if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
-         return null;
-
-      // caching if the sequence exists
-      $cls  = get_called_class();
-      $name = self::resolveSequenceName();
-      if(array_key_exists($cls ,self::$_sequence_exists) &&
-         array_key_exists($name,self::$_sequence_exists[$cls]))
-      {
-          return true;
-      }
-
-      // checking if the sequence exists
-      $escape = Driver::$escape_char;
-      $sql    = "select count(sequence_name) as $escape"."CNT"."$escape from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
-      $stmt   = self::resolveConnection()->query($sql);
-      $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
-      $rtn    = intval($rst["CNT"])>0;
-      self::closeCursor($stmt);
-
-      // if exists, cache result
-      if ($rtn) {
-         if (!array_key_exists($cls, self::$_sequence_exists)) {
-            self::$_sequence_exists[$cls] = array();
-         }
-         self::$_sequence_exists[$cls][$name] = true;
-      }
-      return $rtn;
-   }
-
-   /**
-    * Check if sequence exists
-    * If not, create it.
-    */
-   private static function checkSequence() {
-      if(Driver::$primary_key_behaviour!=Driver::PRIMARY_KEY_SEQUENCE)
-         return null;
-
-      if(self::sequenceExists())
-         return;
-
-      // create sequence
-      $name = self::resolveSequenceName();
-      $sql  = "create sequence $name increment by 1 start with 1 nocycle nocache";
-      Log::log($sql);
-      $stmt = self::resolveConnection()->query($sql);
-      self::closeCursor($stmt);
-   }
-
-   /**
-    * Put a prepared statement on cache, if not there.
-    * @return object prepared statement
-    */
-   public static function putCache($sql) {
-      $md5 = md5($sql);
-      if(array_key_exists($md5,self::$_prepared_cache)) {
-         Log::log("already prepared: $sql");
-         return self::$_prepared_cache[$md5];
-      } else {
-         Log::log("inserting on cache: $sql");
-      }
-      $prepared = self::resolveConnection()->prepare($sql);
-      self::$_prepared_cache[$md5] = $prepared;
-      return $prepared;
-   }
-
-   /**
-    * Get a prepared statement from cache
-    * @return object or null if not on cache
-    */
-   public static function getCache($sql) {
-      $md5 = md5($sql);
-      if(!array_key_exists($md5,self::$_prepared_cache)) 
-         return null;
-      return self::$_prepared_cache[$md5];
-   }
-
-   /**
-    * Resolve relations, if present
-    */
-   private function resolveRelations($method) {
-      $many = self::checkAndReturnMany($method,$this->_data[self::getPK()]);
-      if($many)
-         return $many;
-
-      $belongs = self::checkAndReturnBelongs($method,$this->_data);
-      if($belongs)
-         return $belongs;
-
-      $has_one = self::checkAndReturnHasOne($method,$this->_data[self::getPK()]);
-      if($has_one)
-         return $has_one;
-
-      return null;
-   }
-
-   private function resolveIds($attr,$values=null) {
-      $cls = get_called_class();
-
-      if(!array_key_exists($cls ,self::$_has_many_maps) ||
-         !array_key_exists($attr,self::$_has_many_maps[$cls]))
-         return null;
-
-      $klass   = self::hasManyClass(self::$_has_many_maps[$cls][$attr]);
-      $foreign = self::hasManyForeignKey(Inflections::pluralize(strtolower($klass)));
-      $value   = $this->_data[self::getPK()];
-      $klasspk = $klass::getPK();
-
-      // if values sent, set them
-      if($values) {
-         $this->_has_many_ids = $values;
-         $ids   = join(",",$values);
-         $this->nullNotPresentIds($klass,$foreign,$ids,$value);
-      } else {
-         $data = $klass::where(array($foreign=>$value));
-         $this->_has_many_ids = array();
-         while($row=$data->next())
-            array_push($this->_has_many_ids,$row->get($klasspk));
-      }
-      return $this->_has_many_ids;
-   }
-
-   private function resolveCollection($attr,$values) {
-      $cls = get_called_class();
-
-      if(!array_key_exists($cls,self::$_has_many_maps))
-         return null;
-      
-      $maps = array_values(self::$_has_many_maps[$cls]);
-      if(!in_array($attr,$maps))
-         return null;
-      
-      if(!$values || !is_array($values) || sizeof($values)<1 || !is_object($values[0]))
-         return null;
-      
-      $this->_has_many_ids = array();
-      foreach($values as $value) {
-         $klass = get_class($value);
-         $this->push($value);
-         $id = $value->get($klass::getPK());
-         if($id)
-            array_push($this->_has_many_ids,$id);
-      }
-      return $this->_has_many_ids;
-   }
-
-   private function nullNotPresentIds($klass,$foreign,$ids,$id) {
-      $escape  = Driver::$escape_char;
-      $klasspk = $klass::getPK();
-      $klass   = strtolower($klass);
-      $table   = Model::getTableName($klass);
-      $sql     = "update $escape$table$escape set $escape$foreign$escape=null where $escape$foreign$escape=$id and $escape$table$escape.$escape$klasspk$escape not in ($ids)";
-      $stmt    = self::query($sql);
-      self::closeCursor($stmt);
-   }
-
-   public function push($obj) {
-      if(!$obj)
-         return;
-
-      $cls           = get_called_class();
-      $escape        = Driver::$escape_char;
-      $value         = array_key_exists(self::getPK(),$this->_data) ? $this->_data[self::getPK()] : null;
-      $other_cls     = get_class($obj);
-      $other_pk      = $other_cls::getPK();
-      $other_value   = $obj->get($other_pk);
-      $table         = Model::getTableName($other_cls);
-      $foreign       = self::hasManyForeignKey(Inflections::pluralize(strtolower($other_cls)));
-
-      // if the current object exists ...
-      if(!is_null($value)) {
-         $obj->set(strtolower($foreign),$value);
-         // if the pushed object is still not saved
-         if(is_null($other_value)) {
-            if(!$obj->save())
-               return false;
-            $other_value = $obj->get($other_pk);
-         }
-         $foreign    = self::$_mapping[$other_cls][$foreign];
-         $other_pk   = self::$_mapping[$other_cls][$other_pk];
-         $sql        = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
-         $stmt       = self::query($sql);
-         $rst        = $stmt->rowCount()==1;
-         self::closeCursor($stmt);
-         return $rst;
-      }
-
-      // if current object does not exists ...
-      if(is_null($value)) {
-         $this->pushLater($obj);
-      }
-   }
-
-   private function pushLater($obj) {
-      array_push($this->_push_later,$obj);
-   }
-
-   /**
-    * Trigger to use object values as methods
-    * Like
-    * $user->name("john doe");
-    * echo $user->name();
-    */
-   public function __call($method,$args) {
-      if(method_exists($this,$method)) 
-         return call_user_func_array(array($this,$method),$args);
-
-      $relation = $this->resolveRelations($method);
-      if($relation)
-         return $relation;
-
-      $ids = $this->resolveIds($method,$args);
-      if($ids)
-         return $ids;
-
-      if(!$args) 
-         return $this->get($method);
-      $this->set($method,$args[0]);
-   }
-
-   public static function __callStatic($method,$args) {
-      $scope = self::resolveScope($method,$args);
-      if($scope)
-         return $scope;
-      return null;
-   }
-
-   /**
-    * Trigger to get object values as attributes
-    * Like
-    * echo $user->name;
-    */
-   function __get($attr) {
-      $changes  = $this->changedAttribute($attr);
-      if($changes)
-         return $changes;
-
-      $relation = $this->resolveRelations($attr);
-      if($relation)
-         return $relation;
-
-      $ids = $this->resolveIds($attr);
-      if($ids)
-         return $ids;
-      return $this->get($attr);
-   }
-
-   /**
-    * Trigger to set object values as attributes
-    * Like
-    * $user->name = "john doe";
-    */
-   function __set($attr,$value) {
-      $ids = $this->resolveIds($attr,$value);
-      if($ids) 
-         return $ids;
-
-      $ids = $this->resolveCollection($attr,$value);
-      if($ids) 
-         return $ids;
-      
-      $this->set($attr,$value);
-   }
-
-   public static function beforeSave($func) {
-      $cls = get_called_class();
-      self::addCallback($cls,"before_save",$func);
-   }
-
-   public static function afterSave($func) {
-      $cls = get_called_class();
-      self::addCallback($cls,"after_save",$func);
-   }
-
-   public static function beforeDestroy($func) {
-      $cls = get_called_class();
-      self::addCallback($cls,"before_destroy",$func);
-   }
-
-   public static function afterDestroy($func) {
-      $cls = get_called_class();
-      self::addCallback($cls,"after_destroy",$func);
-   }
-
-   private function checkCallback($cls,$callback) {
-      self::initiateCallbacks($cls);
-      foreach(self::$_callbacks[$cls][$callback] as $func) {
-         if(!call_user_func(array($cls,$func)))
-            return false;
-      }
-      return true;
-   }
-
-   private function addCallback($cls,$callback,$func) {
-      self::initiateCallbacks($cls);
-      array_push(self::$_callbacks[$cls][$callback],$func);
-   }
-
-   private function initiateCallbacks($cls) {
-      if(!array_key_exists($cls,self::$_callbacks)) 
-         self::$_callbacks[$cls] = array();
-
-      $callbacks = array("before_save","after_save","before_destroy","after_destroy");
-      foreach($callbacks as $callback) {
-         if(!array_key_exists($callback,self::$_callbacks[$cls]))
-            self::$_callbacks[$cls][$callback] = array();
-      }
-   }
-
-   private function changedAttribute($attr) {
-      preg_match('/(\w+)_(change|changed|was)$/',$attr,$matches);
-      if(sizeof($matches)<1)
-         return null;
-      $attr = $matches[1];
-      $meth = $matches[2];
-      $cur  = $this->get($attr);
-      $old  = $this->get($attr,false);
-
-      if($meth=="was")
-         return $old;
-      if($meth=="changed") 
-         return $cur!=$old;
-      if($meth=="change")
-         return array($old,$cur);
-      return null;
-   }
-
-   public function changes() {
-      return $this->changed(true);
-   }
-
-   public function changed($attrs=false) {
-      $changes = array();
-      $cls     = get_called_class();
-      foreach(self::$_columns[$cls] as $column) {
-         if($cls::getPK()==$column || in_array(strtolower($column),array("created_at","updated_at")))
-            continue;
-         $cur = $this->get($column);
-         $old = $this->get($column,false);
-         if($cur==$old) 
-            continue;
-         $value = $column;
-         if($attrs) {
-            $value = array($old,$cur);
-            $changes[$column] = $value;
-         } else
-            array_push($changes,$value);
-      }
-      return $changes;
-   }
-
-   public static function closeCursorBehaviour($action) {
-       self::$_cc_action = $action;
-   }
-
-   private static function closeCursor($stmt) {
-      if (self::$_cc_action == self::CURSOR_NOTHING) {
-          return;
-      }
-      if (self::$_cc_action == self::CURSOR_CLOSE && is_object($stmt)) {
-          $stmt->closeCursor();
-      } else {
-          $stmt = null;
-      }
-   }
+    /**
+     * Get an attribute value
+     *
+     * @param string  $attr    attribute
+     * @param boolean $current current value
+     *
+     * @return mixed attribute value
+     */
+    public function get($attr,$current=true)
+    {
+        if (!$this->_data || !array_key_exists($attr, $this->_data)) {
+            return null;
+        }
+        return Connection::convertToEncoding($current ? $this->_data[$attr] : $this->_prev_data[$attr]);
+    }
+
+    /**
+     * Set an attribute value
+     *
+     * @param string $attr  attribute
+     * @param mixed  $value value
+     *
+     * @return null
+     */
+    public function set($attr, $value)
+    {
+        $pk = self::getPK();
+        // can't change the primary key of an existing record
+        if (!$this->_new_rec && $attr == $pk) {
+            return;
+        }
+        $this->_data[$attr] = $value;
+    }
+
+    /**
+     * Resolve relations on an attribute, if present
+     *
+     * @param string $attr attribute
+     *
+     * @return null
+     */
+    private function _resolveRelations($attr)
+    {
+        $many = self::_checkAndReturnMany($attr, $this->_data[self::getPK()]);
+        if ($many) {
+            return $many;
+        }
+
+        $belongs = self::_checkAndReturnBelongs($attr, $this->_data);
+        if ($belongs) {
+            return $belongs;
+        }
+
+        $has_one = self::_checkAndReturnHasOne($attr, $this->_data[self::getPK()]);
+        if ($has_one) {
+            return $has_one;
+        }
+        return null;
+    }
+
+    /**
+     * Trigger to use object values as methods
+     * Like
+     * $user->name("john doe");
+     * echo $user->name();
+     *
+     * @param string $method method
+     * @param mixed  $args   arguments
+     *
+     * @return null
+     */
+    public function __call($method, $args)
+    {
+        if (method_exists($this, $method)) {
+            return call_user_func_array(array($this, $method), $args);
+        }
+
+        $relation = $this->_resolveRelations($method);
+        if ($relation) {
+            return $relation;
+        }
+
+        $ids = $this->_resolveIds($method, $args);
+        if ($ids) {
+            return $ids;
+        }
+
+        if (!$args) {
+            return $this->get($method);
+        }
+        $this->set($method, $args[0]);
+    }
+
+    /**
+     * Trigger to get object values as attributes
+     * Like
+     * echo $user->name;
+     *
+     * @param string $attr attribute
+     *
+     * @return attribute value
+     */
+    public function __get($attr) 
+    {
+        $changes = $this->_changedAttribute($attr);
+        if ($changes) {
+            return $changes;
+        }
+
+        $relation = $this->_resolveRelations($attr);
+        if ($relation) {
+            return $relation;
+        }
+
+        $ids = $this->_resolveIds($attr);
+        if ($ids) {
+            return $ids;
+        }
+        return $this->get($attr);
+    }
+
+    /**
+     * Trigger to set object values as attributes
+     * Like
+     * $user->name = "john doe";
+     *
+     * @param string $attr  attribute
+     * @param mixed  $value value
+     *
+     * @return null
+     */
+    public function __set($attr,$value)
+    {
+        $ids = $this->_resolveIds($attr, $value);
+        if ($ids) {
+            return $ids;
+        }
+
+        $ids = $this->_resolveCollection($attr, $value);
+        if ($ids) {
+            return $ids;
+        }
+        $this->set($attr, $value);
+    }
+
+    /**
+     * Behaviour to close cursor
+     *
+     * @param mixed $action to use
+     *
+     * @return null
+     */
+    public static function closeCursorBehaviour($action)
+    {
+        self::$_cc_action = $action;
+    }
+
+    /**
+     * Close cursor
+     *
+     * @param mixed $stmt statement
+     *
+     * @return null
+     */
+    private static function _closeCursor($stmt) 
+    {
+        if (self::$_cc_action == self::CURSOR_NOTHING) {
+            return;
+        }
+
+        if (self::$_cc_action == self::CURSOR_CLOSE && is_object($stmt)) {
+            $stmt->closeCursor();
+        } else {
+            $stmt = null;
+        }
+    }
 }
 ?>

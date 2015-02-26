@@ -29,7 +29,7 @@ trait Persistence
 
         // check for callbacks before validation below
         $calling = get_called_class();
-        if (!self::checkCallback($calling, "before_save")) {
+        if (!self::_checkCallback($calling, "before_save")) {
             return false;
         }
 
@@ -74,7 +74,7 @@ trait Persistence
         }
 
         if ($rst) {
-            self::checkCallback($calling, "after_save");
+            self::_checkCallback($calling, "after_save");
         }
         $this->_prev_data = $this->_data;
         return $rst;
@@ -109,8 +109,8 @@ trait Persistence
             $seq_name   = self::resolveSequenceName();
 
             // check if the sequence exists
-            self::checkSequence();
-            if (!self::sequenceExists()) {
+            self::_checkSequence();
+            if (!self::_sequenceExists()) {
                 $this->_addError($pk, "Sequence $seq_name could not be created");
                 return false;
             }
@@ -276,7 +276,7 @@ trait Persistence
 
         $calling = get_called_class();
 
-        if (!self::checkCallback($calling, "before_destroy")) {
+        if (!self::_checkCallback($calling, "before_destroy")) {
             return false;
         }
 
@@ -289,9 +289,27 @@ trait Persistence
 
         $rst = self::executePrepared($sql, array($pk_value))->rowCount()==1;
         if ($rst) {
-            self::checkCallback($calling, "after_destroy");
+            self::_checkCallback($calling, "after_destroy");
         }
         return $rst;
+    }
+
+    /**
+     * Update object attributes
+     *
+     * @param mixed $attrs attributes
+     *
+     * @return updated or not
+     */
+    public function updateAttributes($attrs)
+    {
+        if (array_key_exists(self::getPK(), $attrs)) {
+            unset($attrs[self::getPK()]);
+        }
+        foreach ($attrs as $attr => $value) {
+            $this->_data[$attr] = $value;
+        }
+        return $this->save();
     }
 }
 ?>
