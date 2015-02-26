@@ -5,7 +5,7 @@
  * PHP version 5.5
  *
  * @category Model
- * @package  Torm
+ * @package  TORM
  * @author   Eustáquio Rangel <taq@bluefish.com.br>
  * @license  http://www.gnu.org/copyleft/gpl.html GPL
  * @link     http://github.com/taq/torm
@@ -25,6 +25,8 @@ namespace TORM;
  */
 class Model
 {
+    use Finders, Storage, Persistence, Errors;
+
     const CURSOR_NOTHING = 0;
     const CURSOR_CLOSE   = 1;
     const CURSOR_NULL    = 2;
@@ -72,7 +74,7 @@ class Model
     public function __construct($data=null)
     {
         $cls = get_called_class();
-        self::checkLoaded();
+        self::_checkLoaded();
 
         // setting default null values
         $this->_data       = self::_loadNullValues();
@@ -165,97 +167,136 @@ class Model
         return $values;
     }
 
-   public static function setTableName($table_name) {
-      $cls = get_called_class();
-      self::$_table_name[$cls] = $table_name;
-   }
+    /**
+     * Set the model's table name
+     *
+     * @param string $table_name table name
+     *
+     * @return null
+     */
+    public static function setTableName($table_name)
+    {
+        $cls = get_called_class();
+        self::$_table_name[$cls] = $table_name;
+    }
 
-   /**
-    * Returns the table name.
-    * If not specified one, get the current class name and pluralize it.
-    * @return string table name
-    */
-   public static function getTableName($cls=null) {
-      $cls  = $cls ? $cls : get_called_class();
-      if(array_key_exists($cls,self::$_table_name))
-         return self::$_table_name[$cls];
-      $name = Inflections::pluralize($cls);
-      if(self::isIgnoringCase())
-         $name = strtolower($name);
-      return $name;
-   }
+    /**
+     * Returns the table name.
+     * If not specified one, get the current class name and pluralize it.
+     *
+     * @param string $cls class name
+     *
+     * @return string table name
+     */
+    public static function getTableName($cls=null)
+    {
+        $cls = $cls ? $cls : get_called_class();
 
-   public static function setPK($pk) {
-      $cls = get_called_class();
-      self::$_pk[$cls] = $pk;
-   }
+        if (array_key_exists($cls, self::$_table_name)) {
+            return self::$_table_name[$cls];
+        }
+        $name = Inflections::pluralize($cls);
+        if (self::isIgnoringCase()) {
+            $name = strtolower($name);
+        }
+        return $name;
+    }
 
-   /**
-    * Returns the primary key column.
-    * @return string primary key
-    */
-   public static function getPK() {
-      $cls = get_called_class();
-      return array_key_exists($cls,self::$_pk) ? self::$_pk[$cls] : "id";
-   }
+    /**
+     * Set the primary key column
+     *
+     * @param string $pk primary key
+     *
+     * @return null
+     */
+    public static function setPK($pk)
+    {
+        $cls = get_called_class();
+        self::$_pk[$cls] = $pk;
+    }
 
-   public static function setOrder($order) {
-      $cls = get_called_class();
-      self::$_order[$cls] = $order;
-   }
+    /**
+     * Returns the primary key column.
+     *
+     * @return string primary key
+     */
+    public static function getPK()
+    {
+        $cls = get_called_class();
+        return array_key_exists($cls, self::$_pk) ? self::$_pk[$cls] : "id";
+    }
 
-   /**
-    * Returns the default order.
-    * If not specified, returns an empty string.
-    * @return string order
-    */
-   public static function getOrder() {
-      $cls = get_called_class();
-      return array_key_exists($cls,self::$_order) ? self::$_order[$cls] : "";
-   }
+    /**
+     * Set the default order
+     *
+     * @param string $order default
+     *
+     * @return null
+     */
+    public static function setOrder($order)
+    {
+        $cls = get_called_class();
+        self::$_order[$cls] = $order;
+    }
 
-   /**
-    * Returns the inverse order.
-    * If DESC is specified, retuns ASC.
-    * @return string order
-    */
-   public static function getReversedOrder() {
-      $sort = preg_match("/desc/i",self::getOrder());
-      $sort = $sort ? " ASC " : " DESC ";
-      return self::getOrder() ? self::getOrder()." $sort" : "";
-   }
+    /**
+     * Returns the default order.
+     * If not specified, returns an empty string.
+     *
+     * @return string order
+     */
+    public static function getOrder()
+    {
+        $cls = get_called_class();
+        return array_key_exists($cls, self::$_order) ? self::$_order[$cls] : "";
+    }
 
-   /**
-    * Sets a specific connection for the current model
-    *
-    * @param $con PDO connection
-    * 
-    * @return null
-    */
-   public static function setConnection($con, $env="development")
-   {
-       $cls = get_called_class();
-       if (!array_key_exists($cls, self::$_connections)) {
-           self::$_connections[$cls] = array();
-       }
-       self::$_connections[$cls][$env] = $con;
-   }
+    /**
+     * Returns the inverse order.
+     * If DESC is specified, returns ASC.
+     *
+     * @return string order
+     */
+    public static function getReversedOrder()
+    {
+        $sort = preg_match("/desc/i", self::getOrder());
+        $sort = $sort ? " ASC " : " DESC ";
+        return self::getOrder() ? self::getOrder()." $sort" : "";
+    }
 
-   /**
-    * Resolve the current connection handle.
-    * Get it from PDO or from the current class.
-    *
-    * @return object connection
-    */
-   public static function resolveConnection() {
-       $cls = get_called_class();
-       $env = Connection::selectEnvironment();
-       if (array_key_exists($cls, self::$_connections) &&
-           array_key_exists($env, self::$_connections[$cls])) {
-           return self::$_connections[$cls][$env];
-       }
-       return self::$connection ? self::$connection : Connection::getConnection();
-   }
+    /**
+     * Sets a specific connection for the current model
+     *
+     * @param $con PDO connection
+     * 
+     * @return null
+     */
+    public static function setConnection($con, $env="development")
+    {
+        $cls = get_called_class();
+        if (!array_key_exists($cls, self::$_connections)) {
+            self::$_connections[$cls] = array();
+        }
+        self::$_connections[$cls][$env] = $con;
+    }
+
+    /**
+     * Resolve the current connection handle.
+     * Get it from PDO or from the current class.
+     *
+     * @return object connection
+     */
+    public static function resolveConnection() 
+    {
+        $cls = get_called_class();
+        $env = Connection::selectEnvironment();
+        if (array_key_exists($cls, self::$_connections) 
+            && array_key_exists($env, self::$_connections[$cls])
+        ) {
+                return self::$_connections[$cls][$env];
+        }
+        return self::$connection ? self::$connection : Connection::getConnection();
+    }
 
     /**
      * Load column info
@@ -316,523 +357,198 @@ class Model
         self::$_loaded[$cls] = true;
     }
 
-   public static function extractColumns() {
-      self::checkLoaded();
-      $cls = get_called_class();
-      $temp_columns = "";
-      $escape = Driver::$escape_char;
-      foreach(self::$_columns[$cls] as $column) {
-         $temp_columns .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$column]."$escape,";
-      }
-      return substr($temp_columns,0,strlen($temp_columns)-1);
-   }
+    /**
+     * Extract table columns string
+     *
+     * @return string columns
+     */
+    public static function extractColumns() 
+    {
+        self::_checkLoaded();
+        $cls = get_called_class();
+        $temp_columns = "";
+        $escape = Driver::$escape_char;
+        foreach (self::$_columns[$cls] as $column) {
+            $temp_columns .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$column]."$escape,";
+        }
+        return substr($temp_columns, 0, strlen($temp_columns)-1);
+    }
 
-   public static function extractUpdateColumns($values) {
-      $cls = get_called_class();
-      $temp_columns = "";
-      $escape = Driver::$escape_char;
-      foreach($values as $key=>$value)
-         $temp_columns .= "$escape".self::$_mapping[$cls][$key]."$escape=?,";
-      return substr($temp_columns,0,strlen($temp_columns)-1);
-   }
+    /**
+     * Extract update columns string
+     *
+     * @param mixed $values to set columns
+     *
+     * @return string columns
+     */
+    public static function extractUpdateColumns($values)
+    {
+        $cls = get_called_class();
+        $temp_columns = "";
+        $escape = Driver::$escape_char;
+        foreach ($values as $key => $value) {
+            $temp_columns .= "$escape".self::$_mapping[$cls][$key]."$escape=?,";
+        }
+        return substr($temp_columns, 0, strlen($temp_columns)-1);
+    }
 
-   private static function extractWhereConditions($conditions) {
-      if(!$conditions)
-         return "";
+    /**
+     * Extract where conditions string
+     *
+     * @param mixed $conditions to extract
+     *
+     * @return string where conditions
+     */
+    private static function _extractWhereConditions($conditions) 
+    {
+        if (!$conditions) {
+            return "";
+        }
 
-      $cls = get_called_class();
-      $escape = Driver::$escape_char;
-      if(is_array($conditions)) {
-         $temp_cond = "";
-         foreach($conditions as $key=>$value)
-            $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape=? and ";
-         $temp_cond  = substr($temp_cond,0,strlen($temp_cond)-5);
-         $conditions = $temp_cond;
-      }
-      return $conditions;
-   }
+        $cls    = get_called_class();
+        $escape = Driver::$escape_char;
 
-   public static function extractWhereValues($conditions) {
-      $values = array();
-      if(!$conditions)
-         return $values;
-
-      if(is_array($conditions)) {
-         foreach($conditions as $key=>$value)
-            array_push($values,$value);
-      }
-      return $values;
-   }
-
-   /**
-    * Use the WHERE clause to return values
-    * @conditions string or array - better use is using an array
-    * @return Collection of results
-    */
-   public static function where($conditions) {
-      self::checkLoaded();
-
-      $builder          = self::makeBuilder();
-      $builder->where   = self::extractWhereConditions($conditions);
-      $builder->fields  = self::extractColumns();
-      $vals             = self::extractWhereValues($conditions);
-      return new Collection($builder,$vals,get_called_class());
-   }
-
-   private static function makeBuilder() {
-      $builder = new Builder();
-      $builder->table = self::getTableName();
-      $builder->order = self::getOrder();
-      return $builder;
-   }
-
-   /**
-    * Find an object by its primary key
-    * @param object $id - primary key
-    * @return object result
-    */
-   public static function find($id) {
-      self::checkLoaded();
-
-      $pk               = self::isIgnoringCase() ? strtolower(self::getPK()) : self::getPK();
-      $builder          = self::makeBuilder();
-      $builder->fields  = self::extractColumns();
-      $builder->where   = self::extractWhereConditions(array($pk=>$id));
-      $builder->limit   = 1;
-      $cls  = get_called_class();
-      $stmt = self::executePrepared($builder,array($id));
-      $data = $stmt->fetch(\PDO::FETCH_ASSOC);
-      if(!$data)
-         return null;
-      return new $cls($data);
-   }
-
-   /**
-    * Return all values
-    * @return Collection values
-    */
-   public static function all($conditions=null) {
-      self::checkLoaded();
-
-      $builder = self::makeBuilder();
-      $builder->fields  = self::extractColumns();
-      $vals    = null;
-      if($conditions) {
-         $builder->where = self::extractWhereConditions($conditions);
-         $vals           = self::extractWhereValues($conditions);
-      }
-      return new Collection($builder,$vals,get_called_class());
-   }
-
-   /**
-    * Get result by position - first or last
-    * @param $position first or last
-    * @param object conditions
-    * @return result or null
-    */
-   private static function getByPosition($position,$conditions=null) {
-      self::checkLoaded();
-
-      $builder          = self::makeBuilder();
-      $builder->fields  = self::extractColumns();
-      $builder->order   = $position=="first" ? self::getOrder() : self::getReversedOrder();
-      $builder->where   = self::extractWhereConditions($conditions);
-      $vals             = self::extractWhereValues($conditions);
-      
-      $cls  = get_called_class();
-      $stmt = self::executePrepared($builder,$vals);
-      $data = $stmt->fetch(\PDO::FETCH_ASSOC);
-      if(!$data)
-         return null;
-      return new $cls($data);
-   }
-
-   /**
-    * Return the first value.
-    * Get by order.
-    * @param conditions
-    * @return object result
-    */
-   public static function first($conditions=null) {
-      return self::getByPosition("first",$conditions);
-   }
-
-   /**
-    * Return the last value.
-    * Get by inverse order.
-    * @return object result
-    */
-   public static function last($conditions=null) {
-      return self::getByPosition("last",$conditions);
-   }
-
-   /**
-    * Tell if its a new object (not saved)
-    * @return boolean new or not 
-    */
-   public function is_new() {
-      return $this->_new_rec;
-   }
-
-   /**
-    * Return the object current values
-    * @return Array data
-    */
-   public function getData() {
-      return $this->_data;
-   }
-
-   /**
-    * Return the previous data array
-    * @return Array data
-    */
-   public function getPrevData() {
-      return $this->_prev_data;
-   }
-
-   /**
-    * Return the original data array, immutable through the life of the object
-    * @return Array data
-    */
-   public function getOriginalData() {
-      return $this->_orig_data ;
-   }
-
-   private static function checkLoaded() {
-      $cls = get_called_class();
-      if(!array_key_exists($cls,self::$_loaded))
-         self::$_loaded[$cls] = false;
-      if(!self::$_loaded[$cls])
-         self::_loadColumns();
-   } 
-
-   private static function hasColumn($column) {
-      $cls  = get_called_class();
-      $key  = null;
-      $keys = self::$_columns[$cls];
-      foreach($keys as $ckey) {
-         $col1 = self::isIgnoringCase() ? strtolower($ckey)   : $ckey;
-         $col2 = self::isIgnoringCase() ? strtolower($column) : $column;
-         if($col1==$col2) {
-            $key = $ckey;
-            break;
-         }
-      }
-      return $key;
-   }
-
-   /**
-    * Save or update currenct object
-    * @return boolean saved/updated
-    */
-   public function save($force=false) {
-      if(!self::$_loaded) 
-         self::_loadColumns();
-
-      // check for callbacks before validation below
-      $calling = get_called_class();
-      if(!self::checkCallback($calling,"before_save"))
-         return false;
-
-      // with all the before callbacks checked, check if its valid
-      if(!$this->isValid())
-         return false;
-
-      $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = array_key_exists($pk,$this->_data) ? $this->_data[$pk] : null;
-      $attrs      = $this->_data;
-
-      if(!$pk_value) {
-         // if there is a method to get the new primary key value on the class, 
-         // call it
-         if(method_exists($calling,"getNewPKValue")) {
-            $pk_value = $calling::getNewPKValue();
-            if(!$this->_data[$pk])
-               $this->_data[$pk] = $pk_value;
-            $attrs = $this->_data;
-         }
-      }
-
-      if($pk_value)
-         $this->_new_rec = !self::find($pk_value);
-
-      $rst = false;
-      if($this->_new_rec) 
-         $rst = $this->insert($attrs,$calling,$pk,$pk_value);
-      else {
-         // no need to update if there weren't changes
-         if(sizeof($this->changed())<1 && !$force) {
-            Log::log("No changes, not updating");
-            $rst = true;
-         } else
-            $rst = $this->update($attrs,$calling,$pk,$pk_value);
-      }
-
-      if($rst)
-         self::checkCallback($calling,"after_save");
-      $this->_prev_data = $this->_data;
-      return $rst;
-   }
-
-   private function insert($attrs,$calling,$pk,$pk_value) {
-      $escape        = Driver::$escape_char;
-      $vals          = array();
-      $create_column = self::hasColumn("created_at");
-      $update_column = self::hasColumn("updated_at");
-
-      $sql = "insert into $escape".$calling::getTableName()."$escape (";
-
-      // remove the current value when need to insert a NULL value to create 
-      // the autoincrement value
-      if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_DELETE && !$pk_value)
-         unset($attrs[$pk]);
-
-      if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && empty($pk_value)) {
-         $seq_name   = self::resolveSequenceName();
-
-         // check if the sequence exists
-         self::checkSequence();
-         if(!self::sequenceExists()) {
-            $this->addError($pk,"Sequence $seq_name could not be created");
-            return false;
-         }
-
-         // get the sequence next value
-         $seq_sql    = "select $seq_name.nextval from dual";
-         $seq_stmt   = self::executePrepared($seq_sql);
-         $seq_data   = $seq_stmt->fetch(\PDO::FETCH_ASSOC);
-         if($seq_data) {
-            $seq_keys = array("nextval","NEXTVAL");
-            foreach($seq_keys as $seq_key) {
-               if(array_key_exists($seq_key,$seq_data)) {
-                  $attrs[$pk] = $seq_data[$seq_key];
-                  break;
-               }
+        if (is_array($conditions)) {
+            $temp_cond = "";
+            foreach ($conditions as $key => $value) {
+                $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape=? and ";
             }
-         }
-      } 
+            $temp_cond  = substr($temp_cond, 0, strlen($temp_cond)-5);
+            $conditions = $temp_cond;
+        }
+        return $conditions;
+    }
 
-      // use sequence, but there is already a value on the primary key.
-      // remember that it will allow this only if is really a record that
-      // wasn't found when checking for the primary key, specifying that its 
-      // a new record!
-      if(Driver::$primary_key_behaviour==Driver::PRIMARY_KEY_SEQUENCE && !empty($pk_value))
-         $attrs[$pk] = $pk_value;
+    /**
+     * Extract where values from conditions
+     *
+     * @param mixed $conditions to extract values
+     *
+     * @return mixed $values
+     */
+    public static function extractWhereValues($conditions) 
+    {
+        $values = array();
+        if (!$conditions) {
+            return $values;
+        }
 
-      if($create_column && array_key_exists($create_column,$attrs))
-         unset($attrs[$create_column]);
-
-      if($update_column && array_key_exists($update_column,$attrs))
-         unset($attrs[$update_column]);
-
-      // marks to insert values on prepared statement
-      $marks = array();
-      foreach($attrs as $attr=>$value) {
-         $sql .= "$escape".self::$_mapping[$calling][$attr]."$escape,";
-         array_push($marks,"?");
-      }
-      if($create_column) {
-         $sql .= "$escape".self::$_mapping[$calling][$create_column]."$escape,";
-         array_push($marks,Driver::$current_timestamp);
-      }
-      if($update_column) {
-         $sql .= "$escape".self::$_mapping[$calling][$update_column]."$escape,";
-         array_push($marks,Driver::$current_timestamp);
-      }
-
-      $marks = join(",",$marks); 
-      $sql   = substr($sql,0,strlen($sql)-1);
-      $sql  .= ") values ($marks)";
-
-      // now fill the $vals array with all values to be inserted on the 
-      // prepared statement
-      foreach($attrs as $attr=>$value) 
-         array_push($vals,$value);
-      $rtn = self::executePrepared($sql,$vals)->rowCount()==1;
-
-      // if inserted
-      if($rtn) {
-         // check for last inserted value
-         $lid = null;
-         if(Driver::$last_id_supported) {
-            $lid = self::resolveConnection()->lastInsertId();
-            if(empty($this->_data[$pk]) && !empty($lid))
-               $this->_data[$pk] = $lid;
-         }
-
-         // or, like Oracle, if the database does not support last inserted id
-         if(empty($this->_data[$pk]) && empty($lid) && !empty($attrs[$pk]))
-            $this->_data[$pk] = $attrs[$pk];
-
-         // check for database filled columns
-         if($this->_data[$pk]) {
-            $found = self::find($this->_data[$pk]);
-            if($found) {
-               if($create_column)
-                  $this->_data[$create_column] = $found->get($create_column);
+        if (is_array($conditions)) {
+            foreach ($conditions as $key => $value) {
+                array_push($values, $value);
             }
-         }
+        }
+        return $values;
+    }
 
-         // push later objects
-         foreach($this->_push_later as $obj) {
-            $this->push($obj);
-         }
-         $this->_push_later = array();
-      }
-      Log::log($sql);
-      return $rtn;
-   }
+    /**
+     * Create a query builder
+     *
+     * @return mixed $builder
+     */
+    private static function _makeBuilder()
+    {
+        $builder = new Builder();
+        $builder->table = self::getTableName();
+        $builder->order = self::getOrder();
+        return $builder;
+    }
 
-   private function update($attrs,$calling,$pk,$pk_value) {
-      $escape        = Driver::$escape_char;
-      $vals          = array();
-      $update_column = self::hasColumn("updated_at");
-      $create_column = self::hasColumn("created_at");
+    /**
+     * Tell if its a new object (not saved)
+     *
+     * @return boolean new or not
+     */
+    public function is_new()
+    {
+        return $this->_new_rec;
+    }
 
-      unset($attrs[$pk]);
-      $sql  = "update $escape".$calling::getTableName()."$escape set ";
-      foreach($attrs as $attr=>$value) {
-         if(($update_column && $attr==$update_column) ||
-            ($create_column && $attr==$create_column))
-            continue;
-         if(strlen(trim($value))<1)
-            $value = null;
-         $sql .= "$escape".self::$_mapping[$calling][$attr]."$escape=?,";
-         array_push($vals,$value);
-      }
-      if($update_column)
-         $sql .= "$escape".self::$_mapping[$calling][$update_column]."$escape=".Driver::$current_timestamp.",";
+    /**
+     * Check if the object columns were loaded
+     *
+     * @return boolean loaded or not
+     */
+    private static function _checkLoaded()
+    {
+        $cls = get_called_class();
+        if (!array_key_exists($cls, self::$_loaded)) {
+            self::$_loaded[$cls] = false;
+        }
+        if (!self::$_loaded[$cls]) {
+            self::_loadColumns();
+        }
+    } 
 
-      $sql  = substr($sql,0,strlen($sql)-1);
-      $sql .= " where $escape".self::getTableName()."$escape.$escape".self::$_mapping[$calling][$pk]."$escape=?";
-      array_push($vals,$pk_value);
+    /**
+     * Check if a column exists
+     *
+     * @param string $column to check
+     *
+     * @return column key
+     */
+    public static function hasColumn($column)
+    {
+        $cls  = get_called_class();
+        $key  = null;
+        $keys = self::$_columns[$cls];
 
-      Log::log($sql);
-      return self::executePrepared($sql,$vals)->rowCount()==1;
-   }
+        foreach ($keys as $ckey) {
+            $col1 = self::isIgnoringCase() ? strtolower($ckey)   : $ckey;
+            $col2 = self::isIgnoringCase() ? strtolower($column) : $column;
+            if ($col1==$col2) {
+                $key = $ckey;
+                break;
+            }
+        }
+        return $key;
+    }
 
-   /**
-    * Destroy the current object
-    * @return boolean destroyed or not
-    */
-   public function destroy() {
-      if(!self::$_loaded) 
-         self::_loadColumns();
+    /**
+     * Execute a prepared statement, trying to get it from cache.
+     *
+     * @param mixed $obj    object
+     * @param mixed $values to use
+     *
+     * @return object statement
+     */
+    public static function executePrepared($obj,$values=array())
+    {
+        if (!self::$_loaded) {
+            self::_loadColumns();
+        }
 
-      $calling    = get_called_class();
-      if(!self::checkCallback($calling,"before_destroy"))
-         return false;
+        // convert a builder to string
+        if (!is_string($obj) && get_class($obj) == "TORM\Builder") {
+            $sql = $obj->toString();
+        }
 
-      $table_name = $calling::getTableName();
-      $pk         = $calling::isIgnoringCase() ? strtolower($calling::getPK()) : $calling::getPK();
-      $pk_value   = $this->_data[$pk];
-      $escape     = Driver::$escape_char;
-      $sql        = "delete from $escape$table_name$escape where $escape$table_name$escape.$escape".self::$_mapping[$calling][$pk]."$escape=?";
-      Log::log($sql);
+        if (is_string($obj)) {
+            $sql = $obj;
+        }
 
-      $rst = self::executePrepared($sql,array($pk_value))->rowCount()==1;
-      if($rst)
-         self::checkCallback($calling,"after_destroy");
-      return $rst;
-   }
+        $stmt = self::putCache($sql);
+        $stmt->execute($values);
+        return $stmt;
+    }
 
-   /**
-    * Execute a prepared statement.
-    * Try to get it from cache.
-    * @return object statement
-    */
-   public static function executePrepared($obj,$values=array()) {
-      if(!self::$_loaded)
-         self::_loadColumns();
-
-      if(!is_string($obj) && get_class($obj)=="TORM\Builder")
-         $sql = $obj->toString();
-      if(is_string($obj))
-         $sql = $obj;
-
-      $stmt = self::putCache($sql);
-      $stmt->execute($values);
-      return $stmt;
-   }
-
-   public static function query($sql) {
-      return self::resolveConnection()->query($sql);
-   }
-
-   /**
-    * Add an error to an attribute
-    * @param $attr attribute
-    * @param $msg  message
-    */
-   private function addError($attr,$msg) {
-      if(!array_key_exists($attr,$this->errors))
-         $this->errors[$attr] = array();
-      array_push($this->errors[$attr],$msg);
-   }
-
-   public function errorMessages() {
-      $msgs = array();
-      foreach($this->errors as $key=>$values) {
-         foreach($values as $value)
-            array_push($msgs,"$key $value");
-      }
-      return $msgs;
-   }
-
-   /** 
-    * Sets the YAML file location
-    */
-   public function setYAMLFile($file) {
-      self::$yaml_file = $file;
-   }
+    /**
+     * Run a SQL query
+     *
+     * @param string $sql query
+     *
+     * @return mixed result
+     */
+    public static function query($sql) 
+    {
+        return self::resolveConnection()->query($sql);
+    }
 
    /**
-    * Return textual and translated error messages
-    */
-   public function fullMessages($errors=null) {
-      if(!function_exists("yaml_parse") ||
-         is_null(self::$yaml_file)      ||
-         !file_exists(self::$yaml_file))
-         return array();
-
-      $rtn    = array();
-      $parsed = yaml_parse(file_get_contents(self::$yaml_file));
-      $errors = is_null($errors) ? $this->errors : $errors;
-      $locale = function_exists("locale_get_default") ? locale_get_default() : "en-US";
-
-      if(!array_key_exists($locale   ,$parsed)          ||
-         !array_key_exists("errors"  ,$parsed[$locale]) ||
-         !array_key_exists("messages",$parsed[$locale]["errors"]))
-         return $this->errorMessages();
-
-      $msgs = $parsed[$locale]["errors"]["messages"];
-      $cls  = strtolower(get_called_class());
-
-      foreach($errors as $key=>$values) {
-         $attr = array_key_exists("attributes",$parsed[$locale]) &&
-                 array_key_exists($cls,$parsed[$locale]["attributes"]) &&
-                 array_key_exists($key,$parsed[$locale]["attributes"][$cls]) ?
-                 $parsed[$locale]["attributes"][$cls][$key] : $key;
-         foreach($values as $value) {
-            $msg = array_key_exists($value,$msgs) ? $msgs[$value] : ":$value";
-            array_push($rtn,"$attr $msg");
-         }
-      }
-      return $rtn;
-   }
-
-   /**
-    * Reset errors
-    */
-   private function resetErrors() {
-      $this->errors = array();
-   }
-
-   /**
-    * Check if is valid
+    * Check if object is valid
     */
    public function isValid() {
-      $this->resetErrors();
+      $this->_resetErrors();
       $cls = get_called_class();
       $rtn = true;
       $pk  = self::get(self::getPK());
@@ -853,7 +569,7 @@ class Model
             $test = call_user_func_array(array("TORM\Validation",$validation_key),$args);
             if(!$test) {
                $rtn = false;
-               $this->addError($attr,Validation::$validation_map[$validation_key]);
+               $this->_addError($attr,Validation::$validation_map[$validation_key]);
             }
          }
       }
