@@ -14,11 +14,16 @@ namespace TORM;
 
 trait BelongsTo
 {
+    private static $_belongs_to = array();
+    private $_belongs_cache     = array();
+
     /**
      * Create a belongs relationship
      *
-     * @param string $attr    attribute
+     * @param string $model   model
      * @param mixed  $options options for relation
+     *
+     * @return null
      */
     public static function belongsTo($model, $options=null)
     {
@@ -37,13 +42,13 @@ trait BelongsTo
      *
      * @return mixed association
      */
-    private static function _checkAndReturnBelongs($attr, $values)
+    private function _checkAndReturnBelongs($attr, $values)
     {
         $cls = get_called_class();
         if (array_key_exists($cls, self::$_belongs_to)
             && array_key_exists($attr, self::$_belongs_to[$cls])
         ) {
-            return self::_resolveBelongsTo($attr, $values);
+            return $this->_resolveBelongsTo($attr, $values);
         }
     }
 
@@ -55,7 +60,7 @@ trait BelongsTo
      *
      * @return association
      */
-    private static function _resolveBelongsTo($attr, $values)
+    private function _resolveBelongsTo($attr, $values)
     {
         $cls = get_called_class();
         if (!array_key_exists($cls, self::$_belongs_to)
@@ -64,12 +69,20 @@ trait BelongsTo
             return null;
         }
 
+        if (array_key_exists($attr, $this->_belongs_cache) && $this->_belongs_cache[$attr]) {
+            return $this->_belongs_cache[$attr];
+        }
+
         $configs       = self::$_belongs_to[$cls][$attr];
         $belongs_cls   = is_array($configs) && array_key_exists("class_name",  $configs) ? $configs["class_name"]  : ucfirst($attr);
         $belongs_key   = is_array($configs) && array_key_exists("foreign_key", $configs) ? $configs["foreign_key"] : strtolower($belongs_cls)."_id";
         $primary_key   = is_array($configs) && array_key_exists("primary_key", $configs) ? $configs["primary_key"] : "id";
         $value         = $values[$belongs_key];
         $obj           = $belongs_cls::first(array($primary_key => $value));
+
+        if ($obj) {
+            $this->_belongs_cache[$attr] = $obj;
+        }
         return $obj;
     }
 }

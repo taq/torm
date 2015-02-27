@@ -48,7 +48,6 @@ class Model
     private static $_validations     = array();
     private static $_has_many        = array();
     private static $_has_many_maps   = array();
-    private static $_belongs_to      = array();
     private static $_sequence        = array();
     private static $_has_one         = array();
     private static $_callbacks       = array();
@@ -131,6 +130,18 @@ class Model
         if (method_exists($this, "afterInitialize")) {
             $this->afterInitialize();
         }
+    }
+
+    /**
+     * Reload the current object
+     *
+     * @return mixed object
+     */
+    public function reload()
+    {
+        $data = $this->find($this->id)->getData();
+        $this->_setData($data);
+        $this->_belongs_cache = array();
     }
 
     /**
@@ -594,7 +605,7 @@ class Model
             return $many;
         }
 
-        $belongs = self::_checkAndReturnBelongs($attr, $this->_data);
+        $belongs = $this->_checkAndReturnBelongs($attr, $this->_data);
         if ($belongs) {
             return $belongs;
         }

@@ -14,6 +14,17 @@ namespace TORM;
 
 trait Storage
 {
+    /**
+     * Set data
+     *
+     * @param mixed $data data
+     *
+     * @return null
+     */
+    private function _setData($data)
+    {
+        $this->_data = $data;
+    }
 
     /**
      * Return the object current values
