@@ -1,181 +1,374 @@
 <?php
+/**
+ * Collection class
+ *
+ * PHP version 5.5
+ *
+ * @category Collections
+ * @package  TORM
+ * @author   Eustáquio Rangel <taq@bluefish.com.br>
+ * @license  http://www.gnu.org/copyleft/gpl.html GPL
+ * @link     http://github.com/taq/torm
+ */
 namespace TORM;
 
-class Collection implements \Iterator {
-   private $data     = null;
-   private $builder  = null;
-   private $vals     = null;
-   private $cls      = null;
-   private $curval   = null;
-   private $count    = null;
-   private $valid    = false;
-   public  $page     = null;
-   public  $per_page = null;
+/**
+ * Collection main class
+ *
+ * PHP version 5.5
+ *
+ * @category Collections
+ * @package  TORM
+ * @author   Eustáquio Rangel <taq@bluefish.com.br>
+ * @license  http://www.gnu.org/copyleft/gpl.html GPL
+ * @link     http://github.com/taq/torm
+ */
+class Collection implements \Iterator
+{
+    private $_data     = null;
+    private $_builder  = null;
+    private $_vals     = null;
+    private $_cls      = null;
+    private $_curval   = null;
+    private $_count    = null;
+    private $_valid    = false;
 
-   public function __construct($builder,$vals,$cls) {
-      $this->data    = null;
-      $this->builder = $builder;
-      $this->vals    = $vals;
-      $this->cls     = $cls;
-      $this->count   = 0;
-      $this->valid   = true;
-   }
+    public  $page     = null;
+    public  $per_page = null;
 
-   function limit($limit) {
-      $this->builder->limit = $limit;
-      return $this;
-   }
+    /**
+     * Constructor
+     *
+     * @param mixed  $builder builder object
+     * @param mixed  $vals    values
+     * @param string $cls     class
+     */
+    public function __construct($builder, $vals, $cls) 
+    {
+        $this->_data    = null;
+        $this->_builder = $builder;
+        $this->_vals    = $vals;
+        $this->_cls     = $cls;
+        $this->_count   = 0;
+        $this->_valid   = true;
+    }
 
-   function order($order) {
-      $this->builder->order = $order;
-      return $this;
-   }
+    /**
+     * Define row limit
+     *
+     * @param int $limit row limit
+     *
+     * @return mixed this object
+     */
+    public function limit($limit)
+    {
+        $this->_builder->limit = $limit;
+        return $this;
+    }
 
-   public function current()  {
-      if($this->curval==null)
-         return $this->next();
-      return new $this->cls($this->curval);
-   }
-   
-   public function key() {
-      return $this->count;
-   }
-      
-   public function valid() {
-      return $this->valid;
-   }    
-   
-   public function rewind() {
-      $this->count = 0;
-   }
+    /**
+     * Define row order
+     *
+     * @param int $order row order
+     *
+     * @return mixed this object
+     */
+    function order($order)
+    {
+        $this->_builder->order = $order;
+        return $this;
+    }
 
-   public function count() {
-      $cls = $this->cls;
-      $pk  = $cls::getPK();
-      $builder = $this->makeBuilderForAggregations(" count($pk) ");
-      return $this->executeAndReturnFirst($builder,$this->vals);
-   }
+    /**
+     * Return current value
+     *
+     * @return mixed value
+     */
+    public function current()
+    {
+        if ($this->_curval == null) {
+            return $this->next();
+        }
+        return new $this->_cls($this->_curval);
+    }
 
-   public function sum($attr) {
-      $builder = $this->makeBuilderForAggregations(" sum($attr) ");
-      return $this->executeAndReturnFirst($builder,$this->vals);
-   }
+    /**
+     * Return current key
+     *
+     * @return mixed key
+     */
+    public function key()
+    {
+        return $this->_count;
+    }
 
-   public function avg($attr) {
-      $builder = $this->makeBuilderForAggregations(" avg($attr) ");
-      return $this->executeAndReturnFirst($builder,$this->vals);
-   }
+    /**
+     * Return if its valid
+     *
+     * @return boolean valid
+     */
+    public function valid()
+    {
+        return $this->_valid;
+    }
 
-   public function min($attr) {
-      $builder = $this->makeBuilderForAggregations(" min($attr) ");
-      return $this->executeAndReturnFirst($builder,$this->vals);
-   }
+    /**
+     * Rewind collection
+     *
+     * @return null
+     */
+    public function rewind()
+    {
+        $this->_count = 0;
+    }
 
-   public function max($attr) {
-      $builder = $this->makeBuilderForAggregations(" max($attr) ");
-      return $this->executeAndReturnFirst($builder,$this->vals);
-   }
+    /**
+     * Return collection row count
+     *
+     * Example:
+     * echo Person::all()->count();
+     *
+     * @return int row count
+     */
+    public function count()
+    {
+        $cls     = $this->_cls;
+        $pk      = $cls::getPK();
+        $builder = $this->_makeBuilderForAggregations(" count($pk) ");
+        return $this->_executeAndReturnFirst($builder, $this->_vals);
+    }
 
-   public function paginate($page,$per_page=50) {
-      $this->builder->limit  = $per_page;
-      $this->builder->offset = ($page-1)*$per_page;
-      $this->page            = $page;
-      $this->per_page        = $per_page;
+    /**
+     * Return collection attribute sum
+     *
+     * Example:
+     * echo Person::all()->sum("age");
+     *
+     * @param string $attr attribute
+     *
+     * @return mixed sum
+     */
+    public function sum($attr)
+    {
+        $builder = $this->_makeBuilderForAggregations(" sum($attr) ");
+        return $this->_executeAndReturnFirst($builder, $this->_vals);
+    }
 
-      if(Driver::$pagination_subquery) {
-         $this->builder->limit   = $this->builder->offset+$per_page-1;
-         $this->builder->offset  = $this->builder->offset+1;
-      }
-      return $this;
-   }
+    /**
+     * Return collection attribute average
+     *
+     * Example:
+     * echo Person::all()->avg("age");
+     *
+     * @param string $attr attribute
+     *
+     * @return mixed average
+     */
+    public function avg($attr)
+    {
+        $builder = $this->_makeBuilderForAggregations(" avg($attr) ");
+        return $this->_executeAndReturnFirst($builder, $this->_vals);
+    }
 
-   private function makeBuilderForAggregations($fields) {
-      // a lot of people using PHP 5.3 yet ... no deferencing there.
-      $builder = $this->builder;
-      $table   = $builder->table;
-      $where   = $builder->where;
-      $limit   = $builder->limit;
-      $offset  = $builder->offset;
+    /**
+     * Return collection attribute minimum value
+     *
+     * Example:
+     * echo Person::all()->min("age");
+     *
+     * @param string $attr attribute
+     *
+     * @return mixed minimum
+     */
+    public function min($attr)
+    {
+        $builder = $this->_makeBuilderForAggregations(" min($attr) ");
+        return $this->_executeAndReturnFirst($builder, $this->_vals);
+    }
 
-      $builder = new Builder();
-      $builder->prefix = "select";
-      $builder->fields = $fields;
-      $builder->table  = $table;
-      $builder->where  = $where;
-      $builder->limit  = $limit;
-      $builder->offset = $offset;
-      return $builder;
-   }
+    /**
+     * Return collection attribute maximum value
+     *
+     * Example:
+     * echo Person::all()->max("age");
+     *
+     * @param string $attr attribute
+     *
+     * @return mixed maximum
+     */
+    public function max($attr)
+    {
+        $builder = $this->_makeBuilderForAggregations(" max($attr) ");
+        return $this->_executeAndReturnFirst($builder, $this->_vals);
+    }
 
-   private function executeAndReturnFirst($builder,$vals) {
-      $cls  = $this->cls;
-      $stmt = $cls::executePrepared($builder,$this->vals);
-      $data = $stmt->fetch();
-      if(!$data)
-         return 0;
-      return $data[0];
-   }
+    /**
+     * Return collection pagination page
+     *
+     * Example:
+     * echo Person::all()->paginate(1, 25);
+     *
+     * @param int $page     current page
+     * @param int $per_page rows per page
+     *
+     * @return mixed this object
+     */
+    public function paginate($page, $per_page = 50) 
+    {
+        $this->_builder->limit  = $per_page;
+        $this->_builder->offset = ($page - 1) * $per_page;
+        $this->page             = $page;
+        $this->per_page         = $per_page;
 
-   public function destroy() {
-      $builder = $this->builder;
-      $table   = $builder->table;
-      $where   = $builder->where;
+        if (Driver::$pagination_subquery) {
+            $this->_builder->limit   = $this->_builder->offset + $per_page - 1;
+            $this->_builder->offset  = $this->_builder->offset + 1;
+        }
+        return $this;
+    }
 
-      $builder = new Builder();
-      $builder->prefix = "delete";
-      $builder->fields = "";
-      $builder->table  = $table;
-      $builder->where  = $where;
+    /**
+     * Construct builder for aggregations
+     *
+     * @param mixed $fields fields to use
+     *
+     * @return mixed average
+     */
+    private function _makeBuilderForAggregations($fields)
+    {
+        $table   = $this->_builder->table;
+        $where   = $this->_builder->where;
+        $limit   = $this->_builder->limit;
+        $offset  = $this->_builder->offset;
 
-      $cls = $this->cls;
-      return $cls::executePrepared($builder,$this->vals)->rowCount()>0;
-   }
+        $builder         = new Builder();
+        $builder->prefix = "select";
+        $builder->fields = $fields;
+        $builder->table  = $table;
+        $builder->where  = $where;
+        $builder->limit  = $limit;
+        $builder->offset = $offset;
+        return $builder;
+    }
 
-   public function updateAttributes($attrs) {
-      $cls     = $this->cls;
-      $builder = $this->builder;
-      $table   = $builder->table;
-      $where   = $builder->where;
-      $escape  = Driver::$escape_char;
+    /**
+     * Return the first value
+     *
+     * @param mixed $builder builder
+     * @param mixed $vals    values to use
+     *
+     * @return mixed average
+     */
+    private function _executeAndReturnFirst($builder,$vals)
+    {
+        $cls  = $this->_cls;
+        $stmt = $cls::executePrepared($builder, $this->_vals);
+        $data = $stmt->fetch();
+        return $data ? $data[0] : 0;
+    }
 
-      $sql   = "update $escape$table$escape set ";
-      $sql  .= $cls::extractUpdateColumns($attrs,",");
-      $vals  = $cls::extractWhereValues($attrs);
-      if(!empty($where))
-         $sql .= " where $where";
-      $nval = array_merge($vals,is_array($this->vals) ? $this->vals : array());
-      return $cls::executePrepared($sql,$nval);
-   }
+    /**
+     * Destroy collection records
+     *
+     * Example:
+     * Person::all()->destroy();
+     *
+     * @return destroyed or not
+     */
+    public function destroy()
+    {
+        $table   = $this->_builder->table;
+        $where   = $this->_builder->where;
 
-   public function toArray($limit=-1) {
-      $ar  = array();
-      $cnt = 0;
-      while ($data=$this->next()) {
-         array_push($ar,$data);
-         $cnt ++;
-         if ($limit != -1 && $cnt>=$limit) {
-             break;
-         }
-      }
-      return $ar;
-   }
-   
-   public function next() {
-      $cls = $this->cls;
+        $builder = new Builder();
+        $builder->prefix = "delete";
+        $builder->fields = "";
+        $builder->table  = $table;
+        $builder->where  = $where;
 
-      if(!$this->data) {
-         $this->data = $cls::executePrepared($this->builder,$this->vals);
-      }
-      $data = $this->data->fetch(\PDO::FETCH_ASSOC);
+        $cls = $this->_cls;
+        return $cls::executePrepared($builder, $this->_vals)->rowCount()>0;
+    }
 
-      if(!$data) {
-         $this->valid  = false;
-         $this->curval = null;
-         return $this->curval;
-      } else {
-         ++$this->count;
-         $this->curval = $data;
-         return new $this->cls($this->curval);
-      }
-   }
+    /**
+     * Update collection attributes
+     *
+     * Example:
+     * echo Person::all()->updateAttributes("age", 25);
+     *
+     * @param string $attrs attributes
+     *
+     * @return updated or not
+     */
+    public function updateAttributes($attrs)
+    {
+        $cls     = $this->_cls;
+        $table   = $this->_builder->table;
+        $where   = $this->_builder->where;
+        $escape  = Driver::$escape_char;
+
+        $sql   = "update $escape$table$escape set ";
+        $sql  .= $cls::extractUpdateColumns($attrs, ",");
+        $vals  = $cls::extractWhereValues($attrs);
+
+        if (!empty($where)) {
+            $sql .= " where $where";
+        }
+        $nval = array_merge($vals, is_array($this->_vals) ? $this->_vals : array());
+        return $cls::executePrepared($sql, $nval);
+    }
+
+    /**
+     * Convert collection to an array
+     *
+     * Example:
+     * echo Person::all()->toArray();
+     *
+     * @param string $limit -1 to all collection, otherwise the number of 
+     * elements
+     *
+     * @return mixed average
+     */
+    public function toArray($limit=-1)
+    {
+        $ar  = array();
+        $cnt = 0;
+
+        while ($data=$this->next()) {
+            array_push($ar, $data);
+            $cnt ++;
+            if ($limit != -1 && $cnt >= $limit) {
+                break;
+            }
+        }
+        return $ar;
+    }
+
+    /**
+     * Return the next collection object
+     *
+     * Example:
+     * echo Person::all()->next();
+     *
+     * @return mixed object
+     */
+    public function next()
+    {
+        $cls = $this->_cls;
+
+        if (!$this->_data) {
+            $this->_data = $cls::executePrepared($this->_builder, $this->_vals);
+        }
+        $data = $this->_data->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$data) {
+            $this->_valid  = false;
+            $this->_curval = null;
+            return $this->_curval;
+        } else {
+            ++$this->_count;
+            $this->_curval = $data;
+            return new $this->_cls($this->_curval);
+        }
+    }
 }
