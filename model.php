@@ -44,20 +44,8 @@ class Model
     private static $_mapping         = array();
     private static $_loaded          = array();
     private static $_cc_action       = self::CURSOR_CLOSE;
-    private static $_prepared_cache  = array();
-    private static $_validations     = array();
-    private static $_has_many        = array();
-    private static $_has_many_maps   = array();
-    private static $_sequence        = array();
-    private static $_callbacks       = array();
-    private static $_scopes          = array();
-    private static $_sequence_exists = array();
     private static $_connections     = array();
 
-    private $_data         = array();
-    private $_prev_data    = array();
-    private $_orig_data    = array();
-    private $_has_many_ids = array();
     private $_new_rec      = false;
     private $_push_later   = array();
 

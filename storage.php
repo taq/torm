@@ -14,6 +14,10 @@ namespace TORM;
 
 trait Storage
 {
+    private $_data      = array();
+    private $_prev_data = array();
+    private $_orig_data = array();
+
     /**
      * Set data
      *

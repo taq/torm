@@ -14,6 +14,8 @@ namespace TORM;
 
 trait Validations
 {
+    private static $_validations = array();
+
     /**
      * Check if object is valid
      *
@@ -26,7 +28,7 @@ trait Validations
         $rtn = true;
         $pk  = self::get(self::getPK());
 
-        if (!array_key_exists($cls,self::$_validations)
+        if (!array_key_exists($cls, self::$_validations)
             || sizeof(self::$_validations[$cls]) < 1
         ) {
             return true;

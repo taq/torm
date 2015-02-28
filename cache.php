@@ -14,6 +14,8 @@ namespace TORM;
 
 trait Cache
 {
+    private static $_prepared_cache = array();
+
     /**
      * Put a prepared statement on cache, if not there.
      *

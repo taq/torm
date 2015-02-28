@@ -14,6 +14,8 @@ namespace TORM;
 
 trait Callbacks
 {
+    private static $_callbacks = array();
+
     /**
      * Before save callback
      *

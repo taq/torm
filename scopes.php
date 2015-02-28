@@ -14,6 +14,8 @@ namespace TORM;
 
 trait Scopes
 {
+    private static $_scopes = array();
+
     /**
      * Create a scope
      *

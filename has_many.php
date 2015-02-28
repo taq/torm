@@ -14,6 +14,10 @@ namespace TORM;
 
 trait HasMany
 {
+    private static $_has_many      = array();
+    private static $_has_many_maps = array();
+    private        $_has_many_ids  = array();
+
     /**
      * Create a has many relationship
      *

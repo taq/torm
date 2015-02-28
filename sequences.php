@@ -14,6 +14,9 @@ namespace TORM;
 
 trait Sequences
 {
+    private static $_sequence        = array();
+    private static $_sequence_exists = array();
+
     /**
      * Set the sequence name, if any
      *
