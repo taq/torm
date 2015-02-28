@@ -49,7 +49,6 @@ class Model
     private static $_has_many        = array();
     private static $_has_many_maps   = array();
     private static $_sequence        = array();
-    private static $_has_one         = array();
     private static $_callbacks       = array();
     private static $_scopes          = array();
     private static $_sequence_exists = array();
@@ -610,7 +609,7 @@ class Model
             return $belongs;
         }
 
-        $has_one = self::_checkAndReturnHasOne($attr, $this->_data[self::getPK()]);
+        $has_one = $this->_checkAndReturnHasOne($attr, $this->_data[self::getPK()]);
         if ($has_one) {
             return $has_one;
         }

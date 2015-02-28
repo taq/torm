@@ -952,6 +952,25 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Has one benchmark
+     *
+     * @return null
+     */
+    public function testHasOneBenchmark()
+    {
+        $user    = User::first();
+        $account = TORM\Factory::create("account");
+        $limit   = 10000;
+        $m1      = microtime(true);
+
+        for ($i = 0; $i < $limit; $i++) {
+            $acct = $user->account;
+        }
+        $m2 = microtime(true);
+        echo "time to retrieve $limit accounts: ".($m2 - $m1);
+    }
+
+    /**
      * Test get method
      *
      * @return null

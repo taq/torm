@@ -14,6 +14,9 @@ namespace TORM;
 
 trait HasOne
 {
+    private static $_has_one = array();
+    private $_has_one_cache  = array();
+
     /**
      * Create a has one association
      *
@@ -39,7 +42,7 @@ trait HasOne
      *
      * @return collection
      */
-    private static function _resolveHasOne($attr, $value)
+    private function _resolveHasOne($attr, $value)
     {
         $cls = get_called_class();
         if (!array_key_exists($cls, self::$_has_one)
@@ -48,10 +51,18 @@ trait HasOne
             return null;
         }
 
+        if (array_key_exists($attr, $this->_has_one_cache) && $this->_has_one_cache[$attr]) {
+            return $this->_has_one_cache[$attr];
+        }
+
         $configs       = self::$_has_one[$cls][$attr];
         $has_one_cls   = is_array($configs) && array_key_exists("class_name", $configs)  ? $configs["class_name"]  : ucfirst(preg_replace('/s$/', "", $attr));
         $this_key      = is_array($configs) && array_key_exists("foreign_key", $configs) ? $configs["foreign_key"] : (self::isIgnoringCase() ? strtolower($cls)."_id" : $cls."_id");
         $obj           = $has_one_cls::first(array($this_key=>$value));
+
+        if ($obj) {
+            $this->_has_one_cache[$attr] = $obj;
+        }
         return $obj;
     }
 
@@ -63,13 +74,13 @@ trait HasOne
      *
      * @return association
      */
-    private static function _checkAndReturnHasOne($method, $value)
+    private function _checkAndReturnHasOne($method, $value)
     {
         $cls = get_called_class();
         if (array_key_exists($cls, self::$_has_one)
             && array_key_exists($method, self::$_has_one[$cls])
         ) {
-            return self::_resolveHasOne($method, $value);
+            return $this->_resolveHasOne($method, $value);
         }
     }
 }
