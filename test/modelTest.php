@@ -1299,6 +1299,49 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test doe mail user
+     *
+     * @return null
+     */
+    public function testDoeUser()
+    {
+        $user = TORM\Factory::create("user");
+        $this->assertEquals(1, User::doe()->count());
+        $this->assertTrue($user->destroy());
+    }
+
+    /**
+     * Test first mail name scope
+     *
+     * @return null
+     */
+    public function testFirstMailNameScope()
+    {
+        $user = TORM\Factory::create("user");
+        $this->assertEquals(1, User::email_first("Mary")->count());
+        $this->assertTrue($user->destroy());
+    }
+
+    /**
+     * Test chained scopes
+     *
+     * @return null
+     */
+    public function testChainedScopes()
+    {
+        $this->assertEquals(0, User::by_level(1)->doe()->count());
+
+        $user = TORM\Factory::create("user");
+        $this->assertEquals(1, User::by_level(1)->doe()->count());
+        $this->assertEquals(1, User::by_level(1)->doe()->email_first("Mary")->count());
+
+        $user->updateAttributes(array("email" => "marilyn@doe.com"));
+        $this->assertEquals(0, User::by_level(1)->doe()->email_first("Mary")->count());
+        $this->assertEquals(1, User::by_level(1)->doe()->email_first("Marilyn")->count());
+        $this->assertTrue($user->destroy());
+    }
+
+    /**
      * Test validations with accented chars
      *
      * @return null

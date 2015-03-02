@@ -54,4 +54,6 @@
    User::scope("first_level",array("level"=>1));
    User::scope("by_level",function($args) { return "level=".$args[0]; });
    User::scope("by_level_and_date",function($args) { return "level=".$args[0]." and created_at<'".$args[1]." 23:59:59'"; });
+   User::scope("doe", "email like '%doe.com'");
+   User::scope("email_first", function($args) { return "email like '".$args[0]."%'"; });
 ?>

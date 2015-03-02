@@ -40,16 +40,18 @@ trait Scopes
     }
 
     /**
-     * Resolve a scope, returning a collection
+     * Return a scope
      *
      * @param string $name of scope
-     * @param mixed  $args arguments to use on callable scopes
+     * @param string $cls  class of scope
      *
-     * @return mixed collection
+     * @return mixed scope
      */
-    public static function resolveScope($name, $args=null)
+    public static function getScope($name, $cls = null)
     {
-        $cls = get_called_class();
+        if (!$cls) {
+            $cls = get_called_class();
+        }
 
         if (!array_key_exists($cls, self::$_scopes)
             || !array_key_exists($name, self::$_scopes[$cls])
@@ -57,7 +59,21 @@ trait Scopes
             return null;
         }
 
-        $conditions = self::$_scopes[$cls][$name];
+        return self::$_scopes[$cls][$name];
+    }
+
+    /**
+     * Resolve a scope, returning a collection
+     *
+     * @param string $name of scope
+     * @param mixed  $args arguments to use on callable scopes
+     * @param string $cls  class of scope
+     *
+     * @return mixed collection
+     */
+    public static function resolveScope($name, $args=null, $cls=null)
+    {
+        $conditions = self::getScope($name, $cls);
         if (!$conditions) {
             return null;
         }

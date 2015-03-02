@@ -371,4 +371,21 @@ class Collection implements \Iterator
             return new $this->_cls($this->_curval);
         }
     }
+
+    public function __call($method, $args)
+    {
+        if (!$this->_cls) {
+            return null;
+        }
+        $cls   = $this->_cls;
+        $conditions = Model::getScope($method, $cls);
+        if (!$conditions) {
+            return $this;
+        }
+        if (is_callable($conditions)) {
+            $conditions = $conditions($args);
+        }
+        $this->_builder->where .= " and $conditions";
+        return $this;
+    }
 }
