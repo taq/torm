@@ -512,7 +512,7 @@ class Model
      *
      * @return object statement
      */
-    public static function executePrepared($obj,$values=array())
+    public static function executePrepared($obj, $values=array())
     {
         if (!self::$_loaded) {
             self::_loadColumns();
@@ -525,6 +525,11 @@ class Model
 
         if (is_string($obj)) {
             $sql = $obj;
+        }
+
+        // if there aren't value marks, execute like a regular query
+        if (!preg_match('/\?/', $sql)) {
+            return self::query($sql);
         }
 
         $stmt = self::putCache($sql);
