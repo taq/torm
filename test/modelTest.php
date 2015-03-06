@@ -308,19 +308,6 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test cache method
-     *
-     * @return null
-     */
-    public function testCache() 
-    {
-        $sql = "select * from Users where id=?";
-        $this->assertNull(User::getCache($sql));
-        User::putCache($sql);
-        $this->assertNotNull(User::getCache($sql));
-    }
-
-    /**
      * Test invalid presence
      *
      * @return null

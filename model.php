@@ -26,7 +26,7 @@ namespace TORM;
 class Model
 {
     use Finders, Storage, Persistence, Errors, Validations, Scopes, HasMany,
-        HasOne, BelongsTo, Sequences, Cache, Callbacks, Dirty;
+        HasOne, BelongsTo, Sequences, Callbacks, Dirty;
 
     const CURSOR_NOTHING = 0;
     const CURSOR_CLOSE   = 1;
@@ -532,7 +532,7 @@ class Model
             return self::query($sql);
         }
 
-        $stmt = self::putCache($sql);
+        $stmt = Cache::getInstance()->put($sql);
         $stmt->execute($values);
         return $stmt;
     }
