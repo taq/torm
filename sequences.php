@@ -92,7 +92,7 @@ trait Sequences
         $stmt   = self::resolveConnection()->query($sql);
         $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
         $rtn    = intval($rst["CNT"])>0;
-        self::_closeCursor($stmt);
+        self::closeCursor($stmt);
 
         // if exists, cache result
         if ($rtn) {
@@ -124,7 +124,7 @@ trait Sequences
         $sql  = "create sequence $name increment by 1 start with 1 nocycle nocache";
         Log::log($sql);
         $stmt = self::resolveConnection()->query($sql);
-        self::_closeCursor($stmt);
+        self::closeCursor($stmt);
     }
 }
 ?>

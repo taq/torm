@@ -329,19 +329,19 @@ class Model
         // needs to create table
         if (!$check || !is_object($rst) || !$rst->fetch()) {
             $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
-            self::_closeCursor($stmt);
+            self::closeCursor($stmt);
         }
         if (is_object($rst)) {
-            self::_closeCursor($rst);
+            self::closeCursor($rst);
         }
 
         // insert first value
         $rst = self::resolveConnection()->query("select id from torm_info");
         if (!$rst->fetch()) {
             $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
-            self::_closeCursor($stmt);
+            self::closeCursor($stmt);
         }
-        self::_closeCursor($rst);
+        self::closeCursor($rst);
 
         // hack to dont need a query string to get columns
         $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
@@ -353,7 +353,7 @@ class Model
             array_push(self::$_columns[$cls], $keyc);
             self::$_mapping[$cls][$keyc] = $key;
         }
-        self::_closeCursor($rst);
+        self::closeCursor($rst);
         self::$_loaded[$cls] = true;
     }
 
@@ -713,7 +713,7 @@ class Model
      *
      * @return null
      */
-    private static function _closeCursor($stmt) 
+    public static function closeCursor($stmt) 
     {
         if (self::$_cc_action == self::CURSOR_NOTHING) {
             return;

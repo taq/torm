@@ -48,6 +48,7 @@ class CacheTest extends PHPUnit_Framework_TestCase
         TORM\Connection::setDriver("sqlite");
         TORM\Factory::setFactoriesPath("./factories");
         TORM\Log::enable(false);
+        TORM\Cache::getInstance()->setTimeout(300);
     }
 
     /**
@@ -57,10 +58,50 @@ class CacheTest extends PHPUnit_Framework_TestCase
      */
     public function testCache() 
     {
+        TORM\Cache::getInstance()->clear();
         $sql = "select * from Users where id=?";
         $this->assertNull(TORM\Cache::getInstance()->get($sql));
         TORM\Cache::getInstance()->put($sql);
         $this->assertNotNull(TORM\Cache::getInstance()->get($sql));
+    }
+
+    /**
+     * Test cache timeout
+     *
+     * @return null
+     */
+    public function testCacheTimeout()
+    {
+        TORM\Cache::getInstance()->clear();
+        TORM\Cache::getInstance()->setTimeout(1);
+
+        $sql = "select * from Users where id=?";
+        $this->assertNull(TORM\Cache::getInstance()->get($sql));
+        TORM\Cache::getInstance()->put($sql);
+        $size = TORM\Cache::getInstance()->size() > 0;
+        $this->assertTrue($size > 0);
+        sleep(2);
+        $this->assertNull(TORM\Cache::getInstance()->get($sql));
+        $this->assertEquals($size - 1, TORM\Cache::getInstance()->size());
+    }
+
+    /**
+     * Test cache expiration function
+     *
+     * @return null
+     */
+    public function testCacheExpiration()
+    {
+        TORM\Cache::getInstance()->setTimeout(3);
+        TORM\Cache::getInstance()->clear();
+
+        $this->assertFalse(TORM\Cache::getInstance()->expireCache());
+        sleep(1);
+        $this->assertFalse(TORM\Cache::getInstance()->expireCache());
+        sleep(2);
+        $this->assertTrue(TORM\Cache::getInstance()->expireCache());
+        sleep(1);
+        $this->assertFalse(TORM\Cache::getInstance()->expireCache());
     }
 
     /**
@@ -70,6 +111,8 @@ class CacheTest extends PHPUnit_Framework_TestCase
      */
     public function testCacheSize()
     {
+        $sql = "select * from Users where id=?";
+        TORM\Cache::getInstance()->put($sql);
         $this->assertTrue(TORM\Cache::getInstance()->size() > 0);
     }
 
@@ -80,6 +123,8 @@ class CacheTest extends PHPUnit_Framework_TestCase
      */
     public function testClearCache()
     {
+        $sql = "select * from Users where id=?";
+        TORM\Cache::getInstance()->put($sql);
         $this->assertTrue(TORM\Cache::getInstance()->size() > 0);
         TORM\Cache::getInstance()->clear();
         $this->assertEquals(0, TORM\Cache::getInstance()->size());

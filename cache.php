@@ -27,6 +27,8 @@ class Cache
 {
     private static $_instance = null;
     private $_prepared_cache  = array();
+    private $_timeout         = 300; // seconds
+    private $_last_expired_at = null;
 
     /**
      * Private constructor
@@ -73,16 +75,17 @@ class Cache
      */
     public function put($sql)
     {
+        $this->expireCache();
         $hash = self::_sqlHash($sql);
 
         if (array_key_exists($hash, $this->_prepared_cache)) {
             Log::log("already prepared: $sql");
-            return $this->_prepared_cache[$hash];
+            return $this->_prepared_cache[$hash]["statement"];
         } else {
             Log::log("inserting on cache: $sql");
         }
         $prepared = Model::resolveConnection()->prepare($sql);
-        $this->_prepared_cache[$hash] = $prepared;
+        $this->_prepared_cache[$hash] = ["statement" => $prepared, "timestamp" => mktime()];
         return $prepared;
     }
 
@@ -95,11 +98,55 @@ class Cache
      */
     public function get($sql)
     {
+        $this->expireCache();
         $hash = self::_sqlHash($sql);
+
+        // if doesn't exists, return null
         if (!array_key_exists($hash, $this->_prepared_cache)) {
             return null;
         }
-        return $this->_prepared_cache[$hash];
+        return $this->_prepared_cache[$hash]["statement"];
+    }
+
+    /**
+     * Expire cache
+     *
+     * I'd love to use threads to do that, but I'm not forcing 
+     * compiling PHP to use that.
+     *
+     * @param boolean $verbose mode
+     *
+     * @return boolean
+     */
+    public function expireCache($verbose = false)
+    {
+        // if first run ...
+        if (!$this->_last_expired_at) {
+            $this->_last_expired_at = mktime();
+            if ($verbose) {
+                echo "First time running cache expiration\n";
+            }
+        }
+
+        // if current time is lower than the last time ran plust timeout
+        if (mktime() < $this->_last_expired_at + $this->_timeout) {
+            if ($verbose) {
+                echo "Not checking cache timeouts\n";
+            }
+            return false;
+        }
+
+        if ($verbose) {
+            echo "Checking cache timeouts.\n";
+        }
+        foreach ($this->_prepared_cache as $key => $cache) {
+            if (mktime() > intval($cache["timestamp"]) + $this->_timeout) {
+                Model::closeCursor($cache["statement"]);
+                unset($this->_prepared_cache[$key]);
+            }
+        }
+        $this->_last_expired_at = mktime();
+        return true;
     }
 
     /**
@@ -119,7 +166,30 @@ class Cache
      */
     public function clear()
     {
-        $this->_prepared_cache = array();
+        $this->_prepared_cache  = array();
+        $this->_last_expired_at = mktime();
+    }
+
+    /**
+     * Set timeout
+     *
+     * @param int $timeout timeout in seconds
+     *
+     * @return null
+     */
+    public function setTimeout($timeout)
+    {
+        $this->_timeout = $timeout;
+    }
+
+    /**
+     * Get timeout
+     *
+     * @return int timeout
+     */
+    public function getTimeout()
+    {
+        return $this->_timeout;
     }
 }
 ?>

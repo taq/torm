@@ -227,7 +227,7 @@ trait HasMany
         $table   = Model::getTableName($klass);
         $sql     = "update $escape$table$escape set $escape$foreign$escape=null where $escape$foreign$escape=$id and $escape$table$escape.$escape$klasspk$escape not in ($ids)";
         $stmt    = self::query($sql);
-        self::_closeCursor($stmt);
+        self::closeCursor($stmt);
     }
 
     /**
@@ -269,7 +269,7 @@ trait HasMany
             $sql        = "update $escape$table$escape set $escape$foreign$escape=$value where $escape$other_pk$escape=$other_value";
             $stmt       = self::query($sql);
             $rst        = $stmt->rowCount()==1;
-            self::_closeCursor($stmt);
+            self::closeCursor($stmt);
             return $rst;
         }
 
