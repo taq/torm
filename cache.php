@@ -17,6 +17,18 @@ trait Cache
     private static $_prepared_cache = array();
 
     /**
+     * Get the SQL hash
+     *
+     * @param string $sql sql query
+     *
+     * @return string
+     */
+    private static function _sqlHash($sql)
+    {
+        return md5($sql);
+    }
+
+    /**
      * Put a prepared statement on cache, if not there.
      *
      * @param string $sql query
@@ -25,16 +37,16 @@ trait Cache
      */
     public static function putCache($sql)
     {
-        $md5 = md5($sql);
+        $hash = self::_sqlHash($sql);
 
-        if (array_key_exists($md5, self::$_prepared_cache)) {
+        if (array_key_exists($hash, self::$_prepared_cache)) {
             Log::log("already prepared: $sql");
-            return self::$_prepared_cache[$md5];
+            return self::$_prepared_cache[$hash];
         } else {
             Log::log("inserting on cache: $sql");
         }
         $prepared = self::resolveConnection()->prepare($sql);
-        self::$_prepared_cache[$md5] = $prepared;
+        self::$_prepared_cache[$hash] = $prepared;
         return $prepared;
     }
 
@@ -47,11 +59,11 @@ trait Cache
      */
     public static function getCache($sql)
     {
-        $md5 = md5($sql);
-        if (!array_key_exists($md5, self::$_prepared_cache)) {
+        $hash = self::_sqlHash($sql);
+        if (!array_key_exists($hash, self::$_prepared_cache)) {
             return null;
         }
-        return self::$_prepared_cache[$md5];
+        return self::$_prepared_cache[$hash];
     }
 }
 ?>
