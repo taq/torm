@@ -22,6 +22,19 @@ trait Errors
      *
      * @return null
      */
+    public function addError($attr, $msg)
+    {
+        $this->_addError($attr, $msg);
+    }
+
+    /**
+     * Add an error to an attribute
+     *
+     * @param string $attr attribute
+     * @param string $msg  message
+     *
+     * @return null
+     */
     private function _addError($attr, $msg)
     {
         if (!array_key_exists($attr, $this->errors)) {
