@@ -1226,6 +1226,64 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test before create method
+     *
+     * @return null
+     */
+    public function testBeforeCreate()
+    {
+        $this->_checkCallbackFile("/tmp/torm-before-create.log");
+    }
+
+    /**
+     * Test after create method
+     *
+     * @return null
+     */
+    public function testAfterCreate() 
+    {
+        $this->_checkCallbackFile("/tmp/torm-after-create.log");
+    }
+
+    /**
+     * Test before update method
+     *
+     * @return null
+     */
+    public function testBeforeUpdate()
+    {
+        $file = "/tmp/torm-before-update.log";
+        if (file_exists($file)) {
+            unlink($file);
+        }
+
+        $user = TORM\Factory::create("user");
+        $this->assertFalse(file_exists($file));
+        $this->assertTrue($user->save());
+        $this->assertTrue(file_exists($file));
+    }
+
+    /**
+     * Test after update method
+     *
+     * @return null
+     */
+    public function testAfterUpdate()
+    {
+        $user = TORM\Factory::build("user");
+        $this->assertTrue($user->save());
+
+        $file = "/tmp/torm-after-update.log";
+        if (file_exists($file)) {
+            unlink($file);
+        }
+
+        $this->assertFalse(file_exists($file));
+        $this->assertTrue($user->save());
+        $this->assertTrue(file_exists($file));
+    }
+
+    /**
      * Test before destroy method
      *
      * @return null

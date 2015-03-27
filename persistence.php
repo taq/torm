@@ -59,11 +59,16 @@ trait Persistence
             $this->_new_rec = !self::find($pk_value);
         }
 
-        $rst = false;
+        $rst    = false;
+        $newr   = false;
 
         if ($this->_new_rec) {
+            $newr = true;
+            self::_checkCallBack($calling, "before_create");
             $rst = $this->_insert($attrs, $calling, $pk, $pk_value);
         } else {
+            self::_checkCallBack($calling, "before_update");
+
             // no need to update if there weren't changes
             if (sizeof($this->changed()) < 1 && !$force) {
                 Log::log("No changes, not updating");
@@ -75,6 +80,11 @@ trait Persistence
 
         if ($rst) {
             self::_checkCallback($calling, "after_save");
+            if ($newr) {
+                self::_checkCallBack($calling, "after_create");
+            } else {
+                self::_checkCallBack($calling, "after_update");
+            }
         }
         $this->_prev_data = $this->_data;
         return $rst;
