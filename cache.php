@@ -70,10 +70,11 @@ class Cache
      * Put a prepared statement on cache, if not there.
      *
      * @param string $sql query
+     * @param string $cls class to resolve connection
      *
      * @return object prepared statement
      */
-    public function put($sql)
+    public function put($sql, $cls = null)
     {
         $this->expireCache();
         $hash = self::_sqlHash($sql);
@@ -84,7 +85,9 @@ class Cache
         } else {
             Log::log("inserting on cache: $sql");
         }
-        $prepared = Model::resolveConnection()->prepare($sql);
+        $cls      = $cls ? $cls : "TORM\Model";
+        $con      = $cls::resolveConnection();
+        $prepared = $con->prepare($sql);
         $this->_prepared_cache[$hash] = ["statement" => $prepared, "timestamp" => mktime()];
         return $prepared;
     }

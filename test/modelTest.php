@@ -1575,6 +1575,11 @@ class ModelTest extends PHPUnit_Framework_TestCase
         AnotherUser::setConnection($con, "test");
         $user = AnotherUser::first();
         $this->assertEquals("Walternate", $user->name);
+        $this->assertEquals($con, AnotherUser::resolveConnection());
+
+        $ouser = AnotherUser::find($user->id);
+        $this->assertEquals($user, $ouser);
+        $this->assertEquals($con, AnotherUser::resolveConnection());
     }
 
     /**

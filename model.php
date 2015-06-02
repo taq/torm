@@ -290,6 +290,7 @@ class Model
     {
         $cls = get_called_class();
         $env = Connection::selectEnvironment();
+
         if (array_key_exists($cls, self::$_connections) 
             && array_key_exists($env, self::$_connections[$cls])
         ) {
@@ -451,6 +452,7 @@ class Model
         $builder = new Builder();
         $builder->table = self::getTableName();
         $builder->order = self::getOrder();
+        $builder->cls   = get_called_class();
         return $builder;
     }
 
@@ -532,7 +534,7 @@ class Model
             return self::query($sql);
         }
 
-        $stmt = Cache::getInstance()->put($sql);
+        $stmt = Cache::getInstance()->put($sql, get_called_class());
         $stmt->execute($values);
         return $stmt;
     }
