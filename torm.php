@@ -1,27 +1,39 @@
 <?php
+/**
+ * When not using Composer, including this file includes all other ones
+ *
+ * PHP version 5.5
+ *
+ * @category Traits
+ * @package  TORM
+ * @author   Eustáquio Rangel <taq@bluefish.com.br>
+ * @license  http://www.gnu.org/copyleft/gpl.html GPL
+ * @link     http://github.com/taq/torm
+ */
+
 // traits
-require_once "finders.php";
-require_once "storage.php";
-require_once "persistence.php";
-require_once "errors.php";
-require_once "validations.php";
-require_once "scopes.php";
-require_once "has_many.php";
-require_once "has_one.php";
-require_once "belongs_to.php";
-require_once "sequences.php";
-require_once "cache.php";
-require_once "callbacks.php";
-require_once "dirty.php";
+require_once "src/Finders.php";
+require_once "src/Storage.php";
+require_once "src/Persistence.php";
+require_once "src/Errors.php";
+require_once "src/Validations.php";
+require_once "src/Scopes.php";
+require_once "src/HasMany.php";
+require_once "src/HasOne.php";
+require_once "src/BelongsTo.php";
+require_once "src/Sequences.php";
+require_once "src/Cache.php";
+require_once "src/Callbacks.php";
+require_once "src/Dirty.php";
 
 // classes
-require_once "connection.php";
-require_once "builder.php";
-require_once "model.php";
-require_once "collection.php";
-require_once "factory.php";
-require_once "driver.php";
-require_once "validation.php";
-require_once "log.php";
-require_once "inflections.php";
+require_once "src/Connection.php";
+require_once "src/Builder.php";
+require_once "src/Model.php";
+require_once "src/Collection.php";
+require_once "src/Factory.php";
+require_once "src/Driver.php";
+require_once "src/Validation.php";
+require_once "src/Log.php";
+require_once "src/Inflections.php";
 ?>

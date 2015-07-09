@@ -10,11 +10,7 @@
  * @license  http://www.gnu.org/copyleft/gpl.html GPL
  * @link     http://github.com/taq/torm
  */
-require_once "../torm.php";
-require_once "../models/user.php";
-require_once "../models/another_user.php";
-require_once "../models/ticket.php";
-require_once "../models/account.php";
+require_once "../vendor/autoload.php";
 
 /**
  * Cache test main class 
