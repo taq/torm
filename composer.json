@@ -5,7 +5,7 @@
     "keywords": ["database","orm","activerecord"],
     "homepage": "http://github.com/taq/torm",
     "license": "GPL",
-    "version": "1.1.9",
+    "version": "1.2.0",
     "authors": [
         {
             "name": "Eustaquio Rangel",
