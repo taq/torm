@@ -108,7 +108,7 @@ class Connection
      */
     public static function setDriver($driver, $env = null)
     {
-        $file = realpath(dirname(__FILE__)."/drivers/$driver.php");
+        $file = realpath(dirname(__FILE__)."/../drivers/$driver.php");
         if (!file_exists($file)) {
             Log::log("ERROR: Driver file $file does not exists");
             return null;
