@@ -71,6 +71,7 @@ class Model
         // if data not send, is a new record, return
         if ($data == null) {
             $this->_new_rec = true;
+            $this->_validateAfterInitialize();
             return;
         }
 
@@ -113,7 +114,16 @@ class Model
             $this->_new_rec = true;
         }
 
-        // check if there is a afterInitialize method, if so, run it
+        $this->_validateAfterInitialize();
+    }
+
+    /**
+     * Validate after initialize
+     *
+     * @return null
+     */
+    private function _validateAfterInitialize()
+    {
         if (method_exists($this, "afterInitialize")) {
             $this->afterInitialize();
         }
@@ -726,6 +736,20 @@ class Model
         } else {
             $stmt = null;
         }
+    }
+
+    /**
+     * Return columns
+     *
+     * @return mixed columns
+     */
+    public static function getColumns()
+    {
+        $cls = get_called_class();
+        if (!array_key_exists($cls, self::$_columns)) {
+            return null;
+        }
+        return self::$_columns[$cls];
     }
 }
 ?>
