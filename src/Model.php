@@ -421,12 +421,18 @@ class Model
 
         if (is_array($conditions)) {
             $temp_cond = "";
-            foreach ($conditions as $key => $value) {
-                $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape=? and ";
+            foreach ($conditions as $key => &$value) {
+                $operator = '=';
+                if (is_array($value)) {
+                    $operator = $value[0];
+                    $value = $value[1];
+                }
+                $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape$operator? and ";
             }
             $temp_cond  = substr($temp_cond, 0, strlen($temp_cond)-5);
             $conditions = $temp_cond;
         }
+
         return $conditions;
     }
 
@@ -446,7 +452,7 @@ class Model
 
         if (is_array($conditions)) {
             foreach ($conditions as $key => $value) {
-                array_push($values, $value);
+                array_push($values, is_array($value) ? $value[1] : $value);
             }
         }
         return $values;
