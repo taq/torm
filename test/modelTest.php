@@ -1655,5 +1655,25 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $conditions = User::extractWhereValues(["id=? and name=? and level=?", 1, "john", 2]);
         $this->assertEquals($expected, $conditions);
     }
+
+    /**
+     * Test conditions with regular array
+     *
+     * @return null
+     */
+    public function testConditionsRegular()
+    {
+        $user = User::where(["name = ?", "Eustaquio Rangel"])->next();
+        $this->assertEquals("Eustaquio Rangel", $user->name);
+
+        $user = User::where(["level >= ?", 1])->next();
+        $this->assertEquals("Eustaquio Rangel", $user->name);
+
+        $user = User::where(["level >= ?", 2])->next();
+        $this->assertEquals("Rangel, Eustaquio", $user->name);
+
+        $user = User::where(["level >= ? and name = ?", 1, "Rangel, Eustaquio"])->next();
+        $this->assertEquals("Rangel, Eustaquio", $user->name);
+    }
 }
 ?>
