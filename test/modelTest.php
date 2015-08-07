@@ -1609,7 +1609,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test where conditions
+     * Test where associative conditions
      *
      * @return nul
      */
@@ -1617,6 +1617,18 @@ class ModelTest extends PHPUnit_Framework_TestCase
     {
         $expected   = '"users"."id"=? and "users"."name"=? and "users"."level"=?';
         $conditions = User::extractWhereConditions(["id" => 1, "name" => 2, "level" => 3]);
+        $this->assertEquals($expected, $conditions);
+    }
+
+    /**
+     * Test where regular conditions
+     *
+     * @return nul
+     */
+    public function testExtractWhereConditionsRegular()
+    {
+        $expected   = "users.id >= ?";
+        $conditions = User::extractWhereConditions([$expected, 1]);
         $this->assertEquals($expected, $conditions);
     }
 }

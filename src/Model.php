@@ -438,8 +438,7 @@ class Model
             if (array_values($conditions) !== $conditions) {
                 $conditions = self::_extractWhereAssociativeConditions($conditions, $cls, $escape);
             } else {
-                echo "regular\n";
-                $conditions = $conditions;
+                $conditions = self::_extractWhereRegularConditions($conditions, $cls, $escape);
             }
         }
         return $conditions;
@@ -461,6 +460,20 @@ class Model
             $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape=? and ";
         }
         return substr($temp_cond, 0, strlen($temp_cond)-5);
+    }
+
+    /**
+     * Extract where conditions string, from a regular array
+     *
+     * @param mixed  $conditions to extract
+     * @param string $cls        class
+     * @param string $escape     escape char
+     *
+     * @return string where conditions
+     */
+    private static function _extractWhereRegularConditions($conditions, $cls, $escape)
+    {
+        return $conditions[0]; // the string is always the first
     }
 
 
