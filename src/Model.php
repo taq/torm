@@ -405,6 +405,20 @@ class Model
 
     /**
      * Extract where conditions string
+     * Just used for testing, to avoid change the function name withou the
+     * underline on all code. This is something PHP should change.
+     *
+     * @param mixed $conditions to extract
+     *
+     * @return string where conditions
+     */
+    public static function extractWhereConditions($conditions)
+    {
+        return self::_extractWhereConditions($conditions);
+    }
+
+    /**
+     * Extract where conditions string
      *
      * @param mixed $conditions to extract
      *
@@ -420,15 +434,35 @@ class Model
         $escape = Driver::$escape_char;
 
         if (is_array($conditions)) {
-            $temp_cond = "";
-            foreach ($conditions as $key => $value) {
-                $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape=? and ";
+            // check if is a regular array or an associative one
+            if (array_values($conditions) !== $conditions) {
+                $conditions = self::_extractWhereAssociativeConditions($conditions, $cls, $escape);
+            } else {
+                echo "regular\n";
+                $conditions = $conditions;
             }
-            $temp_cond  = substr($temp_cond, 0, strlen($temp_cond)-5);
-            $conditions = $temp_cond;
         }
         return $conditions;
     }
+
+    /**
+     * Extract where conditions string, from an associative array
+     *
+     * @param mixed  $conditions to extract
+     * @param string $cls        class
+     * @param string $escape     escape char
+     *
+     * @return string where conditions
+     */
+    private static function _extractWhereAssociativeConditions($conditions, $cls, $escape)
+    {
+        $temp_cond = "";
+        foreach ($conditions as $key => $value) {
+            $temp_cond .= "$escape".self::getTableName()."$escape.$escape".self::$_mapping[$cls][$key]."$escape=? and ";
+        }
+        return substr($temp_cond, 0, strlen($temp_cond)-5);
+    }
+
 
     /**
      * Extract where values from conditions

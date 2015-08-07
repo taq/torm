@@ -1607,5 +1607,17 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
         $this->assertNotEquals($u1h, $u2h);
     }
+
+    /**
+     * Test where conditions
+     *
+     * @return nul
+     */
+    public function testExtractWhereConditionsAssociative()
+    {
+        $expected   = '"users"."id"=? and "users"."name"=? and "users"."level"=?';
+        $conditions = User::extractWhereConditions(["id" => 1, "name" => 2, "level" => 3]);
+        $this->assertEquals($expected, $conditions);
+    }
 }
 ?>
