@@ -492,11 +492,41 @@ class Model
         }
 
         if (is_array($conditions)) {
-            foreach ($conditions as $key => $value) {
-                array_push($values, $value);
+            if (array_values($conditions) !== $conditions) {
+                $values = self::_extractWhereAssociativeValues($conditions);
+            } else {
+                $values = self::_extractWhereRegularValues($conditions);
             }
         }
         return $values;
+    }
+
+    /**
+     * Extract values from an associative array
+     *
+     * @param mixed $conditions conditions
+     *
+     * @return mixed values
+     */
+    private static function _extractWhereAssociativeValues($conditions)
+    {
+        $values = array();
+        foreach ($conditions as $key => $value) {
+            array_push($values, $value);
+        }
+        return $values;
+    }
+
+    /**
+     * Extract values from a regular array
+     *
+     * @param mixed $conditions conditions
+     *
+     * @return mixed values
+     */
+    private static function _extractWhereRegularValues($conditions)
+    {
+        return array_slice($conditions, 1);
     }
 
     /**

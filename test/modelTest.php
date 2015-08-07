@@ -1616,7 +1616,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testExtractWhereConditionsAssociative()
     {
         $expected   = '"users"."id"=? and "users"."name"=? and "users"."level"=?';
-        $conditions = User::extractWhereConditions(["id" => 1, "name" => 2, "level" => 3]);
+        $conditions = User::extractWhereConditions(["id" => 1, "name" => "john", "level" => 3]);
         $this->assertEquals($expected, $conditions);
     }
 
@@ -1629,6 +1629,30 @@ class ModelTest extends PHPUnit_Framework_TestCase
     {
         $expected   = "users.id >= ?";
         $conditions = User::extractWhereConditions([$expected, 1]);
+        $this->assertEquals($expected, $conditions);
+    }
+
+    /**
+     * Test where associative values
+     *
+     * @return nul
+     */
+    public function testExtractWhereValuesAssociative()
+    {
+        $expected   = [1, "john", 2];
+        $conditions = User::extractWhereValues(["id" => 1, "name" => "john", "level" => 2]);
+        $this->assertEquals($expected, $conditions);
+    }
+
+    /**
+     * Test where regular values
+     *
+     * @return nul
+     */
+    public function testExtractWhereValuesRegular()
+    {
+        $expected   = [1, "john", 2];
+        $conditions = User::extractWhereValues(["id=? and name=? and level=?", 1, "john", 2]);
         $this->assertEquals($expected, $conditions);
     }
 }
