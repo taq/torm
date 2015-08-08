@@ -37,6 +37,10 @@ $user = User::find(1);
 // find some users
 $users = User::where(["level" => 1]);
 
+// find some users, using more complex expressions
+// the array first element is the query, the rest are values
+$users = User::where(["level >= ?", 1]); 
+
 // updating users
 User::where(["level" => 1])->updateAttributes(["level" => 3]);
 
