@@ -28,7 +28,7 @@ Ticket::belongsTo("user");
 $user = new User();
 $user->name  = "John Doe";
 $user->email = "john@doe.com";
-$user->level = 1
+$user->level = 1;
 $user->save();
 
 // this will find the user using its primary key
@@ -45,7 +45,7 @@ $users = User::where(["level >= ?", 1]);
 User::where(["level" => 1])->updateAttributes(["level" => 3]);
 
 // using fluent queries
-$users = User::where(["level" => 1]).limit(5).order("name desc");
+$users = User::where(["level" => 1])->limit(5)->order("name desc");
 
 // listing the user tickets
 foreach($user->tickets as $ticket) {
