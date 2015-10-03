@@ -40,57 +40,60 @@
 
 <p>The full documentation is on the <a href="https://github.com/taq/torm/wiki">project wiki</a>, but is simple as this, as long as you follow some conventions (like pluralized table names, auto increment columns etc):</p>
 
-<pre><code>&lt;?php
-    // include TORM 
-    include "torm.php";
+<div class="highlight">
+<pre>
+  <span class="cp">&lt;?php</span>
+    <span class="c1">// include TORM </span>
+    <span class="k">include</span> <span class="s2">"torm.php"</span><span class="p">;</span>
     
-    // open the PDO connection and set it
-    $con = new PDO("sqlite:database.sqlite3");
-    TORM\Connection::setConnection($con);
-    TORM\Connection::setDriver("sqlite");
+    <span class="c1">// open the PDO connection and set it</span>
+    <span class="nv">$con</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PDO</span><span class="p">(</span><span class="s2">"sqlite:database.sqlite3"</span><span class="p">);</span>
+    <span class="nx">TORM\Connection</span><span class="o">::</span><span class="na">setConnection</span><span class="p">(</span><span class="nv">$con</span><span class="p">);</span>
+    <span class="nx">TORM\Connection</span><span class="o">::</span><span class="na">setDriver</span><span class="p">(</span><span class="s2">"sqlite"</span><span class="p">);</span>
 
-    // define your models - an User class will connect to an users table
-    class User extends TORM\Model {};
-    class Ticket extends TORM\Model {};
+    <span class="c1">// define your models - an User class will connect to an users table</span>
+    <span class="k">class</span> <span class="nc">User</span> <span class="k">extends</span> <span class="nx">TORM\Model</span> <span class="p">{};</span>
+    <span class="k">class</span> <span class="nc">Ticket</span> <span class="k">extends</span> <span class="nx">TORM\Model</span> <span class="p">{};</span>
 
-    // create some validations
-    User::validates("name", array("presence"=&gt;true));
-    User::validates("email", array("presence"=&gt;true));
-    User::validates("email", array("uniqueness"=&gt;true));
-    User::validates("id", array("numericality"=&gt;true));
+    <span class="c1">// create some validations</span>
+    <span class="nx">User</span><span class="o">::</span><span class="na">validates</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s2">"presence"</span> <span class="o">=&gt;</span> <span class="k">true</span><span class="p">));</span>
+    <span class="nx">User</span><span class="o">::</span><span class="na">validates</span><span class="p">(</span><span class="s2">"email"</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s2">"presence"</span> <span class="o">=&gt;</span> <span class="k">true</span><span class="p">));</span>
+    <span class="nx">User</span><span class="o">::</span><span class="na">validates</span><span class="p">(</span><span class="s2">"email"</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s2">"uniqueness"</span> <span class="o">=&gt;</span> <span class="k">true</span><span class="p">));</span>
+    <span class="nx">User</span><span class="o">::</span><span class="na">validates</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s2">"numericality"</span> <span class="o">=&gt;</span> <span class="k">true</span><span class="p">));</span>
 
-    // create some relations
-    User::hasMany("tickets");
-    User::hasOne("account");
-    Ticket::belongsTo("user");
+    <span class="c1">// create some relations</span>
+    <span class="nx">User</span><span class="o">::</span><span class="na">hasMany</span><span class="p">(</span><span class="s2">"tickets"</span><span class="p">);</span>
+    <span class="nx">User</span><span class="o">::</span><span class="na">hasOne</span><span class="p">(</span><span class="s2">"account"</span><span class="p">);</span>
+    <span class="nx">Ticket</span><span class="o">::</span><span class="na">belongsTo</span><span class="p">(</span><span class="s2">"user"</span><span class="p">);</span>
 
-    // this will create a new user
-    $user = new User();
-    $user-&gt;name  = "John Doe";
-    $user-&gt;email = "john@doe.com";
-    $user-&gt;level = 1
-    $user-&gt;save();
+    <span class="c1">// this will create a new user</span>
+    <span class="nv">$user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">();</span>
+    <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">name</span>  <span class="o">=</span> <span class="s2">"John Doe"</span><span class="p">;</span>
+    <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">email</span> <span class="o">=</span> <span class="s2">"john@doe.com"</span><span class="p">;</span>
+    <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">level</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">save</span><span class="p">();</span>
 
-    // this will find the user using its primary key
-    $user = User::find(1);
+    <span class="c1">// this will find the user using its primary key</span>
+    <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">find</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 
-    // find some users
-    $users = User::where(array("level"=&gt;1));
+    <span class="c1">// find some users</span>
+    <span class="nv">$users</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s2">"level"</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">));</span>
 
-    // updating users
-    User::where(array("level"=&gt;1))-&gt;updateAttributes(array("level"=&gt;3));
+    <span class="c1">// updating users</span>
+    <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s2">"level"</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">))</span><span class="o">-&gt;</span><span class="na">updateAttributes</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s2">"level"</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">));</span>
 
-    // using fluent queries
-    $users = User::where(array("level"=&gt;1)).limit(5).order("name desc");
+    <span class="c1">// using fluent queries</span>
+    <span class="nv">$users</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s2">"level"</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">))</span><span class="o">-&gt;</span><span class="na">limit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">order</span><span class="p">(</span><span class="s2">"name desc"</span><span class="p">);</span>
 
-    // listing the user tickets
-    foreach($user-&gt;tickets as $ticket)
-      echo $ticket-&gt;description;
+    <span class="c1">// listing the user tickets</span>
+    <span class="k">foreach</span><span class="p">(</span><span class="nv">$user</span><span class="o">-&gt;</span><span class="na">tickets</span> <span class="k">as</span> <span class="nv">$ticket</span><span class="p">)</span>
+      <span class="k">echo</span> <span class="nv">$ticket</span><span class="o">-&gt;</span><span class="na">description</span><span class="p">;</span>
 
-   // show user account info
-   echo $user-&gt;account-&gt;number; 
-?&gt;
-</code></pre>
+   <span class="c1">// show user account info</span>
+   <span class="k">echo</span> <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">account</span><span class="o">-&gt;</span><span class="na">number</span><span class="p">;</span> 
+  <span class="cp">?&gt;</span><span class="x"></span>
+</pre>
+</div>
 
 <p></p>And many more features. Check the docs.</p>
 
