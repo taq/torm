@@ -190,6 +190,23 @@ class Model
     }
 
     /**
+     * Extract namespace from class name
+     *
+     * @param string $class class name
+     *
+     * @return string $class class name
+     */
+    private static function _extractClassName($cls)
+    {
+        $tokens = preg_split("/\\\\/", $cls);
+        $size   = sizeof($tokens);
+        if ($size < 2) {
+            return $cls;
+        }
+        return $tokens[$size-1];
+    }
+
+    /**
      * Returns the table name.
      * If not specified one, get the current class name and pluralize it.
      *
@@ -199,7 +216,7 @@ class Model
      */
     public static function getTableName($cls=null)
     {
-        $cls = $cls ? $cls : get_called_class();
+        $cls = self::_extractClassName($cls ? $cls : get_called_class());
 
         if (array_key_exists($cls, self::$_table_name)) {
             return self::$_table_name[$cls];

@@ -12,6 +12,7 @@
  */
 require_once "../vendor/autoload.php";
 require_once "../models/user.php";
+require_once "../models/user_namespaced.php";
 require_once "../models/another_user.php";
 require_once "../models/ticket.php";
 require_once "../models/account.php";
@@ -1069,6 +1070,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testModelTableName() 
     {
         $this->assertEquals("users", User::getTableName());
+        $this->assertEquals("users", Test\User::getTableName());
     }
 
     /**
