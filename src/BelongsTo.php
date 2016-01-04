@@ -85,5 +85,27 @@ trait BelongsTo
         }
         return $obj;
     }
+
+    /**
+     * Check the belongs key key/attribute
+     *
+     * @param string $other class
+     * 
+     * @return key found or null
+     */
+    private function _getBelongsKey($other)
+    {
+        $cls   = get_called_class();
+        $other = strtolower(get_class($other));
+
+        if (!isset(self::$_belongs_to[$cls]) || !isset(self::$_belongs_to[$cls][$other])) {
+            return null;
+        }
+        $configs = self::$_belongs_to[$cls][$other];
+
+        $belongs_cls = is_array($configs) && array_key_exists("class_name",  $configs) ? $configs["class_name"]  : ucfirst($other);
+        $belongs_key = is_array($configs) && array_key_exists("foreign_key", $configs) ? $configs["foreign_key"] : strtolower($belongs_cls)."_id";
+        return $belongs_key;
+    }
 }
 ?>

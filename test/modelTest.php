@@ -564,6 +564,32 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Belongs attribution
+     *
+     * @return null
+     */
+    public function testBelongsAttribution()
+    {
+        $user        = new User();
+        $user->name  = "Belongs attribution";
+        $user->email = "belongs@torm.com";
+        $user->code  = "01010";
+        $user->level = 1;
+        $this->assertTrue($user->save());
+
+        $ticket              = new Ticket();
+        $ticket->user        = $user;
+        $ticket->description = "Test";
+        $this->assertTrue($ticket->save());
+
+        $this->assertNotEquals(self::$user->id, $user->id);
+        $this->assertNotNull($user->id);
+        $this->assertEquals($ticket->user_id, $user->id);
+        $this->assertTrue($user->destroy());
+        $this->assertTrue($ticket->destroy());
+    }
+
+    /**
      * Test empty sequence
      *
      * @return null

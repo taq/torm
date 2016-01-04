@@ -786,7 +786,7 @@ class Model
      *
      * @return null
      */
-    public function __set($attr,$value)
+    public function __set($attr, $value)
     {
         $ids = $this->_resolveIds($attr, $value);
         if ($ids) {
@@ -796,6 +796,17 @@ class Model
         $ids = $this->_resolveCollection($attr, $value);
         if ($ids) {
             return $ids;
+        }
+
+        // assigning an object, should be a belongs_to
+        if (is_object($value)) {
+            $bkey = $this->_getBelongsKey($value);
+            if ($bkey) {
+                $ocls  = get_class($value);
+                $okey  = $ocls::getPK();
+                $attr  = $bkey;
+                $value = $value->get($okey);
+            }
         }
         $this->set($attr, $value);
     }
