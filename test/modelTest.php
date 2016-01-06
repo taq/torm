@@ -220,9 +220,13 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals("Rangel, Eustaquio", $user->name);
 
         echo "checking all users ...\n";
+        $count = 0;
+
         foreach (User::all() as $user) {
             echo "user: ".$user->name."\n";
+            $count ++;
         }
+        $this->assertEquals(2, $count);
     }
 
     /**
@@ -492,14 +496,17 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertNotNull($tickets);
         echo "\ntickets:\n";
 
-        $ids = array();
+        $ids   = array();
+        $count = 0;
         foreach ($tickets as $ticket) {
             echo "ticket: ".$ticket->id." ".$ticket->description."\n";
             array_push($ids, $ticket->id);
+            $count ++;
         }
 
         $this->assertNotNull($user->ticket_ids);
         $this->assertEquals(sizeof($ids), sizeof($user->ticket_ids));
+        $this->assertEquals(2, $count);
 
         foreach ($ids as $id) {
             $this->assertTrue(in_array($id, $user->ticket_ids));
@@ -1735,6 +1742,20 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
         $user = User::where(["level >= ? and name = ?", 1, "Rangel, Eustaquio"])->next();
         $this->assertEquals("Rangel, Eustaquio", $user->name);
+    }
+
+    /**
+     * Test on empty collection
+     *
+     * @return null
+     */
+    public function testEmptyConditions()
+    {
+        $count = 0;
+        foreach (User::where(["code" => "xxx"]) as $user) {
+            $count ++;
+        }
+        $this->assertEquals(0, $count);
     }
 }
 ?>

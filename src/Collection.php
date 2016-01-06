@@ -31,7 +31,6 @@ class Collection implements \Iterator
     private $_cls      = null;
     private $_curval   = null;
     private $_count    = null;
-    private $_valid    = false;
 
     public  $page     = null;
     public  $per_page = null;
@@ -50,7 +49,6 @@ class Collection implements \Iterator
         $this->_vals    = $vals;
         $this->_cls     = $cls;
         $this->_count   = 0;
-        $this->_valid   = true;
     }
 
     /**
@@ -109,7 +107,7 @@ class Collection implements \Iterator
      */
     public function valid()
     {
-        return $this->_valid;
+        return $this->current() != null && $this->_curval != null;
     }
 
     /**
@@ -372,7 +370,6 @@ class Collection implements \Iterator
         $data = $this->_getCurrentData();
 
         if (!$data) {
-            $this->_valid  = false;
             $this->_curval = null;
             return $this->_curval;
         } else {
