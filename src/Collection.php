@@ -345,6 +345,20 @@ class Collection implements \Iterator
     }
 
     /**
+     * Get the next result from collection
+     *
+     * @return mixed result
+     */
+    private function _getCurrentData()
+    {
+        $cls = $this->_cls;
+        if (!$this->_data) {
+            $this->_data = $cls::executePrepared($this->_builder, $this->_vals);
+        }
+        return $this->_data->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Return the next collection object
      *
      * Example:
@@ -354,12 +368,8 @@ class Collection implements \Iterator
      */
     public function next()
     {
-        $cls = $this->_cls;
-
-        if (!$this->_data) {
-            $this->_data = $cls::executePrepared($this->_builder, $this->_vals);
-        }
-        $data = $this->_data->fetch(\PDO::FETCH_ASSOC);
+        $cls  = $this->_cls;
+        $data = $this->_getCurrentData();
 
         if (!$data) {
             $this->_valid  = false;
@@ -372,6 +382,14 @@ class Collection implements \Iterator
         }
     }
 
+    /**
+     * Call a method
+     *
+     * @param string $method to call
+     * @param mixed  $args   arguments to send
+     *
+     * @return method return
+     */
     public function __call($method, $args)
     {
         if (!$this->_cls) {
