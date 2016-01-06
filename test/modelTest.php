@@ -590,6 +590,39 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Belongs attribution, from where
+     *
+     * Made for issue 12: https://github.com/taq/torm/issues/12
+     *
+     * @return null
+     */
+    public function testBelongsAttributionFromWhere()
+    {
+        $user        = new User();
+        $user->name  = "Belongs attribution from where";
+        $user->email = "belongswhere@torm.com";
+        $user->code  = "01010";
+        $user->level = 1;
+        $this->assertTrue($user->save());
+
+        Ticket::belongsTo("person", ["class_name"  => "User", "foreign_key" => "user_id"]);
+
+        $users               = [$user->code];
+        $ticket              = new Ticket();
+        $ticket->description = "Test";
+        $ticket->person      = User::where(["code" => $users[0]])->current();
+        $this->assertEquals($user->name, $ticket->person->name);
+        $this->assertTrue($ticket->save());
+
+        $this->assertNotEquals(self::$user->id, $user->id);
+        $this->assertNotNull($user->id);
+        $this->assertEquals($ticket->person->id, $user->id);
+
+        $this->assertTrue($user->destroy());
+        $this->assertTrue($ticket->destroy());
+    }
+
+    /**
      * Test empty sequence
      *
      * @return null
