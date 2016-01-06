@@ -18,6 +18,31 @@ require_once "../models/ticket.php";
 require_once "../models/account.php";
 
 /**
+ * Class for belongsTo tests
+ *
+ * PHP version 5.5
+ *
+ * @category Tests
+ * @package  TORM
+ * @author   Eustáquio Rangel <taq@bluefish.com.br>
+ * @license  http://www.gnu.org/copyleft/gpl.html GPL
+ * @link     http://github.com/taq/torm
+ */
+class Tocket extends TORM\Model
+{
+    /**
+     * PK override
+     *
+     * @return new id
+     */
+    public static function getNewPKValue()
+    {
+        return time()+rand();
+    }
+}
+Tocket::belongsTo("person", ["class_name"  => "User", "foreign_key" => "user_id"]);
+
+/**
  * Model test main class 
  *
  * PHP version 5.5
@@ -626,6 +651,40 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($ticket->person->id, $user->id);
 
         $this->assertTrue($user->destroy());
+        $this->assertTrue($ticket->destroy());
+    }
+
+    /**
+     * Belongs attribution, from where, with different class
+     *
+     * Made for issue 12: https://github.com/taq/torm/issues/12
+     *
+     * @return null
+     */
+    public function testBelongsAttributionFromWhereOtherClass()
+    {
+        $user        = new User();
+        $user->name  = "Belongs attribution from where and other class";
+        $user->email = "belongswhere@torm.com";
+        $user->code  = "01011";
+        $user->level = 1;
+        $this->assertTrue($user->save());
+
+        $uid   = $user->id;
+        $uname = $user->name;
+
+        $users               = [$user->code];
+        $ticket              = new Tocket();
+        $ticket->description = "Test";
+        $ticket->person      = User::where(["code" => $users[0]])->current();
+        $this->assertEquals($uname, $ticket->person->name);
+        $this->assertTrue($user->destroy());
+        $this->assertTrue($ticket->save());
+
+        $this->assertNotEquals(self::$user->id, $uid);
+        $this->assertNotNull($uid);
+        $this->assertEquals($ticket->person->id, $uid);
+
         $this->assertTrue($ticket->destroy());
     }
 

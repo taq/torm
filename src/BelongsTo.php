@@ -95,17 +95,34 @@ trait BelongsTo
      */
     private function _getBelongsKey($other)
     {
-        $cls   = get_called_class();
-        $other = strtolower(get_class($other));
+        $cls = get_called_class();
 
-        if (!isset(self::$_belongs_to[$cls]) || !isset(self::$_belongs_to[$cls][$other])) {
+        if (!isset(self::$_belongs_to[$cls])) {
             return null;
         }
-        $configs = self::$_belongs_to[$cls][$other];
 
-        $belongs_cls = is_array($configs) && array_key_exists("class_name",  $configs) ? $configs["class_name"]  : ucfirst($other);
-        $belongs_key = is_array($configs) && array_key_exists("foreign_key", $configs) ? $configs["foreign_key"] : strtolower($belongs_cls)."_id";
-        return $belongs_key;
+        $other   = strtolower(get_class($other));
+        $idx     = $other;
+        $foreign = strtolower($other)."_id";
+        $found   = isset(self::$_belongs_to[$cls]) && isset(self::$_belongs_to[$cls][$other]) ? self::$_belongs_to[$cls][$other] : null;
+
+        if (is_null($found)) {
+            foreach (self::$_belongs_to[$cls] as $key => $val) {
+                if (isset($val["class_name"]) && strtolower($other) == strtolower($val["class_name"])) {
+                    $other = $val["class_name"];
+                    $idx   = $key;
+                }
+
+                if (isset($val["foreign_key"]) && strtolower($other) == strtolower($val["class_name"])) {
+                    $foreign = $val["foreign_key"];
+                }
+            }
+        }
+
+        if (!isset(self::$_belongs_to[$cls][$idx])) {
+            return null;
+        }
+        return $foreign;
     }
 }
 ?>
