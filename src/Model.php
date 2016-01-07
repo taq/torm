@@ -800,7 +800,7 @@ class Model
 
         // assigning an object, should be a belongs_to
         if (is_object($value)) {
-            $bkey = $this->_getBelongsKey($value);
+            $bkey = $this->_getBelongsKey($attr);
             if (!is_null($bkey)) {
                 $ocls  = get_class($value);
                 $okey  = $ocls::getPK();

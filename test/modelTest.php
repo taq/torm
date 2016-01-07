@@ -40,7 +40,8 @@ class Tocket extends TORM\Model
         return time()+rand();
     }
 }
-Tocket::belongsTo("person", ["class_name"  => "User", "foreign_key" => "user_id"]);
+Tocket::belongsTo("person",       ["class_name"  => "User", "foreign_key" => "user_id"]);
+Tocket::belongsTo("other_person", ["class_name"  => "User", "foreign_key" => "user2_id"]);
 
 /**
  * Model test main class 
@@ -663,27 +664,48 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testBelongsAttributionFromWhereOtherClass()
     {
-        $user        = new User();
-        $user->name  = "Belongs attribution from where and other class";
-        $user->email = "belongswhere@torm.com";
-        $user->code  = "01011";
-        $user->level = 1;
-        $this->assertTrue($user->save());
+        $user1        = new User();
+        $user1->name  = "Belongs attribution from where and other class (1)";
+        $user1->email = "belongswhere@torm.com";
+        $user1->code  = "01011";
+        $user1->level = 1;
+        $this->assertTrue($user1->save());
 
-        $uid   = $user->id;
-        $uname = $user->name;
+        $user2        = new User();
+        $user2->name  = "Belongs attribution from where and other class (2)";
+        $user2->email = "belongswhere2@torm.com";
+        $user2->code  = "01012";
+        $user2->level = 1;
+        $this->assertTrue($user2->save());
 
-        $users               = [$user->code];
-        $ticket              = new Tocket();
-        $ticket->description = "Test";
-        $ticket->person      = User::where(["code" => $users[0]])->current();
-        $this->assertEquals($uname, $ticket->person->name);
-        $this->assertTrue($user->destroy());
+        $uid1   = $user1->id;
+        $uname1 = $user1->name;
+
+        $uid2   = $user2->id;
+        $uname2 = $user2->name;
+
+        $users                = [$user1->code, $user2->code];
+        $ticket               = new Tocket();
+        $ticket->description  = "Test";
+        $ticket->person       = User::where(["code" => $users[0]])->current();
+        $ticket->other_person = User::where(["code" => $users[1]])->current();
+
+        $this->assertEquals($uname1, $ticket->person->name);
+        $this->assertEquals($uname2, $ticket->other_person->name);
+
+        $this->assertTrue($user1->destroy());
+        $this->assertTrue($user2->destroy());
+
         $this->assertTrue($ticket->save());
 
-        $this->assertNotEquals(self::$user->id, $uid);
-        $this->assertNotNull($uid);
-        $this->assertEquals($ticket->person->id, $uid);
+        $this->assertNotEquals(self::$user->id, $uid1);
+        $this->assertNotEquals(self::$user->id, $uid2);
+
+        $this->assertNotNull($uid1);
+        $this->assertNotNull($uid2);
+
+        $this->assertEquals($ticket->person->id, $uid1);
+        $this->assertEquals($ticket->other_person->id, $uid2);
 
         $this->assertTrue($ticket->destroy());
     }
