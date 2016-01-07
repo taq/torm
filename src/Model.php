@@ -798,14 +798,17 @@ class Model
             return $ids;
         }
 
-        // assigning an object, should be a belongs_to
-        if (is_object($value)) {
+        // if is an object, try to find the belongs association
+        // if is null, also try to find to nullify it
+        if (is_object($value) || is_null($value)) {
             $bkey = $this->_getBelongsKey($attr);
-            if (!is_null($bkey)) {
-                $ocls  = get_class($value);
-                $okey  = $ocls::getPK();
+            if (!is_null($bkey) ) {
                 $attr  = $bkey;
-                $value = $value->get($okey);
+                if (!is_null($value)) {
+                    $ocls  = get_class($value);
+                    $okey  = $ocls::getPK();
+                    $value = $value->get($okey);
+                }
             }
         }
         $this->set($attr, $value);
