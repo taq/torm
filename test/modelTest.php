@@ -16,6 +16,7 @@ require_once "../models/user_namespaced.php";
 require_once "../models/another_user.php";
 require_once "../models/ticket.php";
 require_once "../models/account.php";
+require_once "../models/bill.php";
 
 /**
  * Class for belongsTo tests
@@ -253,6 +254,16 @@ class ModelTest extends PHPUnit_Framework_TestCase
             $count ++;
         }
         $this->assertEquals(2, $count);
+
+        $count = 0;
+        $pos   = 1;
+        foreach (Bill::all() as $bill) {
+            $this->assertEquals("Bill #$pos", $bill->description);
+            $this->assertEquals($pos, $bill->value);
+            $pos ++;
+            $count ++;
+        }
+        $this->assertEquals(10, $count);
     }
 
     /**
