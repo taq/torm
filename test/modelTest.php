@@ -622,6 +622,23 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($ticket->destroy());
     }
 
+     /**
+     * Belongs null attribution
+     *
+     * @return null
+     */
+    public function testBelongsNullAttribution()
+    {
+        $ticket              = new Ticket();
+        $ticket->user        = null;
+        $ticket->description = "Null Test";
+        $this->assertTrue($ticket->save());
+
+        $this->assertNull($ticket->user_id);
+        $this->assertNull($ticket->user);
+        $this->assertTrue($ticket->destroy());
+    }
+
     /**
      * Belongs attribution, from where
      *
