@@ -693,8 +693,6 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($uname1, $ticket->person->name);
         $this->assertEquals($uname2, $ticket->other_person->name);
 
-        $this->assertTrue($user1->destroy());
-        $this->assertTrue($user2->destroy());
 
         $this->assertTrue($ticket->save());
 
@@ -706,6 +704,11 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($ticket->person->id, $uid1);
         $this->assertEquals($ticket->other_person->id, $uid2);
+        $this->assertTrue($user1->destroy());
+        $this->assertTrue($user2->destroy());
+
+        $this->assertTrue($ticket->destroy());
+    }
 
         $this->assertTrue($ticket->destroy());
     }
