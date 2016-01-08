@@ -69,16 +69,17 @@ trait BelongsTo
             return null;
         }
 
-        if (array_key_exists($attr, $this->_belongs_cache) && $this->_belongs_cache[$attr]) {
-            return $this->_belongs_cache[$attr];
-        }
-
         $configs       = self::$_belongs_to[$cls][$attr];
         $belongs_cls   = is_array($configs) && array_key_exists("class_name",  $configs) ? $configs["class_name"]  : ucfirst($attr);
         $belongs_key   = is_array($configs) && array_key_exists("foreign_key", $configs) ? $configs["foreign_key"] : strtolower($belongs_cls)."_id";
         $primary_key   = is_array($configs) && array_key_exists("primary_key", $configs) ? $configs["primary_key"] : "id";
         $value         = $values[$belongs_key];
-        $obj           = $belongs_cls::first(array($primary_key => $value));
+
+        if (array_key_exists($attr, $this->_belongs_cache) && $this->_belongs_cache[$attr] && $this->_belongs_cache[$attr]->$primary_key == $value) {
+            return $this->_belongs_cache[$attr];
+        }
+
+        $obj = $belongs_cls::first(array($primary_key => $value));
 
         if ($obj) {
             $this->_belongs_cache[$attr] = $obj;
