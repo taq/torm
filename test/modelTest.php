@@ -622,6 +622,23 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($ticket->destroy());
     }
 
+     /**
+     * Belongs null attribution
+     *
+     * @return null
+     */
+    public function testBelongsNullAttribution()
+    {
+        $ticket              = new Ticket();
+        $ticket->user        = null;
+        $ticket->description = "Null Test";
+        $this->assertTrue($ticket->save());
+
+        $this->assertNull($ticket->user_id);
+        $this->assertNull($ticket->user);
+        $this->assertTrue($ticket->destroy());
+    }
+
     /**
      * Belongs attribution, from where
      *
@@ -693,8 +710,6 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($uname1, $ticket->person->name);
         $this->assertEquals($uname2, $ticket->other_person->name);
 
-        $this->assertTrue($user1->destroy());
-        $this->assertTrue($user2->destroy());
 
         $this->assertTrue($ticket->save());
 
@@ -706,6 +721,60 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($ticket->person->id, $uid1);
         $this->assertEquals($ticket->other_person->id, $uid2);
+        $this->assertTrue($user1->destroy());
+        $this->assertTrue($user2->destroy());
+
+        $this->assertTrue($ticket->destroy());
+    }
+
+    /**
+     * Test whether a second BelongsTO assignment does change the attribute
+     * (Check if BelongsTo cache is properly updated)
+     *
+     * @return null
+     */
+    public function testBelongsDoubleAttributionOtherClass()
+    {
+        $user1        = new User();
+        $user1->name  = "Belongs first attribution from where and other class";
+        $user1->email = "belongswhere@torm.com";
+        $user1->code  = "01011";
+        $user1->level = 1;
+        $this->assertTrue($user1->save());
+
+        $user2        = new User();
+        $user2->name  = "Belongs second attribution from where and other class";
+        $user2->email = "belongswhere2@torm.com";
+        $user2->code  = "01012";
+        $user2->level = 1;
+        $this->assertTrue($user2->save());
+
+        $uid1   = $user1->id;
+        $uname1 = $user1->name;
+
+        $uid2   = $user2->id;
+        $uname2 = $user2->name;
+
+        $users                = [$user1->code, $user2->code];
+        $ticket               = new Tocket();
+        $ticket->description  = "Test";
+        $ticket->person       = $user1;
+
+        $this->assertEquals($uname1, $ticket->person->name);
+        $ticket->person       = $user2;
+        $this->assertEquals($uname2, $ticket->person->name);
+
+        $this->assertTrue($ticket->save());
+
+        $this->assertNotEquals(self::$user->id, $uid1);
+        $this->assertNotEquals(self::$user->id, $uid2);
+
+        $this->assertNotNull($uid1);
+        $this->assertNotNull($uid2);
+
+        $this->assertEquals($ticket->person->id, $uid2);
+        $this->assertTrue($user1->destroy());
+        $this->assertTrue($user2->destroy());
 
         $this->assertTrue($ticket->destroy());
     }
