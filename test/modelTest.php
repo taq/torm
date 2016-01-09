@@ -1229,6 +1229,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
     {
         $this->assertEquals("users", User::getTableName());
         $this->assertEquals("users", Test\User::getTableName());
+        Test\User::setTableName('mydata');
+        $this->assertEquals("mydata", Test\User::getTableName());
     }
 
     /**

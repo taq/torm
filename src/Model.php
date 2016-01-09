@@ -216,11 +216,14 @@ class Model
      */
     public static function getTableName($cls=null)
     {
-        $cls = self::_extractClassName($cls ? $cls : get_called_class());
+        $fullcls = $cls ? $cls : get_called_class();
 
-        if (array_key_exists($cls, self::$_table_name)) {
-            return self::$_table_name[$cls];
+        if (array_key_exists($fullcls, self::$_table_name)) {
+            return self::$_table_name[$fullcls];
         }
+
+        $cls = self::_extractClassName($fullcls);
+
         $name = Inflections::pluralize($cls);
         if (self::isIgnoringCase()) {
             $name = strtolower($name);
