@@ -29,7 +29,7 @@ trait Persistence
 
         // check for callbacks before validation below
         $calling = get_called_class();
-        if (!self::_checkCallback($calling, "before_save")) {
+        if (!self::_checkCallback($calling, "before_save", $this)) {
             return false;
         }
 
@@ -64,10 +64,10 @@ trait Persistence
 
         if ($this->_new_rec) {
             $newr = true;
-            self::_checkCallBack($calling, "before_create");
+            self::_checkCallback($calling, "before_create", $this);
             $rst = $this->_insert($attrs, $calling, $pk, $pk_value);
         } else {
-            self::_checkCallBack($calling, "before_update");
+            self::_checkCallback($calling, "before_update", $this);
 
             // no need to update if there weren't changes
             if (sizeof($this->changed()) < 1 && !$force) {
@@ -79,11 +79,11 @@ trait Persistence
         }
 
         if ($rst) {
-            self::_checkCallback($calling, "after_save");
+            self::_checkCallback($calling, "after_save", $this);
             if ($newr) {
-                self::_checkCallBack($calling, "after_create");
+                self::_checkCallback($calling, "after_create", $this);
             } else {
-                self::_checkCallBack($calling, "after_update");
+                self::_checkCallback($calling, "after_update", $this);
             }
         }
         $this->_prev_data = $this->_data;
@@ -286,7 +286,7 @@ trait Persistence
 
         $calling = get_called_class();
 
-        if (!self::_checkCallback($calling, "before_destroy")) {
+        if (!self::_checkCallback($calling, "before_destroy", $this)) {
             return false;
         }
 
@@ -299,7 +299,7 @@ trait Persistence
 
         $rst = self::executePrepared($sql, array($pk_value))->rowCount()==1;
         if ($rst) {
-            self::_checkCallback($calling, "after_destroy");
+            self::_checkCallback($calling, "after_destroy", $this);
         }
         return $rst;
     }

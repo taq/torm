@@ -48,7 +48,7 @@ trait HasMany
      *
      * @return boolean 
      */
-    public function hasHasMany($attr) 
+    public static function hasHasMany($attr) 
     {
         $cls = get_called_class();
         return array_key_exists($cls,  self::$_has_many) &&

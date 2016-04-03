@@ -125,14 +125,15 @@ trait Callbacks
      *
      * @param string $cls      class
      * @param string $callback callback
+     * @param mixed  $context  context (instance)
      *
      * @return exist or not
      */
-    private function _checkCallback($cls, $callback)
+    private static function _checkCallback($cls, $callback, $context)
     {
         self::_initiateCallbacks($cls);
         foreach (self::$_callbacks[$cls][$callback] as $func) {
-            if (!call_user_func(array($cls, $func))) {
+            if (!call_user_func(array($context, $func))) {
                 return false;
             }
         }

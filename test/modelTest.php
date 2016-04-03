@@ -1146,7 +1146,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testHasCreateColumn() 
     {
         $user = TORM\Factory::build("user");
-        $this->assertNotNull($user->hasColumn("created_at"));
+        $this->assertTrue(array_key_exists("created_at", $user->getData()));
     }
 
     /**
@@ -1157,7 +1157,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testHasNotCreateColumn() 
     {
         $account = TORM\Factory::build("account");
-        $this->assertNull($account->hasColumn("created_at"));
+        $this->assertFalse(array_key_exists("created_at", $account->getData()));
     }
 
 
@@ -1169,7 +1169,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testHasUpdateColumn() 
     {
         $user = TORM\Factory::build("user");
-        $this->assertNotNull($user->hasColumn("updated_at"));
+        $this->assertTrue(array_key_exists("updated_at", $user->getData()));
     }
 
 
@@ -1181,7 +1181,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testHasNotUpdateColumn() 
     {
         $account = TORM\Factory::build("account");
-        $this->assertNull($account->hasColumn("updated_at"));
+        $this->assertFalse(array_key_exists("updated_at", $account->getData()));
     }
 
     /**
@@ -1194,8 +1194,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $account = TORM\Factory::build("account");
         $user    = TORM\Factory::build("user");
 
-        $this->assertFalse($account->hasHasMany("users"));
-        $this->assertTrue($user->hasHasMany("tickets"));
+        $this->assertFalse(Account::hasHasMany("users"));
+        $this->assertTrue(User::hasHasMany("tickets"));
     }
 
     /**
@@ -1206,7 +1206,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testHasManyClass() 
     {
         $user = TORM\Factory::build("user");
-        $this->assertEquals("Ticket" ,$user->hasManyClass("tickets"));
+        $this->assertEquals("Ticket", User::hasManyClass("tickets"));
     }
 
     /**
@@ -1217,7 +1217,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testHasManyForeignKey() 
     {
         $user = TORM\Factory::build("user");
-        $this->assertEquals("user_id", $user->hasManyForeignKey("tickets"));
+        $this->assertEquals("user_id", User::hasManyForeignKey("tickets"));
     }
 
     /**
