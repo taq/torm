@@ -68,13 +68,24 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public static function setUpBeforeClass()
     {
         $file = realpath(dirname(__FILE__)."/../database/test.sqlite3");
-        self::$con  = new PDO("sqlite:$file");
-        // self::$con  = new PDO('mysql:host=localhost;dbname=torm',"torm","torm");
+        $database = getenv("TORM_DATABASE_TEST");
+        $database = strlen($database) > 0 ? $database : "sqlite";
+        echo "Testing using $database\n";
+
+        switch ($database) {
+        case "sqlite":
+            self::$con = new PDO("sqlite:$file");
+            break;
+        case "mysql":
+            self::$con = new PDO('mysql:host=localhost;dbname=torm', "torm", "torm");
+            break;
+        case "postgresql":
+            break;
+        }
 
         TORM\Connection::setConnection(self::$con, "test");
         TORM\Connection::setEncoding("UTF-8");
-        TORM\Connection::setDriver("sqlite");
-        // TORM\Connection::setDriver("mysql");
+        TORM\Connection::setDriver($database);
         TORM\Factory::setFactoriesPath("./factories");
         TORM\Log::enable(false);
 
