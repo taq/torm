@@ -1809,8 +1809,9 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testExtractColumns()
     {
+        $escape  = TORM\Driver::$escape_char;
         $columns = User::extractColumns();
-        $this->assertEquals('"users"."id","users"."name","users"."email","users"."level","users"."code","users"."created_at","users"."updated_at"', $columns);
+        $this->assertEquals("{$escape}users{$escape}.{$escape}id{$escape},{$escape}users{$escape}.{$escape}name{$escape},{$escape}users{$escape}.{$escape}email{$escape},{$escape}users{$escape}.{$escape}level{$escape},{$escape}users{$escape}.{$escape}code{$escape},{$escape}users{$escape}.{$escape}created_at{$escape},{$escape}users{$escape}.{$escape}updated_at{$escape}", $columns);
     }
 
     /**
@@ -1894,7 +1895,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testExtractWhereConditionsAssociative()
     {
-        $expected   = '"users"."id"=? and "users"."name"=? and "users"."level"=?';
+        $escape     = TORM\Driver::$escape_char;
+        $expected   = "{$escape}users{$escape}.{$escape}id{$escape}=? and {$escape}users{$escape}.{$escape}name{$escape}=? and {$escape}users{$escape}.{$escape}level{$escape}=?";
         $conditions = User::extractWhereConditions(["id" => 1, "name" => "john", "level" => 3]);
         $this->assertEquals($expected, $conditions);
     }
