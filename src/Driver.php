@@ -34,6 +34,7 @@ class Driver
     const LIMIT_APPEND         = 11;
     const LIMIT_AROUND         = 12;
 
+    public static $name                  = null;
     public static $primary_key_behaviour = self::PRIMARY_KEY_DELETE;
     public static $limit_behaviour       = self::LIMIT_APPEND;
     public static $limit_query           = null;

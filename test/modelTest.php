@@ -38,7 +38,7 @@ class Tocket extends TORM\Model
      */
     public static function getNewPKValue()
     {
-        return time()+rand();
+        return time() + mt_rand(1, 10000);
     }
 }
 Tocket::belongsTo("person",       ["class_name"  => "User", "foreign_key" => "user_id"]);
@@ -68,8 +68,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public static function setUpBeforeClass()
     {
         $file = realpath(dirname(__FILE__)."/../database/test.sqlite3");
-        $database = getenv("TORM_DATABASE_TEST");
-        $database = strlen($database) > 0 ? $database : "sqlite";
+        $database = self::_database();
         echo "Testing using $database\n";
 
         switch ($database) {
@@ -80,6 +79,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
             self::$con = new PDO('mysql:host=localhost;dbname=torm', "torm", "torm");
             break;
         case "postgresql":
+            self::$con = new PDO('pgsql:host=localhost;dbname=torm', "torm", "torm");
             break;
         }
 
@@ -98,13 +98,81 @@ class ModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Find the test database
+     *
+     * @return String database
+     */
+    private static function _database()
+    {
+        $database = getenv("TORM_DATABASE_TEST");
+        $database = strlen($database) > 0 ? $database : "sqlite";
+        return $database;
+    }
+
+    /**
+     * Setup data
+     *
+     * @return null
+     */
+    private static function _seed()
+    {
+        $database = self::_database();
+
+        User::all()->destroy();
+        Bill::all()->destroy();
+        Ticket::all()->destroy();
+        Tocket::all()->destroy();
+        Account::all()->destroy();
+
+        $user        = new User();
+        $user->id    = 1;
+        $user->name  = "Eustaquio Rangel";
+        $user->email = "eustaquiorangel@gmail.com";
+        $user->code  = "12345";
+        $user->level = 1;
+        $user->save();
+
+        $user        = new User();
+        $user->id    = 2;
+        $user->name  = "Rangel, Eustaquio";
+        $user->email = "taq@bluefish.com.br";
+        $user->code  = "54321";
+        $user->level = 2;
+        $user->save();
+
+        for ($i = 1; $i <= 10; $i++) {
+            $bill              = new Bill();
+            $bill->id          = $i;
+            $bill->user_id     = 1;
+            $bill->description = "Bill #$i";
+            $bill->value       = $i;
+            $bill->save();
+
+            $ticket = new Ticket();
+            $ticket->user_id = 1;
+            $ticket->description = "Just another ticket";
+            $ticket->save();
+        }
+
+        $account = new Account();
+        $account->user_id = 1;
+        $account->number  = "12345";
+        $account->save();
+
+        $account = new Account();
+        $account->user_id = 2;
+        $account->number  = "54321";
+        $account->save();
+    }
+
+    /**
      * Set up tests
      *
      * @return null
      */
     public function setUp()
     {
-        Account::all()->destroy();
+        self::_seed();
     }
 
     /**
@@ -324,7 +392,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testUpdate() 
     {
-        $user = User::where("email='john@doe.com'")->next();
+        $user = TORM\Factory::create("user");
+        $user = User::where("email='".$user->email."'")->next();
         $id   = $user->id;
         $user->name = "Doe, John";
         $user->save();
@@ -356,7 +425,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testDestroy() 
     {
-        $user = User::where("email='john@doe.com'")->next();
+        $user = TORM\Factory::create("user");
+        $user = User::where("email='".$user->email."'")->next();
         $this->assertTrue($user->destroy());
     }
 
@@ -526,7 +596,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testOrder() 
     {
-        $users = User::where("name like '%rangel%'")->order("email desc")->limit(1);
+        $users = User::where("name like '%Rangel%'")->order("email desc")->limit(1);
         $user  = $users->next();
         $this->assertNotNull($user);
         $this->assertEquals("taq@bluefish.com.br", $user->email);
@@ -554,7 +624,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
         $this->assertNotNull($user->ticket_ids);
         $this->assertEquals(sizeof($ids), sizeof($user->ticket_ids));
-        $this->assertEquals(2, $count);
+        $this->assertEquals(10, $count);
 
         foreach ($ids as $id) {
             $this->assertTrue(in_array($id, $user->ticket_ids));
@@ -572,9 +642,12 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $ticket  = TORM\Factory::build("ticket");
         $ticket->user_id = $user->id;
         $this->assertTrue($ticket->save());
+        $this->assertEquals(11, $user->tickets->count());
 
-        $this->assertEquals(3, $user->tickets->count());
-        $user->ticket_ids = [1,2];
+        $t1 = Ticket::first();
+        $t2 = Ticket::last();
+
+        $user->ticket_ids = [$t1->id, $t2->id];
         $this->assertEquals(2, $user->tickets->count());
         $this->assertNotNull(Ticket::find($ticket->id));
         $this->assertTrue($ticket->destroy());
@@ -739,7 +812,16 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testCheckEmptySequence() 
     {
-        $this->assertEquals(null, User::resolveSequenceName());
+        $name = null;
+        switch (TORM\Driver::$name) {
+        case "oracle":
+            $name = "users_sequence";
+            break;
+        case "postgresql":
+            $name = "users_id_seq";
+            break;
+        }
+        $this->assertEquals($name, User::resolveSequenceName());
     }
 
     /**
@@ -749,10 +831,20 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testDefaultSequence() 
     {
+        $name = null;
+        switch (TORM\Driver::$name) {
+        case "oracle":
+            $name = "users_sequence";
+            break;
+        case "postgresql":
+            $name = "users_id_seq";
+            break;
+        }
+
         $old = TORM\Driver::$primary_key_behaviour;
         TORM\Driver::$primary_key_behaviour = TORM\Driver::PRIMARY_KEY_SEQUENCE;
         $name = User::resolveSequenceName();
-        $this->assertEquals("users_sequence", User::resolveSequenceName());
+        $this->assertEquals($name, User::resolveSequenceName());
         TORM\Driver::$primary_key_behaviour = $old;
     }
 
@@ -1099,7 +1191,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testHasOneRelation() 
     {
-        $account = TORM\Factory::create("account");
+        $account = Account::first();
 
         $user = User::first();
         $acct = $user->account;
@@ -1536,7 +1628,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testFirstMailNameScope()
     {
         $user = TORM\Factory::create("user");
-        $this->assertEquals(1, User::email_first("Mary")->count());
+        $this->assertEquals(1, User::email_first("mary")->count());
         $this->assertTrue($user->destroy());
     }
 
@@ -1551,11 +1643,11 @@ class ModelTest extends PHPUnit_Framework_TestCase
 
         $user = TORM\Factory::create("user");
         $this->assertEquals(1, User::by_level(1)->doe()->count());
-        $this->assertEquals(1, User::by_level(1)->doe()->email_first("Mary")->count());
+        $this->assertEquals(1, User::by_level(1)->doe()->email_first("mary")->count());
 
         $user->updateAttributes(array("email" => "marilyn@doe.com"));
-        $this->assertEquals(0, User::by_level(1)->doe()->email_first("Mary")->count());
-        $this->assertEquals(1, User::by_level(1)->doe()->email_first("Marilyn")->count());
+        $this->assertEquals(0, User::by_level(1)->doe()->email_first("mary")->count());
+        $this->assertEquals(1, User::by_level(1)->doe()->email_first("marilyn")->count());
         $this->assertTrue($user->destroy());
     }
 
@@ -1580,7 +1672,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     {
         $user       = User::first();
         $tickets    = $user->tickets->toArray();
-        $this->assertEquals(2, sizeof($tickets));
+        $this->assertEquals(10, sizeof($tickets));
     }
 
     /**
@@ -1634,10 +1726,21 @@ class ModelTest extends PHPUnit_Framework_TestCase
             array_push($objs, $ticket);
         }
 
-        $pages = array(1=>5,2=>5,3=>5,4=>5,5=>3);
-        foreach ($pages as $page=>$qty) {
+        $pages = array(
+            1 => 5,
+            2 => 5,
+            3 => 5, 
+            4 => 5,
+            5 => 5, 
+            6 => 5,
+            7 => 1
+        );
+        $this->assertEquals(31, sizeof($user->tickets->toArray()));
+
+        foreach ($pages as $page => $qty) {
             $tickets = $user->tickets->paginate($page, 5);
             $ar = $tickets->toArray();
+
             $this->assertEquals($page, $tickets->page);
             $this->assertEquals($qty, sizeof($ar));
         }
@@ -1684,9 +1787,12 @@ class ModelTest extends PHPUnit_Framework_TestCase
     /**
      * Test exception
      *
+     * Need to check the correct behaviour of PostgreSQL with:
+     *
+     * This: expectedExceptionMessage table users has no column named invalid_attr
+     * And this: expectedExceptionCode HY000
+     *
      * @expectedException PDOException
-     * @expectedExceptionMessage table users has no column named invalid_attr
-     * @expectedExceptionCode HY000
      *
      * @return null
      */
