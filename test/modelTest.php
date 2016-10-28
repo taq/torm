@@ -81,6 +81,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
         case "postgresql":
             self::$con = new PDO('pgsql:host=localhost;dbname=torm', "torm", "torm");
             break;
+        case "oracle":
+            self::$con = new PDOOCI\PDO('docker', 'system', 'oracle');
         }
 
         TORM\Connection::setConnection(self::$con, "test");
@@ -89,12 +91,12 @@ class ModelTest extends PHPUnit_Framework_TestCase
         TORM\Factory::setFactoriesPath("./factories");
         TORM\Log::enable(false);
 
-        self::$user        = new User();
-        self::$user->id    = 1;
-        self::$user->name  = "John Doe Jr.";
-        self::$user->email = "jr@doe.com";
-        self::$user->code  = "12345";
-        self::$user->level = 1;
+        self::$user             = new User();
+        self::$user->id         = 1;
+        self::$user->name       = "John Doe Jr.";
+        self::$user->email      = "jr@doe.com";
+        self::$user->code       = "12345";
+        self::$user->user_level = 1;
     }
 
     /**
@@ -124,20 +126,20 @@ class ModelTest extends PHPUnit_Framework_TestCase
         Tocket::all()->destroy();
         Account::all()->destroy();
 
-        $user        = new User();
-        $user->id    = 1;
-        $user->name  = "Eustaquio Rangel";
-        $user->email = "eustaquiorangel@gmail.com";
-        $user->code  = "12345";
-        $user->level = 1;
+        $user             = new User();
+        $user->id         = 1;
+        $user->name       = "Eustaquio Rangel";
+        $user->email      = "eustaquiorangel@gmail.com";
+        $user->code       = "12345";
+        $user->user_level = 1;
         $user->save();
 
-        $user        = new User();
-        $user->id    = 2;
-        $user->name  = "Rangel, Eustaquio";
-        $user->email = "taq@bluefish.com.br";
-        $user->code  = "54321";
-        $user->level = 2;
+        $user             = new User();
+        $user->id         = 2;
+        $user->name       = "Rangel, Eustaquio";
+        $user->email      = "taq@bluefish.com.br";
+        $user->code       = "54321";
+        $user->user_level = 2;
         $user->save();
 
         for ($i = 1; $i <= 10; $i++) {
@@ -353,10 +355,10 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testInsert()
     {
         $user = new User();
-        $user->name    = "John Doe";
-        $user->email   = "john@doe.com";
-        $user->level   = 1;
-        $user->code    = "12345";
+        $user->name       = "John Doe";
+        $user->email      = "john@doe.com";
+        $user->user_level = 1;
+        $user->code       = "12345";
         $this->assertTrue($user->isValid());
         $this->assertNull($user->id);
         $this->assertTrue($user->save());
@@ -367,7 +369,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertNotNull($new_user);
         $this->assertEquals($user->name,  $new_user->name);
         $this->assertEquals($user->email, $new_user->email);
-        $this->assertEquals($user->level, $new_user->level);
+        $this->assertEquals($user->user_level, $new_user->user_level);
         $this->assertEquals($user->code,  $new_user->code);
     }
 
@@ -518,7 +520,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testNotANumber() 
         {
-        self::$user->level = "one";
+        self::$user->user_level = "one";
         $this->assertFalse(self::$user->isValid());
     }
 
@@ -529,7 +531,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testNotANumberWithSpecialChars() 
     {
-        self::$user->level = "$%@";
+        self::$user->user_level = "$%@";
         $this->assertFalse(self::$user->isValid());
     }
 
@@ -540,7 +542,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testAPositiveNumber() 
     {
-        self::$user->level = 1;
+        self::$user->user_level = 1;
         $this->assertTrue(self::$user->isValid());
     }
 
@@ -551,7 +553,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testANegativeNumber() 
     {
-        self::$user->level = -1;
+        self::$user->user_level = -1;
         $this->assertTrue(self::$user->isValid());
     }
 
@@ -562,7 +564,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testAFloatingPointNumber()
     {
-        self::$user->level = 1.23;
+        self::$user->user_level = 1.23;
         $this->assertTrue(self::$user->isValid());
     }
 
@@ -698,11 +700,11 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testBelongsAttribution()
     {
-        $user        = new User();
-        $user->name  = "Belongs attribution";
-        $user->email = "belongs@torm.com";
-        $user->code  = "01010";
-        $user->level = 1;
+        $user             = new User();
+        $user->name       = "Belongs attribution";
+        $user->email      = "belongs@torm.com";
+        $user->code       = "01010";
+        $user->user_level = 1;
         $this->assertTrue($user->save());
 
         $ticket              = new Ticket();
@@ -726,11 +728,11 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testBelongsAttributionFromWhere()
     {
-        $user        = new User();
-        $user->name  = "Belongs attribution from where";
-        $user->email = "belongswhere@torm.com";
-        $user->code  = "01010";
-        $user->level = 1;
+        $user             = new User();
+        $user->name       = "Belongs attribution from where";
+        $user->email      = "belongswhere@torm.com";
+        $user->code       = "01010";
+        $user->user_level = 1;
         $this->assertTrue($user->save());
 
         Ticket::belongsTo("person", ["class_name"  => "User", "foreign_key" => "user_id"]);
@@ -759,18 +761,18 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testBelongsAttributionFromWhereOtherClass()
     {
-        $user1        = new User();
-        $user1->name  = "Belongs attribution from where and other class (1)";
-        $user1->email = "belongswhere@torm.com";
-        $user1->code  = "01011";
-        $user1->level = 1;
+        $user1             = new User();
+        $user1->name       = "Belongs attribution from where and other class (1)";
+        $user1->email      = "belongswhere@torm.com";
+        $user1->code       = "01011";
+        $user1->user_level = 1;
         $this->assertTrue($user1->save());
 
-        $user2        = new User();
-        $user2->name  = "Belongs attribution from where and other class (2)";
-        $user2->email = "belongswhere2@torm.com";
-        $user2->code  = "01012";
-        $user2->level = 1;
+        $user2             = new User();
+        $user2->name       = "Belongs attribution from where and other class (2)";
+        $user2->email      = "belongswhere2@torm.com";
+        $user2->code       = "01012";
+        $user2->user_level = 1;
         $this->assertTrue($user2->save());
 
         $uid1   = $user1->id;
@@ -927,7 +929,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testSum() 
     {
-        $this->assertEquals(3, User::all()->sum("level"));
+        $this->assertEquals(3, User::all()->sum("user_level"));
     }
 
     /**
@@ -937,7 +939,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testSumWithConditions() 
     {
-        $this->assertEquals(2, User::all(array("email" => "taq@bluefish.com.br"))->sum("level"));
+        $this->assertEquals(2, User::all(array("email" => "taq@bluefish.com.br"))->sum("user_level"));
     }
 
     /**
@@ -947,7 +949,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testSumWithConditionsAndWhere() 
     {
-        $this->assertEquals(1, User::where(array("email" => "eustaquiorangel@gmail.com"))->sum("level"));
+        $this->assertEquals(1, User::where(array("email" => "eustaquiorangel@gmail.com"))->sum("user_level"));
     }
 
     /**
@@ -957,7 +959,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testAvg() 
     {
-        $this->assertEquals(1.5, User::all()->avg("level"));
+        $this->assertEquals(1.5, User::all()->avg("user_level"));
     }
 
     /**
@@ -967,7 +969,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testAvgWithConditions() 
     {
-        $this->assertEquals(2, User::all(array("email" => "taq@bluefish.com.br"))->avg("level"));
+        $this->assertEquals(2, User::all(array("email" => "taq@bluefish.com.br"))->avg("user_level"));
     }
 
     /**
@@ -977,7 +979,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testAvgWithConditionsAndWhere() 
     {
-        $this->assertEquals(1, User::where(array("email" => "eustaquiorangel@gmail.com"))->avg("level"));
+        $this->assertEquals(1, User::where(array("email" => "eustaquiorangel@gmail.com"))->avg("user_level"));
     }
 
     /**
@@ -987,7 +989,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testMin() 
     {
-        $this->assertEquals(1, User::all()->min("level"));
+        $this->assertEquals(1, User::all()->min("user_level"));
     }
 
     /**
@@ -997,7 +999,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testMinWithConditions() 
     {
-        $this->assertEquals(2, User::all(array("email"=>"taq@bluefish.com.br"))->min("level"));
+        $this->assertEquals(2, User::all(array("email"=>"taq@bluefish.com.br"))->min("user_level"));
     }
 
     /**
@@ -1007,7 +1009,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testMinWithConditionsAndWhere() 
     {
-        $this->assertEquals(1, User::where(array("email"=>"eustaquiorangel@gmail.com"))->min("level"));
+        $this->assertEquals(1, User::where(array("email"=>"eustaquiorangel@gmail.com"))->min("user_level"));
     }
 
     /**
@@ -1017,7 +1019,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testMax() 
     {
-        $this->assertEquals(2, User::all()->max("level"));
+        $this->assertEquals(2, User::all()->max("user_level"));
     }
 
     /**
@@ -1027,7 +1029,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testMaxWithConditions() 
     {
-        $this->assertEquals(2, User::all(array("email"=>"taq@bluefish.com.br"))->max("level"));
+        $this->assertEquals(2, User::all(array("email"=>"taq@bluefish.com.br"))->max("user_level"));
     }
 
     /**
@@ -1037,7 +1039,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testMaxWithConditionsAndWhere() 
     {
-        $this->assertEquals(1, User::where(array("email"=>"eustaquiorangel@gmail.com"))->max("level"));
+        $this->assertEquals(1, User::where(array("email"=>"eustaquiorangel@gmail.com"))->max("user_level"));
     }
 
     /**
@@ -1086,17 +1088,17 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $new_email = "iwishigottaq@gmail.com";
 
         $user = User::find(1);
-        $old_level = $user->level;
+        $old_level = $user->user_level;
         $old_email = $user->email;
-        $user->updateAttributes(array("email"=>$new_email, "level"=>$new_level));
+        $user->updateAttributes(array("email"=>$new_email, "user_level"=>$new_level));
 
         $user = User::find(1);
-        $this->assertEquals($new_level, $user->level);
+        $this->assertEquals($new_level, $user->user_level);
         $this->assertEquals($new_email, $user->email);
-        $user->updateAttributes(array("email"=>$old_email, "level"=>$old_level));
+        $user->updateAttributes(array("email"=>$old_email, "user_level"=>$old_level));
 
         $user = User::find(1);
-        $this->assertEquals($old_level, $user->level);
+        $this->assertEquals($old_level, $user->user_level);
         $this->assertEquals($old_email, $user->email);
     }
 
@@ -1133,11 +1135,11 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $user1 = $users->next();
         $user2 = $users->next();
 
-        User::all()->updateAttributes(array("email"=>"void@gmail.com", "level"=>0));
+        User::all()->updateAttributes(array("email"=>"void@gmail.com", "user_level"=>0));
         $users = User::all();
         while ($user = $users->next()) {
             $this->assertEquals("void@gmail.com", $user->email);
-            $this->assertEquals(0, $user->level);
+            $this->assertEquals(0, $user->user_level);
         }
 
         $this->assertTrue($user1->save(true));
@@ -1156,12 +1158,12 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $user1 = $users->next();
         $this->assertNotNull($user1);
 
-        User::where($cond)->updateAttributes(array("email"=>"void@gmail.com", "level"=>0));
+        User::where($cond)->updateAttributes(array("email"=>"void@gmail.com", "user_level"=>0));
         $users = User::where($cond);
 
         while ($user = $users->next()) {
             $this->assertEquals("void@gmail.com", $user->email);
-            $this->assertEquals(0, $user->level);
+            $this->assertEquals(0, $user->user_level);
         }
         $this->assertTrue($user1->save(true));
     }
@@ -1698,9 +1700,9 @@ class ModelTest extends PHPUnit_Framework_TestCase
         User::setYAMLFile("torm.yml");
         $user = User::first();
         $msgs = $user->fullMessages(
-            array("name"  => array("presence"),
-                  "level" => array("numericality"),
-                  "email" => array("uniqueness","format"))
+            array("name"       => array("presence"),
+                  "user_level" => array("numericality"),
+                  "email"      => array("uniqueness","format"))
         );
 
         $this->assertEquals("Name cannot be blank", $msgs[0]);
@@ -1809,9 +1811,10 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testExtractColumns()
     {
-        $escape  = TORM\Driver::$escape_char;
-        $columns = User::extractColumns();
-        $this->assertEquals("{$escape}users{$escape}.{$escape}id{$escape},{$escape}users{$escape}.{$escape}name{$escape},{$escape}users{$escape}.{$escape}email{$escape},{$escape}users{$escape}.{$escape}level{$escape},{$escape}users{$escape}.{$escape}code{$escape},{$escape}users{$escape}.{$escape}created_at{$escape},{$escape}users{$escape}.{$escape}updated_at{$escape}", $columns);
+        $escape   = TORM\Driver::$escape_char;
+        $columns  = User::extractColumns();
+        $expected = "{$escape}users{$escape}.{$escape}id{$escape},{$escape}users{$escape}.{$escape}name{$escape},{$escape}users{$escape}.{$escape}email{$escape},{$escape}users{$escape}.{$escape}user_level{$escape},{$escape}users{$escape}.{$escape}code{$escape},{$escape}users{$escape}.{$escape}created_at{$escape},{$escape}users{$escape}.{$escape}updated_at{$escape}";
+        $this->assertEquals($expected, $columns);
     }
 
     /**
@@ -1896,8 +1899,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testExtractWhereConditionsAssociative()
     {
         $escape     = TORM\Driver::$escape_char;
-        $expected   = "{$escape}users{$escape}.{$escape}id{$escape}=? and {$escape}users{$escape}.{$escape}name{$escape}=? and {$escape}users{$escape}.{$escape}level{$escape}=?";
-        $conditions = User::extractWhereConditions(["id" => 1, "name" => "john", "level" => 3]);
+        $expected   = "{$escape}users{$escape}.{$escape}id{$escape}=? and {$escape}users{$escape}.{$escape}name{$escape}=? and {$escape}users{$escape}.{$escape}user_level{$escape}=?";
+        $conditions = User::extractWhereConditions(["id" => 1, "name" => "john", "user_level" => 3]);
         $this->assertEquals($expected, $conditions);
     }
 
@@ -1921,7 +1924,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testExtractWhereValuesAssociative()
     {
         $expected   = [1, "john", 2];
-        $conditions = User::extractWhereValues(["id" => 1, "name" => "john", "level" => 2]);
+        $conditions = User::extractWhereValues(["id" => 1, "name" => "john", "user_level" => 2]);
         $this->assertEquals($expected, $conditions);
     }
 
@@ -1933,7 +1936,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
     public function testExtractWhereValuesRegular()
     {
         $expected   = [1, "john", 2];
-        $conditions = User::extractWhereValues(["id=? and name=? and level=?", 1, "john", 2]);
+        $conditions = User::extractWhereValues(["id=? and name=? and user_level=?", 1, "john", 2]);
         $this->assertEquals($expected, $conditions);
     }
 
@@ -1947,13 +1950,13 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $user = User::where(["name = ?", "Eustaquio Rangel"])->next();
         $this->assertEquals("Eustaquio Rangel", $user->name);
 
-        $user = User::where(["level >= ?", 1])->next();
+        $user = User::where(["user_level >= ?", 1])->next();
         $this->assertEquals("Eustaquio Rangel", $user->name);
 
-        $user = User::where(["level >= ?", 2])->next();
+        $user = User::where(["user_level >= ?", 2])->next();
         $this->assertEquals("Rangel, Eustaquio", $user->name);
 
-        $user = User::where(["level >= ? and name = ?", 1, "Rangel, Eustaquio"])->next();
+        $user = User::where(["user_level >= ? and name = ?", 1, "Rangel, Eustaquio"])->next();
         $this->assertEquals("Rangel, Eustaquio", $user->name);
     }
 
@@ -1979,18 +1982,18 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testBelongsDoubleAttribution()
     {
-        $user1        = new User();
-        $user1->name  = "Belongs first attribution from where and other class";
-        $user1->email = "belongswhere@torm.com";
-        $user1->code  = "01011";
-        $user1->level = 1;
+        $user1             = new User();
+        $user1->name       = "Belongs first attribution from where and other class";
+        $user1->email      = "belongswhere@torm.com";
+        $user1->code       = "01011";
+        $user1->user_level = 1;
         $this->assertTrue($user1->save());
 
-        $user2        = new User();
-        $user2->name  = "Belongs second attribution from where and other class";
-        $user2->email = "belongswhere2@torm.com";
-        $user2->code  = "01012";
-        $user2->level = 1;
+        $user2             = new User();
+        $user2->name       = "Belongs second attribution from where and other class";
+        $user2->email      = "belongswhere2@torm.com";
+        $user2->code       = "01012";
+        $user2->user_level = 1;
         $this->assertTrue($user2->save());
 
         $uid1   = $user1->id;

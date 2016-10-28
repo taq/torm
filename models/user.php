@@ -66,7 +66,7 @@
    User::validates("email",array("presence"=>true));
    User::validates("email",array("format"  =>"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"));
    User::validates("email",array("uniqueness"=>true,"allow_null"=>true,"allow_blank"=>true));
-   User::validates("level",array("numericality"=>true));
+   User::validates("user_level",array("numericality"=>true));
    User::validates("code" ,array("format"=>"^[0-9]{5}$","allow_null"=>true));
 
    User::hasMany("tickets",array("class_name"=>"Ticket"));
@@ -85,9 +85,9 @@
    User::beforeUpdate("before_update");
    User::afterUpdate("after_update");
 
-   User::scope("first_level",array("level"=>1));
-   User::scope("by_level",function($args) { return "level=".$args[0]; });
-   User::scope("by_level_and_date",function($args) { return "level=".$args[0]." and created_at<'".$args[1]." 23:59:59'"; });
+   User::scope("first_level",array("user_level"=>1));
+   User::scope("by_level",function($args) { return "user_level=".$args[0]; });
+   User::scope("by_level_and_date",function($args) { return "user_level=".$args[0]." and created_at<'".$args[1]." 23:59:59'"; });
    User::scope("doe", "email like '%doe.com'");
    User::scope("email_first", function($args) { return "email like '".$args[0]."%'"; });
 ?>

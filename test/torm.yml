@@ -12,4 +12,4 @@ en-US:
       user:
          name: "Name"
          email: "E-mail"
-         level: "Level"
+         user_level: "Level"
