@@ -219,7 +219,7 @@ class Collection implements \Iterator
         $this->per_page         = $per_page;
 
         if (Driver::$pagination_subquery) {
-            $this->_builder->limit   = $this->_builder->offset + $per_page - 1;
+            $this->_builder->limit   = $this->_builder->offset + $per_page;
             $this->_builder->offset  = $this->_builder->offset + 1;
         }
         return $this;

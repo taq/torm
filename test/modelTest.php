@@ -67,7 +67,32 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public static function setUpBeforeClass()
     {
+        $database = self::_database();
+        $con      = self::_connection();
+
+        TORM\Connection::setConnection($con, "test");
+        TORM\Connection::setEncoding("UTF-8");
+        TORM\Connection::setDriver($database);
+        TORM\Factory::setFactoriesPath("./factories");
+        TORM\Log::enable(false);
+
+        self::$user             = new User();
+        self::$user->id         = 1;
+        self::$user->name       = "John Doe Jr.";
+        self::$user->email      = "jr@doe.com";
+        self::$user->code       = "12345";
+        self::$user->user_level = 1;
+    }
+
+    /**
+     * Find the test connection
+     *
+     * @return resource connection
+     */
+    private static function _connection()
+    {
         $file = realpath(dirname(__FILE__)."/../database/test.sqlite3");
+
         $database = self::_database();
         echo "Testing using $database\n";
 
@@ -83,20 +108,10 @@ class ModelTest extends PHPUnit_Framework_TestCase
             break;
         case "oracle":
             self::$con = new PDOOCI\PDO('docker', 'system', 'oracle');
+            self::$con->query("alter session set NLS_DATE_FORMAT='YYYY-MM-DD'");
+            self::$con->query("alter session set NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS'");
         }
-
-        TORM\Connection::setConnection(self::$con, "test");
-        TORM\Connection::setEncoding("UTF-8");
-        TORM\Connection::setDriver($database);
-        TORM\Factory::setFactoriesPath("./factories");
-        TORM\Log::enable(false);
-
-        self::$user             = new User();
-        self::$user->id         = 1;
-        self::$user->name       = "John Doe Jr.";
-        self::$user->email      = "jr@doe.com";
-        self::$user->code       = "12345";
-        self::$user->user_level = 1;
+        return self::$con;
     }
 
     /**
@@ -1814,7 +1829,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $escape   = TORM\Driver::$escape_char;
         $columns  = User::extractColumns();
         $expected = "{$escape}users{$escape}.{$escape}id{$escape},{$escape}users{$escape}.{$escape}name{$escape},{$escape}users{$escape}.{$escape}email{$escape},{$escape}users{$escape}.{$escape}user_level{$escape},{$escape}users{$escape}.{$escape}code{$escape},{$escape}users{$escape}.{$escape}created_at{$escape},{$escape}users{$escape}.{$escape}updated_at{$escape}";
-        $this->assertEquals($expected, $columns);
+        $this->assertEquals(strtolower($expected), strtolower($columns));
     }
 
     /**
@@ -1852,6 +1867,10 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testOtherConnection()
     {
+        if (self::_database() != "sqlite") {
+            return;
+        }
+
         $file = realpath(dirname(__FILE__)."/../database/another_test.sqlite3");
         $con  = new PDO("sqlite:$file");
 
@@ -1901,7 +1920,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $escape     = TORM\Driver::$escape_char;
         $expected   = "{$escape}users{$escape}.{$escape}id{$escape}=? and {$escape}users{$escape}.{$escape}name{$escape}=? and {$escape}users{$escape}.{$escape}user_level{$escape}=?";
         $conditions = User::extractWhereConditions(["id" => 1, "name" => "john", "user_level" => 3]);
-        $this->assertEquals($expected, $conditions);
+        $this->assertEquals(strtolower($expected), strtolower($conditions));
     }
 
     /**
