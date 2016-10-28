@@ -1,4 +1,4 @@
 <?php
    class Account extends TORM\Model {};
-   Account::validates("number",array("presence"=>true));
+   Account::validates("account_number",array("presence"=>true));
 ?>

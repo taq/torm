@@ -157,13 +157,13 @@ class ModelTest extends PHPUnit_Framework_TestCase
         }
 
         $account = new Account();
-        $account->user_id = 1;
-        $account->number  = "12345";
+        $account->user_id        = 1;
+        $account->account_number = "12345";
         $account->save();
 
         $account = new Account();
-        $account->user_id = 2;
-        $account->number  = "54321";
+        $account->user_id        = 2;
+        $account->account_number = "54321";
         $account->save();
     }
 
@@ -1117,10 +1117,10 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $new_id  = 999;
         $new_num = "54321";
 
-        $this->assertTrue($account->updateAttributes(array("id"=>$new_id, "number"=>$new_num)));
+        $this->assertTrue($account->updateAttributes(array("id"=>$new_id, "account_number"=>$new_num)));
         $account = Account::find($old_id);
         $this->assertNotNull($account);
-        $this->assertEquals($new_num, $account->number);
+        $this->assertEquals($new_num, $account->account_number);
         $this->assertNull(Account::find($new_id));
     }
 
@@ -1199,7 +1199,7 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $acct = $user->account;
         $this->assertNotNull($acct);
         $this->assertEquals("Account", get_class($acct));
-        $this->assertEquals($account->number, $acct->number);
+        $this->assertEquals($account->account_number, $acct->account_number);
     }
 
     /**
