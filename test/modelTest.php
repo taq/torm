@@ -82,6 +82,8 @@ class ModelTest extends PHPUnit_Framework_TestCase
         self::$user->email      = "jr@doe.com";
         self::$user->code       = "12345";
         self::$user->user_level = 1;
+
+        error_reporting(E_ALL);
     }
 
     /**

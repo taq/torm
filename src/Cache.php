@@ -88,7 +88,7 @@ class Cache
         $cls      = $cls ? $cls : "TORM\Model";
         $con      = $cls::resolveConnection();
         $prepared = $con->prepare($sql);
-        $this->_prepared_cache[$hash] = ["statement" => $prepared, "timestamp" => mktime()];
+        $this->_prepared_cache[$hash] = ["statement" => $prepared, "timestamp" => time()];
         return $prepared;
     }
 
@@ -125,14 +125,14 @@ class Cache
     {
         // if first run ...
         if (!$this->_last_expired_at) {
-            $this->_last_expired_at = mktime();
+            $this->_last_expired_at = time();
             if ($verbose) {
                 echo "First time running cache expiration\n";
             }
         }
 
         // if current time is lower than the last time ran plust timeout
-        if (mktime() < $this->_last_expired_at + $this->_timeout) {
+        if (time() < $this->_last_expired_at + $this->_timeout) {
             if ($verbose) {
                 echo "Not checking cache timeouts\n";
             }
@@ -143,12 +143,12 @@ class Cache
             echo "Checking cache timeouts.\n";
         }
         foreach ($this->_prepared_cache as $key => $cache) {
-            if (mktime() > intval($cache["timestamp"]) + $this->_timeout) {
+            if (time() > intval($cache["timestamp"]) + $this->_timeout) {
                 Model::closeCursor($cache["statement"]);
                 unset($this->_prepared_cache[$key]);
             }
         }
-        $this->_last_expired_at = mktime();
+        $this->_last_expired_at = time();
         return true;
     }
 
@@ -170,7 +170,7 @@ class Cache
     public function clear()
     {
         $this->_prepared_cache  = array();
-        $this->_last_expired_at = mktime();
+        $this->_last_expired_at = time();
     }
 
     /**

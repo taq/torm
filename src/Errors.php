@@ -66,7 +66,7 @@ trait Errors
      *
      * @return null
      */
-    public function setYAMLFile($file)
+    public static function setYAMLFile($file)
     {
         self::$yaml_file = $file;
     }

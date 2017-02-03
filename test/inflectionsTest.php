@@ -38,6 +38,8 @@ class InflectionsTest extends PHPUnit_Framework_TestCase
         TORM\Inflections::push(TORM\Inflections::IRREGULAR, "person",  "people");
         TORM\Inflections::push(TORM\Inflections::SINGULAR,  '/ao$/i',  "oes");
         TORM\Inflections::push(TORM\Inflections::PLURAL,    '/oes$/i', "ao");
+
+        error_reporting(E_ALL);
     }
 
     /**

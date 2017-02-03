@@ -162,7 +162,7 @@ trait Callbacks
      *
      * @return null
      */
-    private function _initiateCallbacks($cls)
+    private static function _initiateCallbacks($cls)
     {
         if (!array_key_exists($cls, self::$_callbacks)) {
             self::$_callbacks[$cls] = array();

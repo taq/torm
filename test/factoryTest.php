@@ -42,6 +42,8 @@ class FactoryTest extends PHPUnit_Framework_TestCase
         TORM\Connection::setDriver("sqlite");
         TORM\Factory::setFactoriesPath("./factories");
         TORM\Log::enable(false);
+
+        error_reporting(E_ALL);
     }
 
     /**

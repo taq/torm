@@ -45,6 +45,8 @@ class CacheTest extends PHPUnit_Framework_TestCase
         TORM\Factory::setFactoriesPath("./factories");
         TORM\Log::enable(false);
         TORM\Cache::getInstance()->setTimeout(300);
+
+        error_reporting(E_ALL);
     }
 
     /**
