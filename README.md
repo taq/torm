@@ -1,3 +1,5 @@
+[![Code Climate](https://codeclimate.com/github/taq/torm/badges/gpa.svg)](https://codeclimate.com/github/taq/torm)
+
 Just another simple ORM for PHP. You can use it, but don't ask why I made it. Right? :-)
 
 Take a look on the [Github Wiki](https://github.com/taq/torm/wiki) for documentation, but let me show the basics here:
