@@ -82,24 +82,6 @@ class LogTest extends PHPUnit_Framework_TestCase
      */
     public function testFile()
     {
-        $this->_deleteLog();
-
-        TORM\Log::file();
-        TORM\Log::log('hello');
-        TORM\Log::log('world');
-
-        $this->assertTrue(file_exists(self::$log_file));
-        $this->assertEquals("hello\nworld\n", file_get_contents(self::$log_file));
-        $this->_deleteLog();
-    }
-
-    /**
-     * Test custom file
-     *
-     * @return null
-     */
-    public function testCustomFile()
-    {
         $custom = "/tmp/torm-test.log";
         $this->_deleteLog($custom);
 

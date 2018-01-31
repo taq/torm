@@ -56,13 +56,12 @@ class Log
     /**
      * Enable or disable file writing
      *
-     * @param string $file or null, if null, will be used /tmp/torm.log
+     * @param string $file or null
      *
      * @return null
      */
     public static function file($file = null)
     {
-        $file = is_null($file) ? "/tmp/torm.log" : $file;
         self::$_file = $file;
     }
 

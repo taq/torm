@@ -128,7 +128,7 @@ trait Sequences
     {
         $escape = Driver::$escape_char;
         $sql    = "select count(sequence_name) as $escape"."CNT"."$escape from user_sequences where sequence_name='$name' or sequence_name='".strtolower($name)."' or sequence_name='".strtoupper($name)."'";
-        $stmt   = self::resolveConnection()->query($sql);
+        $stmt   = self::query($sql);
         $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
         $rtn    = intval($rst["CNT"]) > 0;
         self::closeCursor($stmt);
@@ -146,7 +146,7 @@ trait Sequences
     {
         $escape = Driver::$escape_char;
         $sql    = "select count(*) as {$escape}CNT{$escape} from information_schema.sequences where sequence_name = '$name'";
-        $stmt   = self::resolveConnection()->query($sql);
+        $stmt   = self::query($sql);
         $rst    = $stmt->fetch(\PDO::FETCH_ASSOC);
         $rtn    = intval($rst["CNT"]) > 0;
         self::closeCursor($stmt);
@@ -188,7 +188,7 @@ trait Sequences
         $name = self::resolveSequenceName();
         $sql  = "create sequence $name increment by 1 start with 1 nocycle nocache";
         Log::log($sql);
-        $stmt = self::resolveConnection()->query($sql);
+        $stmt = self::query($sql);
         self::closeCursor($stmt);
     }
 
@@ -202,7 +202,7 @@ trait Sequences
         $name = self::resolveSequenceName();
         $sql  = "create sequence $name increment by 1 start with 1 no cycle";
         Log::log($sql);
-        $stmt = self::resolveConnection()->query($sql);
+        $stmt = self::query($sql);
         self::closeCursor($stmt);
     }
 

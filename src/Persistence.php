@@ -208,7 +208,6 @@ trait Persistence
             }
             $this->_push_later = array();
         }
-        Log::log($sql);
         return $rtn;
     }
 
@@ -257,7 +256,6 @@ trait Persistence
         $sql .= " where $escape".self::getTableName()."$escape.$escape".self::$_mapping[$calling][$pk]."$escape=?";
         array_push($vals, $pk_value);
 
-        Log::log($sql);
         return self::executePrepared($sql, $vals)->rowCount()==1;
     }
 
@@ -283,7 +281,6 @@ trait Persistence
         $pk_value   = $this->_data[$pk];
         $escape     = Driver::$escape_char;
         $sql        = "delete from $escape$table_name$escape where $escape$table_name$escape.$escape".self::$_mapping[$calling][$pk]."$escape=?";
-        Log::log($sql);
 
         $rst = self::executePrepared($sql, array($pk_value))->rowCount()==1;
         if ($rst) {

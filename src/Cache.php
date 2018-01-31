@@ -80,10 +80,10 @@ class Cache
         $hash = self::_sqlHash($sql);
 
         if (array_key_exists($hash, $this->_prepared_cache)) {
-            Log::log("already prepared: $sql");
+            Log::log("SQL: already prepared:\n$sql");
             return $this->_prepared_cache[$hash]["statement"];
         } else {
-            Log::log("inserting on cache: $sql");
+            Log::log("SQL: inserting on cache: $sql");
         }
         $cls      = $cls ? $cls : "TORM\Model";
         $con      = $cls::resolveConnection();

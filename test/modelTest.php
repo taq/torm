@@ -371,6 +371,10 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testInsert()
     {
+        $file = "/tmp/insert.log";
+        TORM\Log::enable(true);
+        TORM\Log::file($file);
+
         $user = new User();
         $user->name       = "John Doe";
         $user->email      = "john@doe.com";
@@ -379,6 +383,11 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($user->isValid());
         $this->assertNull($user->id);
         $this->assertTrue($user->save());
+
+        TORM\Log::enable(false);
+        $contents = $this->_deleteAndReturn($file);
+        $this->assertEquals(1, preg_match('/SQL: inserting/', $contents));
+
         $this->assertNotNull($user->id);
         $this->assertNotNull($user->created_at);
 
@@ -411,11 +420,19 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testUpdate() 
     {
+        $file = "/tmp/update.log";
+        TORM\Log::enable(true);
+        TORM\Log::file($file);
+
         $user = TORM\Factory::create("user");
         $user = User::where("email='".$user->email."'")->next();
         $id   = $user->id;
         $user->name = "Doe, John";
         $user->save();
+
+        TORM\Log::enable(false);
+        $contents = $this->_deleteAndReturn($file);
+        $this->assertEquals(1, preg_match('/update "users"/', $contents));
 
         $this->assertEquals("Doe, John", User::find($id)->name);
         $this->assertTrue($user->isValid());
@@ -444,9 +461,17 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testDestroy() 
     {
+        $file = "/tmp/delete.log";
+        TORM\Log::enable(true);
+        TORM\Log::file($file);
+
         $user = TORM\Factory::create("user");
         $user = User::where("email='".$user->email."'")->next();
         $this->assertTrue($user->destroy());
+
+        TORM\Log::enable(false);
+        $contents = $this->_deleteAndReturn($file);
+        $this->assertEquals(1, preg_match('/delete from "users"/', $contents));
     }
 
     /**
@@ -2048,6 +2073,48 @@ class ModelTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($user2->destroy());
 
         $this->assertTrue($ticket->destroy());
+    }
+
+    /**
+     * Test find method with logger
+     *
+     * @return null
+     */
+    public function testFindLogger()
+    {
+        $file = "/tmp/find.log";
+        $this->_deleteAndReturn($file);
+        TORM\Log::enable(true);
+        TORM\Log::file($file);
+
+        $user = User::find(1);
+
+        TORM\Log::enable(false);
+
+        $this->assertEquals("Eustaquio Rangel", $user->name);
+        $this->assertEquals("eustaquiorangel@gmail.com", $user->email);
+
+        $contents = $this->_deleteAndReturn($file);
+        $this->assertEquals(1, preg_match('/SQL: executing prepared:/', $contents));
+        $this->assertEquals(1, preg_match('/SQL: already prepared:/', $contents));
+    }
+
+    /**
+     * Delete and return file contents
+     *
+     * @param string $file file
+     *
+     * @return contents
+     */
+    private function _deleteAndReturn($file)
+    {
+        $contents = null;
+
+        if (file_exists($file)) {
+            $contents = file_get_contents($file);
+            unlink($file);
+        }
+        return $contents;
     }
 }
 ?>

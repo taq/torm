@@ -352,14 +352,14 @@ class Model
         $rst   = null;
         $check = false;
         try {
-            $rst   = self::resolveConnection()->query("select id from torm_info");
+            $rst   = self::query("select id from torm_info");
             $check = true;
         } catch (\Exception $e) {
         }
 
         // needs to create table
         if (!$check || !is_object($rst) || !$rst->fetch()) {
-            $stmt = self::resolveConnection()->query("create table torm_info (id $type(1))");
+            $stmt = self::query("create table torm_info (id $type(1))");
             self::closeCursor($stmt);
         }
         if (is_object($rst)) {
@@ -367,16 +367,16 @@ class Model
         }
 
         // insert first value
-        $rst = self::resolveConnection()->query("select id from torm_info");
+        $rst = self::query("select id from torm_info");
         if (!$rst->fetch()) {
-            $stmt = self::resolveConnection()->query("insert into torm_info values (1)");
+            $stmt = self::query("insert into torm_info values (1)");
             self::closeCursor($stmt);
         }
         self::closeCursor($rst);
 
         // hack to dont need a query string to get columns
         $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
-        $rst  = self::resolveConnection()->query($sql);
+        $rst  = self::query($sql);
         $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
         foreach ($keys as $key) {
@@ -641,6 +641,12 @@ class Model
             return self::query($sql);
         }
 
+        try {
+            Log::log("SQL: executing prepared: \n$sql\nvalues:\n".join(",", $values));
+        } catch (Exception $e) {
+            Log::log("SQL: executing prepared: \n$sql\nvalues impossible to convert to string");
+        }
+
         $stmt = Cache::getInstance()->put($sql, get_called_class());
         $stmt->execute($values);
         return $stmt;
@@ -653,8 +659,9 @@ class Model
      *
      * @return mixed result
      */
-    public static function query($sql) 
+    public static function query($sql)
     {
+        Log::log("SQL:\n$sql");
         return self::resolveConnection()->query($sql);
     }
 
