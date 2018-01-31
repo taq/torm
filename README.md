@@ -1,4 +1,8 @@
+# TORM
+
 Just another simple ORM for PHP. You can use it, but don't ask why I made it. Right? :-)
+
+## Usage
 
 Take a look on the [Github Wiki](https://github.com/taq/torm/wiki) for documentation, but let me show the basics here:
 
@@ -55,4 +59,32 @@ foreach($user->tickets as $ticket) {
 // show user account info
 echo $user->account->number; 
 ?>
+```
+
+## Testing
+
+### SQLite
+
+First, use `composer update` to make sure everything is ok with all the
+packages. Then, go to the `test` directory and run `run`. It will requires the
+[SQLite driver](http://php.net/manual/en/ref.pdo-sqlite.php) so make sure it is
+available. If not, check the `php.ini` dir found with
+
+```bash
+$ php -r 'phpinfo();' | grep 'php.ini'
+Configuration File (php.ini) Path => /etc/php/7.1/cli
+Loaded Configuration File => /etc/php/7.1/cli/php.ini
+```
+
+and, if not found there or on the `conf.d` on the same location the `php.ini`
+file is, it can be installed, on Ubuntu, using:
+
+```bash
+$ sudo apt install php-sqlite3
+```
+
+### Multibyte strings, locale and YAML
+
+```
+$ sudo apt install php-mbstring php-intl php-yaml
 ```

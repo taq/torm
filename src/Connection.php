@@ -179,10 +179,11 @@ class Connection
             || is_object($mixed)
             || is_array($mixed)
             || !is_string($mixed)
+            || !function_exists('mb_convert_encoding')
         ) {
             return $mixed;  
         }
-        return mb_convert_encoding($mixed, self::$_encoding);
+        return \mb_convert_encoding($mixed, self::$_encoding);
     }
 }
 ?>

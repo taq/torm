@@ -1713,7 +1713,10 @@ class ModelTest extends PHPUnit_Framework_TestCase
      */
     public function testFullErrorMessages() 
     {
-        Locale::setDefault("en-US");
+        if (class_exists('Locale')) {
+            Locale::setDefault("en-US");
+        }
+
         User::setYAMLFile("torm.yml");
         $user = User::first();
         $msgs = $user->fullMessages(
