@@ -23,7 +23,7 @@ require_once "../vendor/autoload.php";
  * @license  http://www.gnu.org/copyleft/gpl.html GPL
  * @link     http://github.com/taq/torm
  */
-class CacheTest extends PHPUnit_Framework_TestCase
+class CacheTest extends PHPUnit\Framework\TestCase
 {
     protected static $con  = null;
     protected static $user = null;

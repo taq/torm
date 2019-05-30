@@ -23,7 +23,7 @@ require_once "../vendor/autoload.php";
  * @license  http://www.gnu.org/copyleft/gpl.html GPL
  * @link     http://github.com/taq/torm
  */
-class LogTest extends PHPUnit_Framework_TestCase
+class LogTest extends PHPUnit\Framework\TestCase
 {
     protected static $log_file = '/tmp/torm.log';
 

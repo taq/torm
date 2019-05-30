@@ -26,7 +26,7 @@ require_once "../models/account.php";
  * @license  http://www.gnu.org/copyleft/gpl.html GPL
  * @link     http://github.com/taq/torm
  */
-class InflectionsTest extends PHPUnit_Framework_TestCase
+class InflectionsTest extends PHPUnit\Framework\TestCase
 {
     /**
      * Run before each test
