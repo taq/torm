@@ -24,7 +24,7 @@ require_once "../models/user.php";
  * @license  http://www.gnu.org/copyleft/gpl.html GPL
  * @link     http://github.com/taq/torm
  */
-class FactoryTest extends PHPUnit_Framework_TestCase
+class FactoryTest extends PHPUnit\Framework\TestCase
 {
     protected static $con  = null;
 

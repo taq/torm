@@ -55,7 +55,7 @@ Tocket::belongsTo("other_person", ["class_name"  => "User", "foreign_key" => "us
  * @license  http://www.gnu.org/copyleft/gpl.html GPL
  * @link     http://github.com/taq/torm
  */
-class ModelTest extends PHPUnit_Framework_TestCase
+class ModelTest extends PHPUnit\Framework\TestCase
 {
     protected static $con  = null;
     protected static $user = null;
