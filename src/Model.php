@@ -146,7 +146,7 @@ class Model
      *
      * @return boolean ignoring case
      */
-    public static function isIgnoringCase() 
+    public static function isIgnoringCase()
     {
         $cls = get_called_class();
         if (!array_key_exists($cls, self::$_ignorecase)) {
@@ -298,7 +298,7 @@ class Model
      *
      * @param mixed  $con PDO connection
      * @param string $env enviroment
-     * 
+     *
      * @return null
      */
     public static function setConnection($con, $env="development")
@@ -316,12 +316,12 @@ class Model
      *
      * @return object connection
      */
-    public static function resolveConnection() 
+    public static function resolveConnection()
     {
         $cls = get_called_class();
         $env = Connection::selectEnvironment();
 
-        if (array_key_exists($cls, self::$_connections) 
+        if (array_key_exists($cls, self::$_connections)
             && array_key_exists($env, self::$_connections[$cls])
         ) {
                 return self::$_connections[$cls][$env];
@@ -376,6 +376,12 @@ class Model
 
         // hack to dont need a query string to get columns
         $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
+
+        if (Driver::$limit_behaviour==Driver::LIMIT_AROUND && Driver::$limit_query) {
+            $sql = str_replace("%query%", $sql, Driver::$limit_query);
+            $sql = str_replace("%limit%", 1, $sql);
+        }
+
         $rst  = self::query($sql);
         $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
@@ -393,7 +399,7 @@ class Model
      *
      * @return string columns
      */
-    public static function extractColumns() 
+    public static function extractColumns()
     {
         self::_checkLoaded();
         $cls = get_called_class();
@@ -444,7 +450,7 @@ class Model
      *
      * @return string where conditions
      */
-    private static function _extractWhereConditions($conditions) 
+    private static function _extractWhereConditions($conditions)
     {
         if (!$conditions) {
             return "";
@@ -504,7 +510,7 @@ class Model
      *
      * @return mixed $values
      */
-    public static function extractWhereValues($conditions) 
+    public static function extractWhereValues($conditions)
     {
         $values = array();
         if (!$conditions) {
@@ -587,7 +593,7 @@ class Model
         if (!self::$_loaded[$cls]) {
             self::_loadColumns();
         }
-    } 
+    }
 
     /**
      * Check if a column exists
@@ -767,7 +773,7 @@ class Model
      *
      * @return attribute value
      */
-    public function __get($attr) 
+    public function __get($attr)
     {
         $changes = $this->_changedAttribute($attr);
         if ($changes) {
@@ -843,7 +849,7 @@ class Model
      *
      * @return null
      */
-    public static function closeCursor($stmt) 
+    public static function closeCursor($stmt)
     {
         if (self::$_cc_action == self::CURSOR_NOTHING) {
             return;

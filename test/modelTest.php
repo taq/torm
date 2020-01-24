@@ -1261,6 +1261,7 @@ class ModelTest extends PHPUnit\Framework\TestCase
         }
         $m2 = microtime(true);
         echo "time to retrieve $limit accounts: ".($m2 - $m1);
+        $this->assertTrue(($m2 - $m1) < 1);
     }
 
     /**
