@@ -375,7 +375,7 @@ class Model
         self::closeCursor($rst);
 
         // hack to dont need a query string to get columns
-        $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1";
+        $sql  = "select $escape".self::getTableName()."$escape.* from torm_info left outer join $escape".self::getTableName()."$escape on 1=1 limit 1";
         $rst  = self::query($sql);
         $keys = array_keys($rst->fetch(\PDO::FETCH_ASSOC));
 
