@@ -1,5 +1,8 @@
 # TORM
 
+| :warning: **WARNING** This software is [abandonware](https://en.wikipedia.org/wiki/Abandonware). As the creator and maintainer, I don't even use PHP _for years_, so, I can't support it anymore. It should work ok for PHP untill version 7, but seems that with 8.1 there are some alerts. Feel free to fork it and keep it going. |
+| --- |
+
 Just another simple ORM for PHP. You can use it, but don't ask why I made it. Right? :-)
 
 ## Usage
